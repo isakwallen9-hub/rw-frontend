@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { fetchWithAuth } from './utils/fetchWithAuth'
 
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 
@@ -39,28 +39,25 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
     if (!token || token === 'undefined' || token === 'null') {
       console.error('[DASHBOARD] Ingen giltig token — skickar tillbaka till login')
-      setError('Din session har gått ut. Logga in igen.')
-      setLoading(false)
+      window.location.href = '/login'
       return
     }
 
-    const headers = { Authorization: `Bearer ${token}` }
-    console.log('[DASHBOARD] Authorization header (exakt):', JSON.stringify(headers.Authorization))
-
     Promise.all([
-      axios.get(`${API_URL}api/v1/dashboard/overview`, { headers }),
-      axios.get(`${API_URL}api/v1/recommendations/top3`, { headers }),
+      fetchWithAuth(`${API_URL}api/v1/dashboard/overview`),
+      fetchWithAuth(`${API_URL}api/v1/recommendations/top3`),
     ])
-      .then(([ovRes, recRes]) => {
-        console.log('[DASHBOARD] overview:', JSON.stringify(ovRes.data, null, 2))
-        console.log('[DASHBOARD] recommendations:', JSON.stringify(recRes.data, null, 2))
-        setOverview(ovRes.data.data ?? ovRes.data)
-        setRecommendations(recRes.data.data ?? recRes.data ?? [])
+      .then(async ([ovRes, recRes]) => {
+        const ovJson = await ovRes.json()
+        const recJson = await recRes.json()
+        console.log('[DASHBOARD] overview:', JSON.stringify(ovJson, null, 2))
+        console.log('[DASHBOARD] recommendations:', JSON.stringify(recJson, null, 2))
+        setOverview(ovJson.data ?? ovJson)
+        setRecommendations(recJson.data ?? recJson ?? [])
       })
       .catch((err) => {
-        console.error('[DASHBOARD] HTTP status:', err.response?.status)
-        console.error('[DASHBOARD] error body:', JSON.stringify(err.response?.data, null, 2))
-        setError(`Kunde inte hämta data (${err.response?.status ?? 'nätverksfel'}). Kontrollera konsolen.`)
+        console.error('[DASHBOARD] error:', err)
+        setError('Kunde inte hämta data. Kontrollera konsolen.')
       })
       .finally(() => setLoading(false))
   }, [])
