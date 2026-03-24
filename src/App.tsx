@@ -23,12 +23,21 @@ function App() {
     console.log('[LOGIN] POST', `${API_URL}api/v1/auth/login`, payload)
     try {
       const res = await axios.post(`${API_URL}api/v1/auth/login`, payload)
-      console.log('[LOGIN] success', res.data)
-      const { accessToken } = res.data.data
-      localStorage.setItem('token', accessToken)
+      console.log('[LOGIN] full response:', JSON.stringify(res.data, null, 2))
+      const data = res.data.data ?? res.data
+      const token = data.accessToken ?? data.token ?? data.access_token
+      console.log('[LOGIN] extracted token:', token)
+      if (!token) {
+        setError('Inloggning lyckades men ingen token returnerades. Kontakta support.')
+        setLoading(false)
+        return
+      }
+      localStorage.setItem('token', token)
+      console.log('[LOGIN] token sparat i localStorage')
       setView('dashboard')
     } catch (err: any) {
-      console.error('[LOGIN] error', err.response?.status, err.response?.data)
+      console.error('[LOGIN] error status:', err.response?.status)
+      console.error('[LOGIN] error data:', JSON.stringify(err.response?.data, null, 2))
       setError('Fel e-post, lösenord eller företagsnamn.')
     }
     setLoading(false)

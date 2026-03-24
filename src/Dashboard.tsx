@@ -35,23 +35,32 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    console.log('[DASHBOARD] token:', token ? 'finns' : 'saknas')
+    console.log('[DASHBOARD] token från localStorage:', token)
+
+    if (!token || token === 'undefined' || token === 'null') {
+      console.error('[DASHBOARD] Ingen giltig token — skickar tillbaka till login')
+      setError('Din session har gått ut. Logga in igen.')
+      setLoading(false)
+      return
+    }
 
     const headers = { Authorization: `Bearer ${token}` }
+    console.log('[DASHBOARD] Authorization header:', headers.Authorization)
 
     Promise.all([
       axios.get(`${API_URL}api/v1/dashboard/overview`, { headers }),
       axios.get(`${API_URL}api/v1/recommendations/top3`, { headers }),
     ])
       .then(([ovRes, recRes]) => {
-        console.log('[DASHBOARD] overview response:', ovRes.data)
-        console.log('[DASHBOARD] recommendations response:', recRes.data)
+        console.log('[DASHBOARD] overview:', JSON.stringify(ovRes.data, null, 2))
+        console.log('[DASHBOARD] recommendations:', JSON.stringify(recRes.data, null, 2))
         setOverview(ovRes.data.data ?? ovRes.data)
         setRecommendations(recRes.data.data ?? recRes.data ?? [])
       })
       .catch((err) => {
-        console.error('[DASHBOARD] error:', err.response?.status, err.response?.data)
-        setError('Kunde inte hämta data. Kontrollera din anslutning.')
+        console.error('[DASHBOARD] HTTP status:', err.response?.status)
+        console.error('[DASHBOARD] error body:', JSON.stringify(err.response?.data, null, 2))
+        setError(`Kunde inte hämta data (${err.response?.status ?? 'nätverksfel'}). Kontrollera konsolen.`)
       })
       .finally(() => setLoading(false))
   }, [])
