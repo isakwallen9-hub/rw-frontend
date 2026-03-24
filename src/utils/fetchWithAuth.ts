@@ -1,7 +1,7 @@
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('accessToken')
 
   const response = await fetch(url, {
     ...options,
@@ -22,7 +22,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 
     if (refreshResponse.ok) {
       const data = await refreshResponse.json()
-      localStorage.setItem('token', data.data.accessToken)
+      localStorage.setItem('accessToken', data.data.accessToken)
       localStorage.setItem('refreshToken', data.data.refreshToken)
 
       return fetch(url, {
@@ -34,11 +34,29 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
         },
       })
     } else {
-      localStorage.removeItem('token')
+      localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       window.location.href = '/login'
       return refreshResponse
     }
+  }
+
+  return response
+}
+
+export async function fetchFormWithAuth(url: string, formData: FormData): Promise<Response> {
+  const token = localStorage.getItem('accessToken')
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+    body: formData,
+  })
+
+  if (response.status === 401) {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    window.location.href = '/login'
   }
 
   return response
