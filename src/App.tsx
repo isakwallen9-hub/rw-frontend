@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import axios from 'axios'
+import Dashboard from './Dashboard'
 
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 
 function App() {
-  const [view, setView] = useState<'login' | 'register'>('login')
+  const [view, setView] = useState<'login' | 'register' | 'dashboard'>('login')
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,16 +19,16 @@ function App() {
   const handleLogin = async () => {
     setLoading(true)
     setError('')
+    const payload = { email, password, organisationSlug: slug }
+    console.log('[LOGIN] POST', `${API_URL}api/v1/auth/login`, payload)
     try {
-      const res = await axios.post(`${API_URL}api/v1/auth/login`, {
-        email,
-        password,
-        organisationSlug: slug,
-      })
+      const res = await axios.post(`${API_URL}api/v1/auth/login`, payload)
+      console.log('[LOGIN] success', res.data)
       const { accessToken } = res.data.data
       localStorage.setItem('token', accessToken)
-      alert('Inloggad!')
+      setView('dashboard')
     } catch (err: any) {
+      console.error('[LOGIN] error', err.response?.status, err.response?.data)
       setError('Fel e-post, lösenord eller företagsnamn.')
     }
     setLoading(false)
@@ -36,21 +37,22 @@ function App() {
   const handleRegister = async () => {
     setLoading(true)
     setError('')
+    const payload = { organisationName: orgName, organisationSlug: slug, email, password, firstName, lastName }
+    console.log('[REGISTER] POST', `${API_URL}api/v1/auth/register`, payload)
     try {
-      await axios.post(`${API_URL}api/v1/auth/register`, {
-        organisationName: orgName,
-        organisationSlug: slug,
-        email,
-        password,
-        firstName,
-        lastName,
-      })
+      const res = await axios.post(`${API_URL}api/v1/auth/register`, payload)
+      console.log('[REGISTER] success', res.data)
       alert('Konto skapat! Logga in nu.')
       setView('login')
     } catch (err: any) {
+      console.error('[REGISTER] error', err.response?.status, err.response?.data)
       setError('Något gick fel. Kontrollera uppgifterna.')
     }
     setLoading(false)
+  }
+
+  if (view === 'dashboard') {
+    return <Dashboard onLogout={() => setView('login')} />
   }
 
   return (
