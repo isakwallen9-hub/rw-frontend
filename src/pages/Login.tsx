@@ -29,6 +29,7 @@ export default function Login() {
         return
       }
       localStorage.setItem('token', token)
+      console.log('[LOGIN] localStorage efter setItem:', localStorage.getItem('token'))
       navigate('/dashboard')
     } catch (err: any) {
       console.error('[LOGIN] error status:', err.response?.status)

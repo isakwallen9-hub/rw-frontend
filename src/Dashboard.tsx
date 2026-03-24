@@ -45,7 +45,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     }
 
     const headers = { Authorization: `Bearer ${token}` }
-    console.log('[DASHBOARD] Authorization header:', headers.Authorization)
+    console.log('[DASHBOARD] Authorization header (exakt):', JSON.stringify(headers.Authorization))
 
     Promise.all([
       axios.get(`${API_URL}api/v1/dashboard/overview`, { headers }),
