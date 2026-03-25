@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchWithAuth, fetchFormWithAuth } from '../utils/fetchWithAuth'
 
+const DEV_MODE = true // sätt till false när backend är redo
+
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 const STEPS = ['Ekonomi', 'Fakturor', 'Kostnader', 'Villkor']
 
@@ -77,6 +79,10 @@ export default function Onboarding() {
   const saveStep1 = async () => {
     if (!bankFile) { setStepError('Välj en fil innan du fortsätter.'); return }
     setStepLoading(true); setStepError('')
+    if (DEV_MODE) {
+      localStorage.setItem('bankData', JSON.stringify({ fileName: bankFile.name, rows: bankRows.length }))
+      markComplete(0); setStep(1); setStepLoading(false); return
+    }
     try {
       const fd = new FormData()
       fd.append('file', bankFile)
@@ -92,6 +98,10 @@ export default function Onboarding() {
   const saveStep2 = async () => {
     if (!invoiceFile) { setStepError('Välj en fil innan du fortsätter.'); return }
     setStepLoading(true); setStepError('')
+    if (DEV_MODE) {
+      localStorage.setItem('invoiceData', JSON.stringify({ fileName: invoiceFile.name, rows: invoiceRows.length }))
+      markComplete(1); setStep(2); setStepLoading(false); return
+    }
     try {
       const fd = new FormData()
       fd.append('file', invoiceFile)
@@ -106,6 +116,13 @@ export default function Onboarding() {
 
   const saveStep3 = async () => {
     setStepLoading(true); setStepError('')
+    if (DEV_MODE) {
+      localStorage.setItem('fixedCosts', JSON.stringify({
+        rent: Number(costs.rent), staff: Number(costs.staff),
+        leasing: Number(costs.leasing), other: Number(costs.other),
+      }))
+      markComplete(2); setStep(3); setStepLoading(false); return
+    }
     try {
       const res = await fetchWithAuth(`${API_URL}api/v1/fixed-costs`, {
         method: 'POST',
@@ -124,6 +141,10 @@ export default function Onboarding() {
 
   const saveStep4 = async () => {
     setStepLoading(true); setStepError('')
+    if (DEV_MODE) {
+      localStorage.setItem('paymentTerms', JSON.stringify({ paymentDays: Number(paymentDays), billingType: paymentType }))
+      markComplete(3); navigate('/dashboard'); return
+    }
     try {
       const res = await fetchWithAuth(`${API_URL}api/v1/payment-terms`, {
         method: 'POST',

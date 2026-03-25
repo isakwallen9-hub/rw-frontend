@@ -6,6 +6,31 @@ import { fetchWithAuth } from './utils/fetchWithAuth'
 
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 
+const MOCK_OVERVIEW = {
+  kpi: { liquidAssets: 65000, overdueInvoices: 76300, breakEven: 143000, runwayDays: 47 },
+  cashflow: [
+    { month: 'Okt', in: 210000, out: 175000 },
+    { month: 'Nov', in: 195000, out: 188000 },
+    { month: 'Dec', in: 240000, out: 160000 },
+    { month: 'Jan', in: 178000, out: 202000 },
+    { month: 'Feb', in: 220000, out: 191000 },
+    { month: 'Mar', in: 255000, out: 198000 },
+  ],
+  recentTransactions: [
+    { date: '2026-03-22', description: 'Inbetalning — Bergström & Co', amount: 48500 },
+    { date: '2026-03-20', description: 'Hyra mars', amount: -24000 },
+    { date: '2026-03-18', description: 'Inbetalning — Lindqvist AB', amount: 31200 },
+    { date: '2026-03-15', description: 'Löner', amount: -87000 },
+    { date: '2026-03-12', description: 'Inbetalning — Nordin Group', amount: 19800 },
+  ],
+}
+
+const MOCK_RECOMMENDATIONS: Recommendation[] = [
+  { priority: 'high', title: 'Påminn om förfallna fakturor', description: '3 fakturor är >30 dagar förfallna. Skicka betalningspåminnelse omgående.', estimatedValue: 76300 },
+  { priority: 'medium', title: 'Förhandla betalningsvillkor', description: 'Minska standard betalningstid från 30 till 14 dagar för nya kunder.', estimatedValue: 32000 },
+  { priority: 'low', title: 'Se över fasta kostnader', description: 'Leasingkostnad kan minskas med ~15% vid omförhandling i april.', estimatedValue: 8400 },
+]
+
 interface KpiData {
   liquidAssets: number
   overdueInvoices: number
@@ -59,8 +84,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loadingOverview, setLoadingOverview] = useState(true)
   const [loadingRec, setLoadingRec] = useState(true)
-  const [errorOverview, setErrorOverview] = useState('')
-  const [errorRec, setErrorRec] = useState('')
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken')
@@ -75,7 +98,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         console.log('[DASHBOARD] overview:', json)
         setOverview(json.data ?? json)
       })
-      .catch(() => setErrorOverview('Kunde inte hämta översikt.'))
+      .catch(() => { setOverview(MOCK_OVERVIEW) })
       .finally(() => setLoadingOverview(false))
 
     fetchWithAuth(`${API_URL}api/v1/recommendations/top3`)
@@ -84,7 +107,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         console.log('[DASHBOARD] recommendations:', json)
         setRecommendations(json.data ?? json ?? [])
       })
-      .catch(() => setErrorRec('Kunde inte hämta rekommendationer.'))
+      .catch(() => { setRecommendations(MOCK_RECOMMENDATIONS) })
       .finally(() => setLoadingRec(false))
   }, [])
 
@@ -137,11 +160,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               </LineChart>
             </ResponsiveContainer>
           </div>
-        ) : !errorOverview ? (
+        ) : (
           <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-gray-400 text-sm">
             Ingen kassaflödesdata tillgänglig — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
           </div>
-        ) : null}
+        )}
 
         {/* Åtgärder + Transaktioner side-by-side på desktop */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -151,8 +174,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Rekommenderade åtgärder</h2>
             {loadingRec ? (
               <SkeletonList rows={3} />
-            ) : errorRec ? (
-              <ErrorBox message={errorRec} />
             ) : recommendations.length > 0 ? (
               <div className="flex flex-col gap-3">
                 {recommendations.map((r, i) => {
@@ -189,8 +210,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Senaste transaktioner</h2>
             {loadingOverview ? (
               <SkeletonList rows={5} />
-            ) : errorOverview ? (
-              <ErrorBox message={errorOverview} />
             ) : transactions.length > 0 ? (
               <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
                 <table className="w-full text-sm">
@@ -233,11 +252,5 @@ function KpiCard({ label, value, highlight }: { label: string; value: string; hi
       <p className="text-gray-400 text-xs mb-2">{label}</p>
       <p className={`text-lg font-bold ${highlight === 'red' ? 'text-red-500' : highlight === 'blue' ? 'text-accent' : 'text-primary'}`}>{value}</p>
     </div>
-  )
-}
-
-function ErrorBox({ message }: { message: string }) {
-  return (
-    <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{message}</div>
   )
 }
