@@ -32,7 +32,7 @@ export default function Landing() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={() => navigate('/onboarding')}
+            onClick={() => navigate('/register')}
             className="bg-primary text-white font-semibold px-8 py-3 rounded-lg hover:opacity-90 transition-opacity"
           >
             Testa gratis

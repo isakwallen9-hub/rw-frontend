@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const successMessage = (location.state as any)?.message ?? ''
   const [slug, setSlug] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -96,6 +98,7 @@ export default function Login() {
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
             </div>
 
+            {successMessage && <p className="text-green-600 text-sm">{successMessage}</p>}
             {error && <p className="text-red-500 text-sm">{error}</p>}
 
             <button onClick={handleLogin} disabled={loading}
@@ -106,7 +109,7 @@ export default function Login() {
 
             <p className="text-center text-sm text-gray-500">
               Inget konto?{' '}
-              <span onClick={() => navigate('/onboarding')} className="text-accent font-medium cursor-pointer hover:underline">
+              <span onClick={() => navigate('/register')} className="text-accent font-medium cursor-pointer hover:underline">
                 Skapa gratis konto
               </span>
             </p>
