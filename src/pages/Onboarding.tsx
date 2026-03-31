@@ -147,9 +147,19 @@ export default function Onboarding() {
   })
 
   const saveStep3 = () => run(async () => {
-    const body = { rent: Number(costs.rent), staff: Number(costs.staff), leasing: Number(costs.leasing), other: Number(costs.other) }
-    const res = await fetchWithAuth(`${API_URL}api/v1/data-import/fixed-costs`, { method: 'POST', body: JSON.stringify(body) })
-    if (!res.ok) throw new Error(await parseErrorMessage(res))
+    const entries = [
+      { name: 'Hyra',           amount: Number(costs.rent) },
+      { name: 'Personal',       amount: Number(costs.staff) },
+      { name: 'Leasing / Lån',  amount: Number(costs.leasing) },
+      { name: 'Övrigt',         amount: Number(costs.other) },
+    ]
+    for (const entry of entries) {
+      const res = await fetchWithAuth(`${API_URL}api/v1/data-import/fixed-costs`, {
+        method: 'POST',
+        body: JSON.stringify({ name: entry.name, amount: entry.amount, frequency: 'MONTHLY' }),
+      })
+      if (!res.ok) throw new Error(`${entry.name}: ${await parseErrorMessage(res)}`)
+    }
     markComplete(2); setStep(3)
   })
 
