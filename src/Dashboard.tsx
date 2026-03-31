@@ -143,6 +143,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
   const transactions: Transaction[] = overview?.recentTransactions ?? []
 
+  const hasData = !loadingOverview && (
+    kpi.liquidAssets !== 0 || kpi.overdueInvoices !== 0 || cashflowData.length > 0 || transactions.length > 0
+  )
+
   const explainThis = async (contextType: string, data: object) => {
     setExplainOpen(true)
     setExplainLoading(true)
@@ -189,18 +193,34 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8">
 
+        {/* Onboarding-banner */}
+        {!loadingOverview && !hasData && (
+          <div className="rounded-2xl bg-primary px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-lg">
+            <div>
+              <p className="text-white font-bold text-xl mb-1">Kom igång med RW Systems</p>
+              <p className="text-blue-200 text-sm leading-relaxed max-w-md">
+                Ladda upp din ekonomidata för att se din kassaflödesanalys och få konkreta åtgärder.
+              </p>
+            </div>
+            <a href="/onboarding"
+              className="shrink-0 bg-white text-primary font-bold text-sm px-6 py-3 rounded-xl hover:bg-blue-50 transition-colors shadow-sm whitespace-nowrap">
+              Starta onboarding →
+            </a>
+          </div>
+        )}
+
         {/* KPI-kort */}
         {loadingOverview ? (
           <SkeletonKpiCards />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KpiCard label="Likvida medel" value={fmt(kpi.liquidAssets)}
+            <KpiCard icon="💰" label="Likvida medel" value={fmt(kpi.liquidAssets)}
               onExplain={() => explainThis('cashflow', { type: 'liquidAssets', value: kpi.liquidAssets })} />
-            <KpiCard label="Förfallna fakturor" value={fmt(kpi.overdueInvoices)} highlight="red"
+            <KpiCard icon="⚠️" label="Förfallna fakturor" value={fmt(kpi.overdueInvoices)} highlight="red"
               onExplain={() => explainThis('diagnosis', { type: 'overdueInvoices', value: kpi.overdueInvoices })} />
-            <KpiCard label="Break-even" value={fmt(kpi.breakEven)}
+            <KpiCard icon="📊" label="Break-even" value={fmt(kpi.breakEven)}
               onExplain={() => explainThis('diagnosis', { type: 'breakEven', value: kpi.breakEven })} />
-            <KpiCard label="Runway" value={`${kpi.runwayDays} dagar`} highlight="blue"
+            <KpiCard icon="⏱" label="Runway" value={`${kpi.runwayDays} dagar`} highlight="blue"
               onExplain={() => explainThis('diagnosis', { type: 'runway', value: kpi.runwayDays })} />
           </div>
         )}
@@ -209,9 +229,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {loadingOverview ? (
           <SkeletonChart />
         ) : cashflowData.length > 0 ? (
-          <div className="bg-white border border-gray-100 rounded-xl p-6">
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Kassaflöde per månad</h2>
+              <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider">Kassaflöde per månad</h2>
               <button
                 onClick={() => explainThis('cashflow', { cashflow: cashflowData })}
                 className="flex items-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
@@ -242,7 +262,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
           {/* Rekommendationer */}
           <div>
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Rekommenderade åtgärder</h2>
+            <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider mb-3">Rekommenderade åtgärder</h2>
             {loadingRec ? (
               <SkeletonList rows={3} />
             ) : recommendations.length > 0 ? (
@@ -250,7 +270,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 {recommendations.map((r, i) => {
                   const p = PRIORITY_COLORS[r.priority ?? 'medium']
                   return (
-                    <div key={i} className="bg-white border border-gray-100 rounded-xl p-5">
+                    <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="flex items-center gap-2">
                           <span className={`w-2 h-2 rounded-full shrink-0 mt-0.5 ${p.dot}`} />
@@ -286,11 +306,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
           {/* Senaste transaktioner */}
           <div>
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Senaste transaktioner</h2>
+            <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider mb-3">Senaste transaktioner</h2>
             {loadingOverview ? (
               <SkeletonList rows={5} />
             ) : transactions.length > 0 ? (
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 text-xs text-gray-400">
@@ -432,24 +452,27 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   )
 }
 
-function KpiCard({ label, value, highlight, onExplain }: {
-  label: string; value: string; highlight?: 'red' | 'blue'; onExplain?: () => void
+function KpiCard({ icon, label, value, highlight, onExplain }: {
+  icon?: string; label: string; value: string; highlight?: 'red' | 'blue'; onExplain?: () => void
 }) {
   return (
-    <div className={`bg-white border rounded-xl px-5 py-4 group relative ${highlight === 'red' ? 'border-red-100' : highlight === 'blue' ? 'border-blue-100' : 'border-gray-100'}`}>
-      <div className="flex items-start justify-between">
-        <p className="text-gray-400 text-xs mb-2">{label}</p>
+    <div className={`bg-white border rounded-2xl px-5 py-5 group relative shadow-sm hover:shadow-md transition-shadow ${highlight === 'red' ? 'border-red-100' : highlight === 'blue' ? 'border-blue-100' : 'border-gray-100'}`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          {icon && <span className="text-lg leading-none">{icon}</span>}
+          <p className="text-gray-500 text-xs font-medium">{label}</p>
+        </div>
         {onExplain && (
           <button
             onClick={onExplain}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-accent hover:text-accent/70 shrink-0 -mt-1 -mr-1"
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-accent hover:text-accent/70 shrink-0"
             title="Förklara med AI"
           >
             <SparkleIcon className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
-      <p className={`text-lg font-bold ${highlight === 'red' ? 'text-red-500' : highlight === 'blue' ? 'text-accent' : 'text-primary'}`}>{value}</p>
+      <p className={`text-xl font-bold ${highlight === 'red' ? 'text-red-500' : highlight === 'blue' ? 'text-accent' : 'text-primary'}`}>{value}</p>
     </div>
   )
 }
