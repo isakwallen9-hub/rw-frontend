@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchWithAuth, fetchFormWithAuth } from '../utils/fetchWithAuth'
+import * as XLSX from 'xlsx'
+import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 const STEPS = ['Ekonomi', 'Fakturor', 'Kostnader', 'Villkor']
@@ -15,6 +16,33 @@ async function parseErrorMessage(res: Response): Promise<string> {
   } catch {
     return `HTTP ${res.status}`
   }
+}
+
+function readFileAsRows(file: File): Promise<Record<string, unknown>[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result
+        const workbook = XLSX.read(data, { type: 'array' })
+        const sheet = workbook.Sheets[workbook.SheetNames[0]]
+        resolve(XLSX.utils.sheet_to_json(sheet))
+      } catch (err) {
+        reject(err)
+      }
+    }
+    reader.onerror = () => reject(new Error('Kunde inte läsa filen.'))
+    reader.readAsArrayBuffer(file)
+  })
+}
+
+async function getOrgId(): Promise<string> {
+  const res = await fetchWithAuth(`${API_URL}api/v1/organisation`)
+  if (!res.ok) throw new Error(`Kunde inte hämta organisation: HTTP ${res.status}`)
+  const json = await res.json()
+  const orgId = json?.data?.id ?? json?.data?.orgId ?? json?.id
+  if (!orgId) throw new Error('Inget orgId i svaret från /api/v1/organisation')
+  return String(orgId)
 }
 
 export default function Onboarding() {
@@ -46,44 +74,55 @@ export default function Onboarding() {
     setCompletedSteps((prev) => { const next = [...prev]; next[i] = true; return next })
   }
 
-  const parseCsvPreview = (file: File, onRows: (rows: string[][]) => void) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const lines = (e.target?.result as string).split('\n').filter(Boolean).slice(1, 6)
-      onRows(lines.map((l) => l.split(',')))
-    }
-    reader.readAsText(file)
-  }
-
   const handleBankFile = (file: File) => {
     setBankFile(file)
-    parseCsvPreview(file, (rows) => {
-      setBankRows(rows.map(([date, description, amount]) => ({
-        date: date?.trim() ?? '', description: description?.trim() ?? '', amount: amount?.trim() ?? '',
+    readFileAsRows(file).then((rows) => {
+      setBankRows(rows.slice(0, 5).map((r) => ({
+        date: String(r['Datum'] ?? r['Date'] ?? r['datum'] ?? ''),
+        description: String(r['Text'] ?? r['Beskrivning'] ?? r['Description'] ?? ''),
+        amount: String(r['Belopp'] ?? r['Amount'] ?? r['belopp'] ?? ''),
       })))
-    })
+    }).catch(() => {})
   }
 
   const handleInvoiceFile = (file: File) => {
     setInvoiceFile(file)
-    parseCsvPreview(file, (rows) => {
-      setInvoiceRows(rows.map(([customer, invoiceNr, amount, dueDate, status]) => ({
-        customer: customer?.trim() ?? '', invoiceNr: invoiceNr?.trim() ?? '',
-        amount: amount?.trim() ?? '', dueDate: dueDate?.trim() ?? '',
-        status: status?.trim() === 'Betald' ? 'Betald' : 'Obetald',
-      })))
-    })
+    readFileAsRows(file).then((rows) => {
+      setInvoiceRows(rows.slice(0, 5).map((r) => {
+        const status = String(r['Status'] ?? r['status'] ?? '')
+        return {
+          customer: String(r['Kund'] ?? r['Customer'] ?? ''),
+          invoiceNr: String(r['Fakturanr'] ?? r['Invoice'] ?? r['Faktura'] ?? ''),
+          amount: String(r['Belopp'] ?? r['Amount'] ?? ''),
+          dueDate: String(r['Förfallodatum'] ?? r['DueDate'] ?? r['Due'] ?? ''),
+          status: status === 'Betald' ? 'Betald' : 'Obetald',
+        }
+      }))
+    }).catch(() => {})
   }
 
   const runImportFlow = async (file: File, type: 'bank' | 'invoice'): Promise<void> => {
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('type', type)
+    // Read file with SheetJS
+    console.log(`[IMPORT] Reading ${type} file:`, file.name)
+    setProgressLabel('Läser fil...')
+    const rows = await readFileAsRows(file)
+    console.log(`[IMPORT] Parsed ${rows.length} rows`)
 
-    // Step 1: Upload
-    console.log(`[IMPORT] Uploading ${type} file:`, file.name)
+    // Fetch orgId
+    console.log('[IMPORT] Fetching orgId...')
+    const orgId = await getOrgId()
+    console.log('[IMPORT] orgId:', orgId)
+
+    const fileType = file.name.toLowerCase().endsWith('.csv') ? 'CSV' : 'XLSX'
+    const body = { orgId, fileName: file.name, fileType, rows }
+
+    // Step 1: Upload JSON
+    console.log(`[IMPORT] Uploading ${type} data...`)
     setProgressLabel('Laddar upp...')
-    const uploadRes = await fetchFormWithAuth(`${API_URL}api/v1/data-import/upload`, fd)
+    const uploadRes = await fetchWithAuth(`${API_URL}api/v1/data-import/upload`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
     console.log('[IMPORT] Upload status:', uploadRes.status)
 
     if (!uploadRes.ok) {
