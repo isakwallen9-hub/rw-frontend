@@ -40,8 +40,10 @@ async function getOrgId(): Promise<string> {
   const res = await fetchWithAuth(`${API_URL}api/v1/organisation`)
   if (!res.ok) throw new Error(`Kunde inte hämta organisation: HTTP ${res.status}`)
   const json = await res.json()
-  const orgId = json?.data?.id ?? json?.data?.orgId ?? json?.id
-  if (!orgId) throw new Error('Inget orgId i svaret från /api/v1/organisation')
+  console.log('[ORG] Full response:', json)
+  console.log('[ORG] data.id:', json?.data?.id)
+  const orgId = json?.data?.id
+  if (!orgId) throw new Error(`Inget orgId i svaret. Fick: ${JSON.stringify(json)}`)
   return String(orgId)
 }
 
