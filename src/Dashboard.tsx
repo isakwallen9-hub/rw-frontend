@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { Banknote, AlertCircle, BarChart2, Clock } from 'lucide-react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
@@ -214,13 +215,13 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           <SkeletonKpiCards />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KpiCard icon="💰" label="Likvida medel" value={fmt(kpi.liquidAssets)}
+            <KpiCard icon={<Banknote className="w-4 h-4" />} label="Likvida medel" value={fmt(kpi.liquidAssets)}
               onExplain={() => explainThis('cashflow', { type: 'liquidAssets', value: kpi.liquidAssets })} />
-            <KpiCard icon="⚠️" label="Förfallna fakturor" value={fmt(kpi.overdueInvoices)} highlight="red"
+            <KpiCard icon={<AlertCircle className="w-4 h-4" />} label="Förfallna fakturor" value={fmt(kpi.overdueInvoices)} highlight="red"
               onExplain={() => explainThis('diagnosis', { type: 'overdueInvoices', value: kpi.overdueInvoices })} />
-            <KpiCard icon="📊" label="Break-even" value={fmt(kpi.breakEven)}
+            <KpiCard icon={<BarChart2 className="w-4 h-4" />} label="Break-even" value={fmt(kpi.breakEven)}
               onExplain={() => explainThis('diagnosis', { type: 'breakEven', value: kpi.breakEven })} />
-            <KpiCard icon="⏱" label="Runway" value={`${kpi.runwayDays} dagar`} highlight="blue"
+            <KpiCard icon={<Clock className="w-4 h-4" />} label="Runway" value={`${kpi.runwayDays} dagar`} highlight="blue"
               onExplain={() => explainThis('diagnosis', { type: 'runway', value: kpi.runwayDays })} />
           </div>
         )}
@@ -453,7 +454,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 }
 
 function KpiCard({ icon, label, value, highlight, onExplain }: {
-  icon?: string; label: string; value: string; highlight?: 'red' | 'blue'; onExplain?: () => void
+  icon?: React.ReactNode; label: string; value: string; highlight?: 'red' | 'blue'; onExplain?: () => void
 }) {
   return (
     <div className={`bg-white border rounded-2xl px-5 py-5 group relative shadow-sm hover:shadow-md transition-shadow ${highlight === 'red' ? 'border-red-100' : highlight === 'blue' ? 'border-blue-100' : 'border-gray-100'}`}>
