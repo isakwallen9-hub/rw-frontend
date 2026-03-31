@@ -5,12 +5,7 @@ import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 
-const STEPS = [
-  { label: 'Ekonomi',  icon: '🏦' },
-  { label: 'Fakturor', icon: '🧾' },
-  { label: 'Kostnader', icon: '📦' },
-  { label: 'Villkor',  icon: '📋' },
-]
+const STEPS = ['Bankdata', 'Fakturor', 'Kostnader', 'Villkor']
 
 type BankRow    = { date: string; description: string; amount: string }
 type InvoiceRow = { customer: string; invoiceNr: string; amount: string; dueDate: string; status: 'Betald' | 'Obetald' }
@@ -48,8 +43,7 @@ async function getOrgId(): Promise<string> {
 }
 
 function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
@@ -93,158 +87,143 @@ export default function Onboarding() {
         customer:  String(r['Kund']          ?? r['Customer']  ?? ''),
         invoiceNr: String(r['Fakturanr']     ?? r['Invoice']   ?? r['Faktura'] ?? ''),
         amount:    String(r['Belopp']        ?? r['Amount']    ?? ''),
-        dueDate:   String(r['Förfallodatum'] ?? r['DueDate']   ?? r['Due'] ?? ''),
+        dueDate:   String(r['Förfallodatum'] ?? r['DueDate']   ?? r['Due']     ?? ''),
         status:    status === 'Betald' ? 'Betald' : 'Obetald',
       }
     }))).catch(() => {})
   }
 
-  const runImportFlow = async (file: File, type: 'bank' | 'invoice') => {
-    console.log(`[IMPORT] Reading ${type} file:`, file.name)
+  const runImportFlow = async (file: File) => {
     setProgressLabel('Läser fil...')
     const rows = await readFileAsRows(file)
-    console.log(`[IMPORT] Parsed ${rows.length} rows`)
+    console.log(`[IMPORT] Parsed ${rows.length} rows from ${file.name}`)
 
-    console.log('[IMPORT] Fetching orgId...')
     const orgId = await getOrgId()
-    console.log('[IMPORT] orgId:', orgId)
-
     const fileType = file.name.toLowerCase().endsWith('.csv') ? 'CSV' : 'XLSX'
-    const body = { orgId, fileName: file.name, fileType, rows }
 
     setProgressLabel('Laddar upp...')
-    const uploadRes = await fetchWithAuth(`${API_URL}api/v1/data-import/upload`, { method: 'POST', body: JSON.stringify(body) })
-    console.log('[IMPORT] Upload status:', uploadRes.status)
+    const uploadRes = await fetchWithAuth(`${API_URL}api/v1/data-import/upload`, {
+      method: 'POST',
+      body: JSON.stringify({ orgId, fileName: file.name, fileType, rows }),
+    })
     if (!uploadRes.ok) throw new Error(`Uppladdning misslyckades: ${await parseErrorMessage(uploadRes)}`)
-
-    const uploadData = await uploadRes.json()
-    console.log('[IMPORT] Upload response:', uploadData)
-    const sessionId = uploadData?.data?.sessionId
+    const { data: { sessionId } } = await uploadRes.json()
     if (!sessionId) throw new Error('Ingen sessionId i svaret från servern.')
 
     setProgressLabel('Validerar...')
     const validateRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/validate`, { method: 'POST' })
-    console.log('[IMPORT] Validate status:', validateRes.status)
     if (!validateRes.ok) throw new Error(`Validering misslyckades: ${await parseErrorMessage(validateRes)}`)
-    console.log('[IMPORT] Validate response:', await validateRes.json())
 
     setProgressLabel('Bekräftar...')
     const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/commit`, { method: 'POST' })
-    console.log('[IMPORT] Commit status:', commitRes.status)
     if (!commitRes.ok) throw new Error(`Bekräftelse misslyckades: ${await parseErrorMessage(commitRes)}`)
-    console.log('[IMPORT] Commit response:', await commitRes.json())
   }
 
   const goBack  = () => { setStepError(''); setProgressLabel(''); setStep(s => Math.max(0, s - 1)) }
   const doReset = () => {
-    setStep(0); setCompletedSteps([false,false,false,false]); setStepError(''); setProgressLabel('')
-    setBankFile(null); setBankRows([]); setInvoiceFile(null); setInvoiceRows([])
-    setCosts({ rent:'', staff:'', leasing:'', other:'' }); setPaymentDays('30'); setPaymentType('Per projekt')
+    setStep(0); setCompletedSteps([false, false, false, false])
+    setStepError(''); setProgressLabel('')
+    setBankFile(null); setBankRows([])
+    setInvoiceFile(null); setInvoiceRows([])
+    setCosts({ rent: '', staff: '', leasing: '', other: '' })
+    setPaymentDays('30'); setPaymentType('Per projekt')
   }
 
-  const saveStep1 = async () => {
-    if (!bankFile) { setStepError('Välj en fil innan du fortsätter.'); return }
+  const run = async (fn: () => Promise<void>) => {
     setStepLoading(true); setStepError('')
-    try { await runImportFlow(bankFile, 'bank'); markComplete(0); setStep(1) }
+    try { await fn() }
     catch (err) { setStepError(err instanceof Error ? err.message : 'Okänt fel') }
     setStepLoading(false); setProgressLabel('')
   }
 
-  const saveStep2 = async () => {
-    if (!invoiceFile) { setStepError('Välj en fil innan du fortsätter.'); return }
-    setStepLoading(true); setStepError('')
-    try { await runImportFlow(invoiceFile, 'invoice'); markComplete(1); setStep(2) }
-    catch (err) { setStepError(err instanceof Error ? err.message : 'Okänt fel') }
-    setStepLoading(false); setProgressLabel('')
-  }
+  const saveStep1 = () => run(async () => {
+    if (!bankFile) throw new Error('Välj en fil innan du fortsätter.')
+    await runImportFlow(bankFile); markComplete(0); setStep(1)
+  })
 
-  const saveStep3 = async () => {
-    setStepLoading(true); setStepError('')
+  const saveStep2 = () => run(async () => {
+    if (!invoiceFile) throw new Error('Välj en fil innan du fortsätter.')
+    await runImportFlow(invoiceFile); markComplete(1); setStep(2)
+  })
+
+  const saveStep3 = () => run(async () => {
     const body = { rent: Number(costs.rent), staff: Number(costs.staff), leasing: Number(costs.leasing), other: Number(costs.other) }
-    console.log('[STEP 3] Posting fixed costs:', body)
-    try {
-      const res = await fetchWithAuth(`${API_URL}api/v1/data-import/fixed-costs`, { method: 'POST', body: JSON.stringify(body) })
-      if (!res.ok) throw new Error(await parseErrorMessage(res))
-      markComplete(2); setStep(3)
-    } catch (err) { setStepError(`Kunde inte spara kostnader: ${err instanceof Error ? err.message : 'Okänt fel'}`) }
-    setStepLoading(false)
-  }
+    const res = await fetchWithAuth(`${API_URL}api/v1/data-import/fixed-costs`, { method: 'POST', body: JSON.stringify(body) })
+    if (!res.ok) throw new Error(await parseErrorMessage(res))
+    markComplete(2); setStep(3)
+  })
 
-  const saveStep4 = async () => {
-    setStepLoading(true); setStepError('')
-    const body = { paymentDays: Number(paymentDays), billingType: paymentType }
-    console.log('[STEP 4] Posting payment terms:', body)
-    try {
-      const res = await fetchWithAuth(`${API_URL}api/v1/data-import/payment-terms`, { method: 'POST', body: JSON.stringify(body) })
-      if (!res.ok) throw new Error(await parseErrorMessage(res))
-      markComplete(3); navigate('/dashboard')
-    } catch (err) { setStepError(`Kunde inte spara villkor: ${err instanceof Error ? err.message : 'Okänt fel'}`) }
-    setStepLoading(false)
-  }
+  const saveStep4 = () => run(async () => {
+    const res = await fetchWithAuth(`${API_URL}api/v1/data-import/payment-terms`, {
+      method: 'POST',
+      body: JSON.stringify({ paymentDays: Number(paymentDays), billingType: paymentType }),
+    })
+    if (!res.ok) throw new Error(await parseErrorMessage(res))
+    markComplete(3); navigate('/dashboard')
+  })
 
-  const handlers = [saveStep1, saveStep2, saveStep3, saveStep4]
-  const saveLabels = ['Spara bankdata', 'Spara fakturadata', 'Spara kostnader', 'Skapa min diagnos']
+  const handlers   = [saveStep1, saveStep2, saveStep3, saveStep4]
+  const saveLabels = ['Fortsätt', 'Fortsätt', 'Fortsätt', 'Skapa diagnos']
+
+  const stepTitles = [
+    'Importera bankdata',
+    'Importera fakturor',
+    'Fasta kostnader',
+    'Betalningsvillkor',
+  ]
+  const stepDescriptions = [
+    'Ladda upp ett kontoutdrag i CSV- eller Excel-format.',
+    'Ladda upp fakturadata för att identifiera sena betalare.',
+    'Ange dina månatliga fasta kostnader.',
+    'Berätta hur du fakturerar dina kunder.',
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between shadow-sm">
-        <span onClick={() => navigate('/')} className="font-bold text-xl text-[#1e3a5f] cursor-pointer tracking-tight select-none">
+      {/* Topbar */}
+      <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
+        <span onClick={() => navigate('/')} className="font-semibold text-gray-900 cursor-pointer select-none tracking-tight">
           RW Systems
         </span>
-        <span className="text-sm text-gray-400 font-medium">Steg {step + 1} av {STEPS.length}</span>
+        <span className="text-sm text-gray-400">Steg {step + 1} av {STEPS.length}</span>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-8 py-12">
+      <div className="max-w-xl mx-auto px-4 py-12">
 
-        {/* Progress bar */}
-        <div className="flex items-start justify-between mb-12 relative">
-          {/* connecting lines */}
-          {STEPS.map((_, i) => i < STEPS.length - 1 && (
-            <div key={`line-${i}`} className="absolute top-5 h-0.5 transition-colors duration-300"
-              style={{
-                left: `calc(${(i / (STEPS.length - 1)) * 100}% + 1.25rem)`,
-                width: `calc(${100 / (STEPS.length - 1)}% - 2.5rem)`,
-                backgroundColor: completedSteps[i] ? '#2563eb' : '#e5e7eb',
-              }}
-            />
-          ))}
-          {STEPS.map(({ label }, i) => (
-            <div key={label} className="flex flex-col items-center gap-2 z-10" style={{ width: `${100 / STEPS.length}%` }}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300
-                ${completedSteps[i]
-                  ? 'bg-[#2563eb] border-[#2563eb] text-white'
-                  : i === step
-                  ? 'bg-[#1e3a5f] border-[#1e3a5f] text-white shadow-md'
-                  : 'bg-white border-gray-300 text-gray-400'}`}>
-                {completedSteps[i] ? '✓' : i + 1}
+        {/* Progress */}
+        <div className="flex items-center mb-10">
+          {STEPS.map((label, i) => (
+            <div key={label} className="flex items-center flex-1 last:flex-none">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all
+                  ${completedSteps[i]
+                    ? 'bg-green-500 border-green-500'
+                    : i === step
+                    ? 'bg-[#1e3a5f] border-[#1e3a5f]'
+                    : 'bg-white border-gray-300'}`}>
+                  {completedSteps[i] ? (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <span className={`text-xs font-semibold ${i === step ? 'text-white' : 'text-gray-400'}`}>{i + 1}</span>
+                  )}
+                </div>
+                <span className={`text-xs font-medium whitespace-nowrap ${i === step ? 'text-gray-900' : completedSteps[i] ? 'text-green-600' : 'text-gray-400'}`}>
+                  {label}
+                </span>
               </div>
-              <span className={`text-xs font-semibold text-center leading-tight
-                ${i === step ? 'text-[#1e3a5f]' : completedSteps[i] ? 'text-[#2563eb]' : 'text-gray-400'}`}>
-                {label}
-              </span>
+              {i < STEPS.length - 1 && (
+                <div className={`flex-1 h-px mx-3 mb-5 transition-colors ${completedSteps[i] ? 'bg-green-400' : 'bg-gray-200'}`} />
+              )}
             </div>
           ))}
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-
-          {/* Step header */}
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">{STEPS[step].icon}</span>
-            <h1 className="text-2xl font-bold text-[#1e3a5f]">
-              {['Importera bankdata', 'Importera fakturor', 'Fasta kostnader', 'Betalningsvillkor'][step]}
-            </h1>
-          </div>
-          <p className="text-gray-500 text-sm mb-8 pl-11">
-            {[
-              'Ladda upp ditt kontoutdrag i CSV- eller Excel-format.',
-              'Ladda upp fakturadata för att identifiera sena betalare.',
-              'Ange dina månatliga fasta kostnader.',
-              'Berätta hur du fakturerar dina kunder.',
-            ][step]}
-          </p>
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">{stepTitles[step]}</h2>
+          <p className="text-sm text-gray-500 mb-8">{stepDescriptions[step]}</p>
 
           {/* Step 1 */}
           {step === 0 && (
@@ -253,10 +232,10 @@ export default function Onboarding() {
               {bankRows.length > 0 && (
                 <PreviewTable headers={['Datum', 'Beskrivning', 'Belopp']}>
                   {bankRows.map((r, i) => (
-                    <tr key={i} className="border-t border-gray-50 text-sm">
+                    <tr key={i} className="border-t border-gray-100 text-sm">
                       <td className="py-2.5 pr-4 text-gray-500 whitespace-nowrap">{r.date}</td>
                       <td className="py-2.5 pr-4 text-gray-700">{r.description}</td>
-                      <td className="py-2.5 text-right text-gray-800 font-medium whitespace-nowrap">{r.amount}</td>
+                      <td className="py-2.5 text-right text-gray-900 font-medium whitespace-nowrap">{r.amount}</td>
                     </tr>
                   ))}
                 </PreviewTable>
@@ -269,15 +248,15 @@ export default function Onboarding() {
             <>
               <UploadZone file={invoiceFile} inputRef={invoiceRef} onFile={handleInvoiceFile} />
               {invoiceRows.length > 0 && (
-                <PreviewTable headers={['Kund', 'Faktura nr', 'Belopp', 'Förfaller', 'Status']}>
+                <PreviewTable headers={['Kund', 'Faktura', 'Belopp', 'Förfaller', 'Status']}>
                   {invoiceRows.map((r, i) => (
-                    <tr key={i} className="border-t border-gray-50 text-sm">
-                      <td className="py-2.5 pr-3 text-gray-800 font-medium">{r.customer}</td>
+                    <tr key={i} className="border-t border-gray-100 text-sm">
+                      <td className="py-2.5 pr-3 text-gray-900 font-medium">{r.customer}</td>
                       <td className="py-2.5 pr-3 text-gray-500">{r.invoiceNr}</td>
-                      <td className="py-2.5 pr-3 text-right text-gray-800">{r.amount}</td>
+                      <td className="py-2.5 pr-3 text-right text-gray-900">{r.amount}</td>
                       <td className="py-2.5 pr-3 text-gray-500 whitespace-nowrap">{r.dueDate}</td>
                       <td className="py-2.5">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${r.status === 'Betald' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${r.status === 'Betald' ? 'bg-green-50 text-green-700 ring-1 ring-green-200' : 'bg-red-50 text-red-600 ring-1 ring-red-200'}`}>
                           {r.status}
                         </span>
                       </td>
@@ -290,11 +269,11 @@ export default function Onboarding() {
 
           {/* Step 3 */}
           {step === 2 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <CostField icon="🏢" label="Hyra (kr/mån)"           value={costs.rent}    onChange={v => setCosts({...costs, rent: v})} />
-              <CostField icon="👥" label="Personal totalt (kr/mån)" value={costs.staff}   onChange={v => setCosts({...costs, staff: v})} />
-              <CostField icon="🚗" label="Leasing / Lån (kr/mån)"  value={costs.leasing} onChange={v => setCosts({...costs, leasing: v})} />
-              <CostField icon="📦" label="Övrigt (kr/mån)"         value={costs.other}   onChange={v => setCosts({...costs, other: v})} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CostField label="Hyra"          sublabel="kr / månad" value={costs.rent}    onChange={v => setCosts({ ...costs, rent: v })} />
+              <CostField label="Personal"      sublabel="kr / månad" value={costs.staff}   onChange={v => setCosts({ ...costs, staff: v })} />
+              <CostField label="Leasing / Lån" sublabel="kr / månad" value={costs.leasing} onChange={v => setCosts({ ...costs, leasing: v })} />
+              <CostField label="Övrigt"        sublabel="kr / månad" value={costs.other}   onChange={v => setCosts({ ...costs, other: v })} />
             </div>
           )}
 
@@ -302,14 +281,17 @@ export default function Onboarding() {
           {step === 3 && (
             <div className="flex flex-col gap-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Standard betalningsvillkor (dagar)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Standard betalningsvillkor
+                  <span className="text-gray-400 font-normal ml-1">(dagar)</span>
+                </label>
                 <input type="number" value={paymentDays} onChange={e => setPaymentDays(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-sm shadow-sm outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20 transition" />
+                  className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Hur tar du betalt?</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Faktureringsmodell</label>
                 <select value={paymentType} onChange={e => setPaymentType(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-sm shadow-sm outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20 transition bg-white appearance-none cursor-pointer">
+                  className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition bg-white cursor-pointer">
                   <option>Per projekt</option>
                   <option>Löpande</option>
                   <option>Annat</option>
@@ -320,32 +302,40 @@ export default function Onboarding() {
 
           {/* Error */}
           {stepError && (
-            <div className="mt-6 bg-red-50 border border-red-200 rounded-xl px-4 py-3.5 flex items-start gap-3">
-              <span className="text-red-500 mt-0.5 shrink-0">⚠</span>
-              <p className="text-red-600 text-sm leading-relaxed">{stepError}</p>
+            <div className="mt-6 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+              <svg className="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 8v4m0 4h.01" />
+              </svg>
+              <p className="text-sm text-red-600">{stepError}</p>
             </div>
           )}
 
-          {/* Actions */}
+          {/* Footer actions */}
           <div className="mt-8 flex items-center justify-between">
-            <div className="flex items-center gap-5 text-xs text-gray-400">
+            <div className="flex items-center gap-4 text-sm text-gray-400">
               {step > 0 && (
-                <button onClick={goBack} className="hover:text-gray-600 transition-colors font-medium flex items-center gap-1">
-                  ← Tillbaka
+                <button onClick={goBack} className="hover:text-gray-700 transition-colors">
+                  Tillbaka
                 </button>
               )}
-              <button onClick={doReset} className="hover:text-gray-600 transition-colors">↺ Börja om</button>
+              <button onClick={doReset} className="hover:text-gray-700 transition-colors">
+                Börja om
+              </button>
             </div>
 
             <button onClick={handlers[step]} disabled={stepLoading}
-              className="flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-7 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50 text-sm">
-              {stepLoading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-              {stepLoading ? (progressLabel || 'Sparar...') : `${saveLabels[step]} →`}
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50">
+              {stepLoading
+                ? <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />{progressLabel || 'Sparar...'}</>
+                : saveLabels[step]
+              }
             </button>
           </div>
-
-          <p className="mt-4 text-center text-xs text-gray-400">Du kan alltid komma tillbaka och uppdatera detta senare.</p>
         </div>
+
+        <p className="mt-4 text-center text-xs text-gray-400">
+          Du kan alltid komma tillbaka och uppdatera detta senare.
+        </p>
       </div>
     </div>
   )
@@ -357,38 +347,41 @@ function UploadZone({ file, inputRef, onFile }: {
   onFile: (f: File) => void
 }) {
   const [dragging, setDragging] = useState(false)
+
   return (
     <div
       onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) onFile(f) }}
       onDragOver={e => { e.preventDefault(); setDragging(true) }}
       onDragLeave={() => setDragging(false)}
       onClick={() => inputRef.current?.click()}
-      className={`rounded-xl border-2 border-dashed p-10 text-center cursor-pointer transition-all select-none
-        ${dragging ? 'bg-blue-100 border-blue-500' : file ? 'bg-green-50 border-green-300' : 'bg-blue-50 border-blue-300 hover:bg-blue-100 hover:border-blue-400'}`}
+      className={`rounded-lg border-2 border-dashed px-8 py-10 text-center cursor-pointer transition-colors select-none
+        ${dragging ? 'border-blue-400 bg-blue-50/50' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'}`}
     >
       <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden"
         onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f) }} />
 
       {file ? (
         <div className="flex flex-col items-center gap-2">
-          <span className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">✓</span>
-          <p className="font-semibold text-green-700 text-sm">{file.name}</p>
-          <p className="text-xs text-gray-500">{formatBytes(file.size)} — Klicka för att byta fil</p>
+          <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center">
+            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-gray-900">{file.name}</p>
+          <p className="text-xs text-gray-400">{formatBytes(file.size)} — klicka för att byta</p>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3">
-          <span className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-          </span>
-          <div>
-            <p className="text-base font-semibold text-gray-700">Dra och släpp din fil här</p>
-            <p className="text-sm text-gray-500 mt-1">CSV, XLSX eller XLS — max 10 MB</p>
           </div>
-          <span className="text-xs text-[#2563eb] font-medium border border-[#2563eb]/30 rounded-lg px-3 py-1.5 hover:bg-blue-50 transition-colors">
-            Välj fil från datorn
-          </span>
+          <div>
+            <p className="text-sm font-medium text-gray-700">Dra och släpp filen här</p>
+            <p className="text-xs text-gray-400 mt-0.5">CSV, XLSX eller XLS — max 10 MB</p>
+          </div>
+          <span className="text-xs text-blue-600 font-medium">eller välj fil</span>
         </div>
       )}
     </div>
@@ -397,12 +390,14 @@ function UploadZone({ file, inputRef, onFile }: {
 
 function PreviewTable({ headers, children }: { headers: string[]; children: React.ReactNode }) {
   return (
-    <div className="mt-6 overflow-x-auto rounded-xl border border-gray-100">
-      <p className="text-xs text-gray-400 px-4 pt-3 pb-1 font-medium">Förhandsgranskning — 5 rader</p>
+    <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200">
+      <p className="text-xs text-gray-400 px-4 py-2.5 border-b border-gray-100 font-medium bg-gray-50">
+        Förhandsgranskning — 5 rader
+      </p>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100 text-xs text-gray-400 bg-gray-50">
-            {headers.map(h => <th key={h} className="text-left px-4 py-2.5 font-semibold last:text-right">{h}</th>)}
+          <tr className="text-xs text-gray-500 border-b border-gray-100">
+            {headers.map(h => <th key={h} className="text-left px-4 py-2.5 font-medium last:text-right">{h}</th>)}
           </tr>
         </thead>
         <tbody>{children}</tbody>
@@ -411,16 +406,16 @@ function PreviewTable({ headers, children }: { headers: string[]; children: Reac
   )
 }
 
-function CostField({ icon, label, value, onChange }: {
-  icon: string; label: string; value: string; onChange: (v: string) => void
+function CostField({ label, sublabel, value, onChange }: {
+  label: string; sublabel: string; value: string; onChange: (v: string) => void
 }) {
   return (
     <div>
-      <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
-        <span>{icon}</span> {label}
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {label} <span className="text-gray-400 font-normal text-xs">{sublabel}</span>
       </label>
       <input type="number" placeholder="0" value={value} onChange={e => onChange(e.target.value)}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-sm shadow-sm outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20 transition" />
+        className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition" />
     </div>
   )
 }
