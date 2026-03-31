@@ -2,13 +2,20 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchWithAuth, fetchFormWithAuth } from '../utils/fetchWithAuth'
 
-const DEV_MODE = true // sätt till false när backend är redo
-
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 const STEPS = ['Ekonomi', 'Fakturor', 'Kostnader', 'Villkor']
 
 type BankRow = { date: string; description: string; amount: string }
 type InvoiceRow = { customer: string; invoiceNr: string; amount: string; dueDate: string; status: 'Betald' | 'Obetald' }
+
+async function parseErrorMessage(res: Response): Promise<string> {
+  try {
+    const json = await res.json()
+    return json?.error?.message ?? json?.message ?? `HTTP ${res.status}`
+  } catch {
+    return `HTTP ${res.status}`
+  }
+}
 
 export default function Onboarding() {
   const navigate = useNavigate()
@@ -16,6 +23,7 @@ export default function Onboarding() {
   const [completedSteps, setCompletedSteps] = useState<boolean[]>([false, false, false, false])
   const [stepLoading, setStepLoading] = useState(false)
   const [stepError, setStepError] = useState('')
+  const [progressLabel, setProgressLabel] = useState('')
 
   // Step 1
   const [bankFile, setBankFile] = useState<File | null>(null)
@@ -67,11 +75,74 @@ export default function Onboarding() {
     })
   }
 
-  const goBack = () => { setStepError(''); setStep((s) => Math.max(0, s - 1)) }
+  const runImportFlow = async (file: File, type: 'bank' | 'invoice'): Promise<void> => {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('type', type)
+
+    // Step 1: Upload
+    console.log(`[IMPORT] Uploading ${type} file:`, file.name)
+    setProgressLabel('Laddar upp...')
+    const uploadRes = await fetchFormWithAuth(`${API_URL}api/v1/data-import/upload`, fd)
+    console.log('[IMPORT] Upload status:', uploadRes.status)
+
+    if (!uploadRes.ok) {
+      const msg = await parseErrorMessage(uploadRes)
+      console.error('[IMPORT] Upload failed:', msg)
+      throw new Error(`Uppladdning misslyckades: ${msg}`)
+    }
+
+    const uploadData = await uploadRes.json()
+    console.log('[IMPORT] Upload response:', uploadData)
+    const sessionId = uploadData?.data?.sessionId
+    console.log('[IMPORT] SessionId:', sessionId)
+
+    if (!sessionId) {
+      throw new Error('Ingen sessionId i svaret från servern. Kontrollera att filen är giltig.')
+    }
+
+    // Step 2: Validate
+    console.log('[IMPORT] Validating session:', sessionId)
+    setProgressLabel('Validerar...')
+    const validateRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/validate`, {
+      method: 'POST',
+    })
+    console.log('[IMPORT] Validate status:', validateRes.status)
+
+    if (!validateRes.ok) {
+      const msg = await parseErrorMessage(validateRes)
+      console.error('[IMPORT] Validate failed:', msg)
+      throw new Error(`Validering misslyckades: ${msg}`)
+    }
+
+    const validateData = await validateRes.json()
+    console.log('[IMPORT] Validate response:', validateData)
+
+    // Step 3: Commit
+    console.log('[IMPORT] Committing session:', sessionId)
+    setProgressLabel('Bekräftar...')
+    const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/commit`, {
+      method: 'POST',
+    })
+    console.log('[IMPORT] Commit status:', commitRes.status)
+
+    if (!commitRes.ok) {
+      const msg = await parseErrorMessage(commitRes)
+      console.error('[IMPORT] Commit failed:', msg)
+      throw new Error(`Bekräftelse misslyckades: ${msg}`)
+    }
+
+    const commitData = await commitRes.json()
+    console.log('[IMPORT] Commit response:', commitData)
+  }
+
+  const goBack = () => { setStepError(''); setProgressLabel(''); setStep((s) => Math.max(0, s - 1)) }
 
   const reset = () => {
-    setStep(0); setCompletedSteps([false, false, false, false]); setStepError('')
-    setBankFile(null); setBankRows([]); setInvoiceFile(null); setInvoiceRows([])
+    setStep(0); setCompletedSteps([false, false, false, false])
+    setStepError(''); setProgressLabel('')
+    setBankFile(null); setBankRows([])
+    setInvoiceFile(null); setInvoiceRows([])
     setCosts({ rent: '', staff: '', leasing: '', other: '' })
     setPaymentDays('30'); setPaymentType('Per projekt')
   }
@@ -79,81 +150,80 @@ export default function Onboarding() {
   const saveStep1 = async () => {
     if (!bankFile) { setStepError('Välj en fil innan du fortsätter.'); return }
     setStepLoading(true); setStepError('')
-    if (DEV_MODE) {
-      localStorage.setItem('bankData', JSON.stringify({ fileName: bankFile.name, rows: bankRows.length }))
-      markComplete(0); setStep(1); setStepLoading(false); return
-    }
     try {
-      const fd = new FormData()
-      fd.append('file', bankFile)
-      const res = await fetchFormWithAuth(`${API_URL}api/v1/bank-transactions/upload`, fd)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      await runImportFlow(bankFile, 'bank')
       markComplete(0); setStep(1)
-    } catch {
-      setStepError('Uppladdning misslyckades. Kontrollera filen och försök igen.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Okänt fel'
+      setStepError(msg)
+      console.error('[STEP 1] Error:', msg)
     }
-    setStepLoading(false)
+    setStepLoading(false); setProgressLabel('')
   }
 
   const saveStep2 = async () => {
     if (!invoiceFile) { setStepError('Välj en fil innan du fortsätter.'); return }
     setStepLoading(true); setStepError('')
-    if (DEV_MODE) {
-      localStorage.setItem('invoiceData', JSON.stringify({ fileName: invoiceFile.name, rows: invoiceRows.length }))
-      markComplete(1); setStep(2); setStepLoading(false); return
-    }
     try {
-      const fd = new FormData()
-      fd.append('file', invoiceFile)
-      const res = await fetchFormWithAuth(`${API_URL}api/v1/invoices/upload`, fd)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      await runImportFlow(invoiceFile, 'invoice')
       markComplete(1); setStep(2)
-    } catch {
-      setStepError('Uppladdning misslyckades. Kontrollera filen och försök igen.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Okänt fel'
+      setStepError(msg)
+      console.error('[STEP 2] Error:', msg)
     }
-    setStepLoading(false)
+    setStepLoading(false); setProgressLabel('')
   }
 
   const saveStep3 = async () => {
     setStepLoading(true); setStepError('')
-    if (DEV_MODE) {
-      localStorage.setItem('fixedCosts', JSON.stringify({
-        rent: Number(costs.rent), staff: Number(costs.staff),
-        leasing: Number(costs.leasing), other: Number(costs.other),
-      }))
-      markComplete(2); setStep(3); setStepLoading(false); return
+    const body = {
+      rent: Number(costs.rent), staff: Number(costs.staff),
+      leasing: Number(costs.leasing), other: Number(costs.other),
     }
+    console.log('[STEP 3] Posting fixed costs:', body)
     try {
-      const res = await fetchWithAuth(`${API_URL}api/v1/fixed-costs`, {
+      const res = await fetchWithAuth(`${API_URL}api/v1/data-import/fixed-costs`, {
         method: 'POST',
-        body: JSON.stringify({
-          rent: Number(costs.rent), staff: Number(costs.staff),
-          leasing: Number(costs.leasing), other: Number(costs.other),
-        }),
+        body: JSON.stringify(body),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      console.log('[STEP 3] Response status:', res.status)
+      if (!res.ok) {
+        const msg = await parseErrorMessage(res)
+        console.error('[STEP 3] Failed:', msg)
+        throw new Error(msg)
+      }
+      const data = await res.json()
+      console.log('[STEP 3] Response data:', data)
       markComplete(2); setStep(3)
-    } catch {
-      setStepError('Kunde inte spara kostnader. Försök igen.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Okänt fel'
+      setStepError(`Kunde inte spara kostnader: ${msg}`)
     }
     setStepLoading(false)
   }
 
   const saveStep4 = async () => {
     setStepLoading(true); setStepError('')
-    if (DEV_MODE) {
-      localStorage.setItem('paymentTerms', JSON.stringify({ paymentDays: Number(paymentDays), billingType: paymentType }))
-      markComplete(3); navigate('/dashboard'); return
-    }
+    const body = { paymentDays: Number(paymentDays), billingType: paymentType }
+    console.log('[STEP 4] Posting payment terms:', body)
     try {
-      const res = await fetchWithAuth(`${API_URL}api/v1/payment-terms`, {
+      const res = await fetchWithAuth(`${API_URL}api/v1/data-import/payment-terms`, {
         method: 'POST',
-        body: JSON.stringify({ paymentDays: Number(paymentDays), billingType: paymentType }),
+        body: JSON.stringify(body),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      console.log('[STEP 4] Response status:', res.status)
+      if (!res.ok) {
+        const msg = await parseErrorMessage(res)
+        console.error('[STEP 4] Failed:', msg)
+        throw new Error(msg)
+      }
+      const data = await res.json()
+      console.log('[STEP 4] Response data:', data)
       markComplete(3); navigate('/dashboard')
-    } catch {
-      setStepError('Kunde inte spara villkor. Försök igen.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Okänt fel'
+      setStepError(`Kunde inte spara villkor: ${msg}`)
     }
     setStepLoading(false)
   }
@@ -189,7 +259,8 @@ export default function Onboarding() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
           {step === 0 && (
             <StepShell title="Importera bankdata" description="Ladda upp kontoutdrag i CSV- eller Excel-format."
-              onBack={goBack} onReset={reset} isFirst loading={stepLoading} error={stepError} onSave={saveStep1} saveLabel="Spara import">
+              onBack={goBack} onReset={reset} isFirst loading={stepLoading} error={stepError}
+              progressLabel={progressLabel} onSave={saveStep1} saveLabel="Spara import">
               <DropZone accept=".csv,.xlsx,.xls" file={bankFile} inputRef={bankRef} onFile={handleBankFile}
                 label="Dra och släpp CSV/Excel här, eller klicka för att välja" />
               {bankRows.length > 0 && (
@@ -208,7 +279,8 @@ export default function Onboarding() {
 
           {step === 1 && (
             <StepShell title="Importera fakturor / kundreskontra" description="Ladda upp fakturadata för att identifiera sena betalare."
-              onBack={goBack} onReset={reset} loading={stepLoading} error={stepError} onSave={saveStep2} saveLabel="Spara fakturadata">
+              onBack={goBack} onReset={reset} loading={stepLoading} error={stepError}
+              progressLabel={progressLabel} onSave={saveStep2} saveLabel="Spara fakturadata">
               <DropZone accept=".csv,.xlsx,.xls" file={invoiceFile} inputRef={invoiceRef} onFile={handleInvoiceFile}
                 label="Dra och släpp CSV/Excel här, eller klicka för att välja" />
               {invoiceRows.length > 0 && (
@@ -233,7 +305,8 @@ export default function Onboarding() {
 
           {step === 2 && (
             <StepShell title="Fasta kostnader" description="Ange dina månatliga fasta kostnader."
-              onBack={goBack} onReset={reset} loading={stepLoading} error={stepError} onSave={saveStep3} saveLabel="Spara fasta kostnader">
+              onBack={goBack} onReset={reset} loading={stepLoading} error={stepError}
+              progressLabel={progressLabel} onSave={saveStep3} saveLabel="Spara fasta kostnader">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <CostField label="Hyra (kr/mån)" value={costs.rent} onChange={(v) => setCosts({ ...costs, rent: v })} />
                 <CostField label="Personal totalt (kr/mån)" value={costs.staff} onChange={(v) => setCosts({ ...costs, staff: v })} />
@@ -245,7 +318,8 @@ export default function Onboarding() {
 
           {step === 3 && (
             <StepShell title="Betalningsvillkor" description="Berätta hur du fakturerar dina kunder."
-              onBack={goBack} onReset={reset} loading={stepLoading} error={stepError} onSave={saveStep4} saveLabel="Skapa min diagnos">
+              onBack={goBack} onReset={reset} loading={stepLoading} error={stepError}
+              progressLabel={progressLabel} onSave={saveStep4} saveLabel="Skapa min diagnos">
               <div className="flex flex-col gap-5">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Standard betalningsvillkor (dagar)</label>
@@ -270,21 +344,25 @@ export default function Onboarding() {
   )
 }
 
-function StepShell({ title, description, children, onBack, onReset, isFirst, loading, error, onSave, saveLabel }: {
+function StepShell({ title, description, children, onBack, onReset, isFirst, loading, error, progressLabel, onSave, saveLabel }: {
   title: string; description: string; children: React.ReactNode
   onBack: () => void; onReset: () => void; isFirst?: boolean
-  loading: boolean; error: string; onSave: () => void; saveLabel: string
+  loading: boolean; error: string; progressLabel: string; onSave: () => void; saveLabel: string
 }) {
   return (
     <div>
       <h2 className="text-xl font-bold text-primary mb-1">{title}</h2>
       <p className="text-gray-500 text-sm mb-6">{description}</p>
       {children}
-      {error && <p className="mt-4 text-red-500 text-sm">{error}</p>}
+      {error && (
+        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          <p className="text-red-600 text-sm font-medium">Fel: {error}</p>
+        </div>
+      )}
       <button onClick={onSave} disabled={loading}
         className="mt-6 w-full bg-accent text-white font-semibold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 text-sm flex items-center justify-center gap-2">
         {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-        {loading ? 'Sparar...' : `${saveLabel} →`}
+        {loading ? (progressLabel || 'Sparar...') : `${saveLabel} →`}
       </button>
       <div className="mt-5 flex items-center justify-between text-xs text-gray-400">
         {!isFirst ? (
