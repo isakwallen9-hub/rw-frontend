@@ -139,7 +139,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     fetchWithAuth(`${API_URL}api/v1/cashflow/current`)
       .then((r) => r.json())
       .then((json) => {
-        const rows: CashflowDay[] = Array.isArray(json.data) ? json.data : []
+        console.log('[CASHFLOW] raw response:', json)
+        console.log('[CASHFLOW] json.data:', json.data)
+        console.log('[CASHFLOW] json.data.series:', json.data?.series)
+        const rows: CashflowDay[] = Array.isArray(json.data?.series) ? json.data.series : []
+        console.log('[CASHFLOW] rows set:', rows.length, rows[0])
         setCashflowDays(rows)
       })
       .catch(() => setCashflowError('Kunde inte hämta kassaflödesdata.'))
