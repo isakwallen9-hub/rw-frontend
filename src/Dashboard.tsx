@@ -59,14 +59,13 @@ interface Recommendation {
 }
 
 interface OverviewData {
-  kpi?: KpiData
+  summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string }
+  lateInvoiceCount?: number
+  runwayDays?: number | null
+  latestSnapshot?: unknown
+  alerts?: unknown[]
   cashflow?: CashflowMonth[]
   recentTransactions?: Transaction[]
-  totalOutstanding?: number
-  totalOverdue?: number
-  avgPaymentDays?: number
-  bestCustomer?: string
-  topLatePayors?: { name: string; amount: number; daysSince: number }[]
 }
 
 interface ChatMessage {
@@ -136,16 +135,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const cashflowData: CashflowMonth[] = overview?.cashflow ?? []
 
   const kpi = {
-    liquidAssets: overview?.kpi?.liquidAssets ?? overview?.totalOutstanding ?? 0,
-    overdueInvoices: overview?.kpi?.overdueInvoices ?? overview?.totalOverdue ?? 0,
-    breakEven: overview?.kpi?.breakEven ?? 0,
-    runwayDays: overview?.kpi?.runwayDays ?? overview?.avgPaymentDays ?? 0,
+    liquidAssets: overview?.summary?.netCashflow ?? 0,
+    overdueInvoices: overview?.lateInvoiceCount ?? 0,
+    breakEven: overview?.summary?.totalOutflow ?? 0,
+    runwayDays: overview?.runwayDays ?? 0,
   }
 
   const transactions: Transaction[] = overview?.recentTransactions ?? []
 
   const hasData = !loadingOverview && (
-    kpi.liquidAssets !== 0 || kpi.overdueInvoices !== 0 || cashflowData.length > 0 || transactions.length > 0
+    kpi.liquidAssets !== 0 || kpi.overdueInvoices !== 0 || kpi.runwayDays !== 0 || cashflowData.length > 0 || transactions.length > 0
   )
 
   const explainThis = async (contextType: string, data: object) => {
