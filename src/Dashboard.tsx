@@ -8,24 +8,26 @@ import { fetchWithAuth } from './utils/fetchWithAuth'
 const API_URL = 'https://divine-warmth-production.up.railway.app/'
 
 const MOCK_OVERVIEW: OverviewData = {
-  summary: { totalInflow: 255000, totalOutflow: 198000, netCashflow: 65000, currency: 'SEK' },
-  lateInvoiceCount: 3,
-  runwayDays: 47,
-  cashflow: [
-    { month: 'Okt', in: 210000, out: 175000 },
-    { month: 'Nov', in: 195000, out: 188000 },
-    { month: 'Dec', in: 240000, out: 160000 },
-    { month: 'Jan', in: 178000, out: 202000 },
-    { month: 'Feb', in: 220000, out: 191000 },
-    { month: 'Mar', in: 255000, out: 198000 },
-  ],
-  recentTransactions: [
-    { date: '2026-03-22', description: 'Inbetalning — Bergström & Co', amount: 48500 },
-    { date: '2026-03-20', description: 'Hyra mars', amount: -24000 },
-    { date: '2026-03-18', description: 'Inbetalning — Lindqvist AB', amount: 31200 },
-    { date: '2026-03-15', description: 'Löner', amount: -87000 },
-    { date: '2026-03-12', description: 'Inbetalning — Nordin Group', amount: 19800 },
-  ],
+  data: {
+    summary: { totalInflow: 255000, totalOutflow: 198000, netCashflow: 65000, currency: 'SEK' },
+    lateInvoiceCount: 3,
+    runwayDays: 47,
+    cashflow: [
+      { month: 'Okt', in: 210000, out: 175000 },
+      { month: 'Nov', in: 195000, out: 188000 },
+      { month: 'Dec', in: 240000, out: 160000 },
+      { month: 'Jan', in: 178000, out: 202000 },
+      { month: 'Feb', in: 220000, out: 191000 },
+      { month: 'Mar', in: 255000, out: 198000 },
+    ],
+    recentTransactions: [
+      { date: '2026-03-22', description: 'Inbetalning — Bergström & Co', amount: 48500 },
+      { date: '2026-03-20', description: 'Hyra mars', amount: -24000 },
+      { date: '2026-03-18', description: 'Inbetalning — Lindqvist AB', amount: 31200 },
+      { date: '2026-03-15', description: 'Löner', amount: -87000 },
+      { date: '2026-03-12', description: 'Inbetalning — Nordin Group', amount: 19800 },
+    ],
+  },
 }
 
 const MOCK_RECOMMENDATIONS: Recommendation[] = [
@@ -54,13 +56,15 @@ interface Recommendation {
 }
 
 interface OverviewData {
-  summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string }
-  lateInvoiceCount?: number
-  runwayDays?: number | null
-  latestSnapshot?: unknown
-  alerts?: unknown[]
-  cashflow?: CashflowMonth[]
-  recentTransactions?: Transaction[]
+  data?: {
+    summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string }
+    lateInvoiceCount?: number
+    runwayDays?: number | null
+    latestSnapshot?: unknown
+    alerts?: unknown[]
+    cashflow?: CashflowMonth[]
+    recentTransactions?: Transaction[]
+  }
 }
 
 interface ChatMessage {
@@ -115,9 +119,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         console.log('[DASHBOARD] netCashflow:', json.data?.summary?.netCashflow)
         console.log('[DASHBOARD] lateInvoiceCount:', json.data?.lateInvoiceCount)
         console.log('[DASHBOARD] runwayDays:', json.data?.runwayDays)
-        const payload = json.data?.data ?? json.data ?? json
-        console.log('[DASHBOARD] payload after normalization:', payload)
-        setOverview(payload)
+        setOverview(json)
       })
       .catch(() => { setOverview(MOCK_OVERVIEW) })
       .finally(() => setLoadingOverview(false))
@@ -136,17 +138,17 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [coachHistory, coachLoading])
 
-  const cashflowData: CashflowMonth[] = overview?.cashflow ?? []
+  const cashflowData: CashflowMonth[] = overview?.data?.cashflow ?? []
 
   const kpi = {
-    liquidAssets: overview?.summary?.netCashflow ?? 0,
-    overdueInvoices: overview?.lateInvoiceCount ?? 0,
-    breakEven: overview?.summary?.totalOutflow ?? 0,
-    runwayDays: overview?.runwayDays ?? 0,
+    liquidAssets: overview?.data?.summary?.totalInflow ?? 0,
+    overdueInvoices: overview?.data?.lateInvoiceCount ?? 0,
+    breakEven: overview?.data?.summary?.totalOutflow ?? 0,
+    runwayDays: overview?.data?.runwayDays ?? 0,
   }
   console.log('[DASHBOARD] kpi mapped:', { liquidAssets: kpi.liquidAssets, breakEven: kpi.breakEven, overdueInvoices: kpi.overdueInvoices, runwayDays: kpi.runwayDays })
 
-  const transactions: Transaction[] = overview?.recentTransactions ?? []
+  const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
 
   const hasData = !loadingOverview && (
     kpi.liquidAssets !== 0 || kpi.overdueInvoices !== 0 || kpi.runwayDays !== 0 || cashflowData.length > 0 || transactions.length > 0
