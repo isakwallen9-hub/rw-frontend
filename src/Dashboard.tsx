@@ -227,7 +227,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KpiCard icon={<Banknote className="w-4 h-4" />} label="Likvida medel" value={fmt(kpi.liquidAssets)}
               onExplain={() => explainThis('cashflow', { type: 'liquidAssets', value: kpi.liquidAssets })} />
-            <KpiCard icon={<AlertCircle className="w-4 h-4" />} label="Förfallna fakturor" value={fmt(kpi.overdueInvoices)} highlight="red"
+            <KpiCard icon={<AlertCircle className="w-4 h-4" />} label="Förfallna fakturor" value={`${kpi.overdueInvoices} st`} highlight="red"
               onExplain={() => explainThis('diagnosis', { type: 'overdueInvoices', value: kpi.overdueInvoices })} />
             <KpiCard icon={<BarChart2 className="w-4 h-4" />} label="Break-even" value={fmt(kpi.breakEven)}
               onExplain={() => explainThis('diagnosis', { type: 'breakEven', value: kpi.breakEven })} />
