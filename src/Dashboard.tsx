@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { Banknote, AlertCircle, BarChart2, Clock } from 'lucide-react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import Navbar from './components/Navbar'
@@ -144,12 +144,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const cashflowData: CashflowMonth[] = overview?.data?.cashflow ?? []
 
   console.log('[DASHBOARD] overview state at render:', overview)
-  const kpi = {
+  const kpi = useMemo(() => ({
     liquidAssets: overview?.data?.summary?.totalInflow ?? 0,
     overdueInvoices: overview?.data?.lateInvoiceCount ?? 0,
     breakEven: overview?.data?.summary?.totalOutflow ?? 0,
     runwayDays: overview?.data?.runwayDays ?? 0,
-  }
+  }), [overview])
   console.log('[DASHBOARD] kpi mapped:', { liquidAssets: kpi.liquidAssets, breakEven: kpi.breakEven, overdueInvoices: kpi.overdueInvoices, runwayDays: kpi.runwayDays })
 
   const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
