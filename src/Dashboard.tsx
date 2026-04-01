@@ -119,7 +119,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         console.log('[DASHBOARD] netCashflow:', json.data?.summary?.netCashflow)
         console.log('[DASHBOARD] lateInvoiceCount:', json.data?.lateInvoiceCount)
         console.log('[DASHBOARD] runwayDays:', json.data?.runwayDays)
-        console.log('[DASHBOARD] setOverview called with:', JSON.stringify(json).slice(0, 300))
+        console.log('[KPI CHECK] liquidAssets:', json?.data?.summary?.totalInflow)
+        console.log('[KPI CHECK] overdueInvoices:', json?.data?.lateInvoiceCount)
+        console.log('[KPI CHECK] breakEven:', json?.data?.summary?.totalOutflow)
         setOverview(json)
       })
       .catch(() => { setOverview(MOCK_OVERVIEW) })
@@ -253,7 +255,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number) => fmt(Number(v))} />
+                <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Line type="monotone" dataKey="in" name="In" stroke="#2563eb" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="out" name="Ut" stroke="#ef4444" strokeWidth={2} dot={false} />
