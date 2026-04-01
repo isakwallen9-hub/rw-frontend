@@ -164,11 +164,17 @@ export default function Onboarding() {
   })
 
   const saveStep4 = () => run(async () => {
-    const res = await fetchWithAuth(`${API_URL}api/v1/data-import/payment-terms`, {
-      method: 'POST',
-      body: JSON.stringify({ paymentDays: Number(paymentDays), billingType: paymentType }),
-    })
-    if (!res.ok) throw new Error(await parseErrorMessage(res))
+    const terms = [
+      { type: 'CUSTOMER', name: 'Standardvillkor', daysUntilDue: Number(paymentDays) },
+      { type: 'SUPPLIER', name: 'Standardvillkor', daysUntilDue: Number(paymentDays) },
+    ]
+    for (const term of terms) {
+      const res = await fetchWithAuth(`${API_URL}api/v1/data-import/payment-terms`, {
+        method: 'POST',
+        body: JSON.stringify(term),
+      })
+      if (!res.ok) throw new Error(`${term.type}: ${await parseErrorMessage(res)}`)
+    }
     markComplete(3); navigate('/dashboard')
   })
 
