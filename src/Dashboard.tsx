@@ -119,6 +119,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         console.log('[DASHBOARD] netCashflow:', json.data?.summary?.netCashflow)
         console.log('[DASHBOARD] lateInvoiceCount:', json.data?.lateInvoiceCount)
         console.log('[DASHBOARD] runwayDays:', json.data?.runwayDays)
+        console.log('[DASHBOARD] setOverview called with:', JSON.stringify(json).slice(0, 300))
         setOverview(json)
       })
       .catch(() => { setOverview(MOCK_OVERVIEW) })
@@ -140,6 +141,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
   const cashflowData: CashflowMonth[] = overview?.data?.cashflow ?? []
 
+  console.log('[DASHBOARD] overview state at render:', overview)
   const kpi = {
     liquidAssets: overview?.data?.summary?.totalInflow ?? 0,
     overdueInvoices: overview?.data?.lateInvoiceCount ?? 0,
