@@ -115,7 +115,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         console.log('[DASHBOARD] netCashflow:', json.data?.summary?.netCashflow)
         console.log('[DASHBOARD] lateInvoiceCount:', json.data?.lateInvoiceCount)
         console.log('[DASHBOARD] runwayDays:', json.data?.runwayDays)
-        setOverview(json.data ?? json)
+        const payload = json.data?.data ?? json.data ?? json
+        console.log('[DASHBOARD] payload after normalization:', payload)
+        setOverview(payload)
       })
       .catch(() => { setOverview(MOCK_OVERVIEW) })
       .finally(() => setLoadingOverview(false))
