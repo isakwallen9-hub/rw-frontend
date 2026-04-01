@@ -165,8 +165,8 @@ export default function Onboarding() {
 
   const saveStep4 = () => run(async () => {
     const terms = [
-      { type: 'CUSTOMER', name: 'Standardvillkor', daysUntilDue: Number(paymentDays) },
-      { type: 'SUPPLIER', name: 'Standardvillkor', daysUntilDue: Number(paymentDays) },
+      { type: 'CUSTOMER', name: 'Standardvillkor kund',        daysUntilDue: Number(paymentDays), customerName: 'Standard' },
+      { type: 'SUPPLIER', name: 'Standardvillkor leverantör',  daysUntilDue: Number(paymentDays), supplierName: 'Standard' },
     ]
     for (const term of terms) {
       const res = await fetchWithAuth(`${API_URL}api/v1/data-import/payment-terms`, {
