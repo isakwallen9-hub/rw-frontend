@@ -42,6 +42,12 @@ interface CashflowMonth {
   out: number
 }
 
+interface CashflowDay {
+  date: string
+  inflow: number
+  outflow: number
+}
+
 interface Transaction {
   date: string
   description: string
@@ -87,6 +93,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loadingOverview, setLoadingOverview] = useState(true)
   const [loadingRec, setLoadingRec] = useState(true)
+  const [cashflowDays, setCashflowDays] = useState<CashflowDay[]>([])
+  const [loadingCashflow, setLoadingCashflow] = useState(true)
+  const [cashflowError, setCashflowError] = useState('')
 
   // AI Explain modal
   const [explainOpen, setExplainOpen] = useState(false)
@@ -126,6 +135,15 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       })
       .catch(() => { setOverview(MOCK_OVERVIEW) })
       .finally(() => setLoadingOverview(false))
+
+    fetchWithAuth(`${API_URL}api/v1/cashflow/current`)
+      .then((r) => r.json())
+      .then((json) => {
+        const rows: CashflowDay[] = Array.isArray(json.data) ? json.data : []
+        setCashflowDays(rows)
+      })
+      .catch(() => setCashflowError('Kunde inte hämta kassaflödesdata.'))
+      .finally(() => setLoadingCashflow(false))
 
     fetchWithAuth(`${API_URL}api/v1/recommendations/top3`)
       .then((r) => r.json())
@@ -237,28 +255,32 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         )}
 
         {/* Kassaflödes-graf */}
-        {loadingOverview ? (
+        {loadingCashflow ? (
           <SkeletonChart />
-        ) : cashflowData.length > 0 ? (
+        ) : cashflowError ? (
+          <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-red-400 text-sm">
+            {cashflowError}
+          </div>
+        ) : cashflowDays.length > 0 ? (
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider">Kassaflöde per månad</h2>
+              <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider">Kassaflöde — senaste 31 dagarna</h2>
               <button
-                onClick={() => explainThis('cashflow', { cashflow: cashflowData })}
+                onClick={() => explainThis('cashflow', { cashflow: cashflowDays })}
                 className="flex items-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 <SparkleIcon /> Förklara detta
               </button>
             </div>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={cashflowData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+              <LineChart data={cashflowDays} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                 <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="in" name="In" stroke="#2563eb" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="out" name="Ut" stroke="#ef4444" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="inflow" name="Inflöde" stroke="#2563eb" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="outflow" name="Utflöde" stroke="#ef4444" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
