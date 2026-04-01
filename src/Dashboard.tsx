@@ -176,6 +176,23 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
   const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
 
+  const recentCashflowRows = useMemo(() => {
+    const fmtDate = (d: string) => {
+      const date = new Date(d)
+      return isNaN(date.getTime()) ? d : date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
+    }
+    return cashflowDays
+      .filter(d => d.inflow > 0 || d.outflow > 0)
+      .slice(-10)
+      .reverse()
+      .flatMap(d => {
+        const rows: { label: string; type: string; amount: number }[] = []
+        if (d.inflow > 0) rows.push({ label: fmtDate(d.date), type: 'Inflöde', amount: d.inflow })
+        if (d.outflow > 0) rows.push({ label: fmtDate(d.date), type: 'Utflöde', amount: -d.outflow })
+        return rows
+      })
+  }, [cashflowDays])
+
   const hasData = !loadingOverview && (
     kpi.liquidAssets !== 0 || kpi.overdueInvoices !== 0 || kpi.runwayDays !== 0 || cashflowData.length > 0 || transactions.length > 0
   )
@@ -344,23 +361,23 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           {/* Senaste transaktioner */}
           <div>
             <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider mb-3">Senaste transaktioner</h2>
-            {loadingOverview ? (
+            {loadingCashflow ? (
               <SkeletonList rows={5} />
-            ) : transactions.length > 0 ? (
+            ) : recentCashflowRows.length > 0 ? (
               <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 text-xs text-gray-400">
                       <th className="text-left px-5 py-3 font-medium">Datum</th>
-                      <th className="text-left px-5 py-3 font-medium">Beskrivning</th>
+                      <th className="text-left px-5 py-3 font-medium">Typ</th>
                       <th className="text-right px-5 py-3 font-medium">Belopp</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((t, i) => (
+                    {recentCashflowRows.map((t, i) => (
                       <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''}`}>
-                        <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.date}</td>
-                        <td className="px-5 py-3 text-gray-700">{t.description}</td>
+                        <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
+                        <td className="px-5 py-3 text-gray-700">{t.type}</td>
                         <td className={`px-5 py-3 text-right font-medium whitespace-nowrap ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
                           {fmt(t.amount)}
                         </td>
