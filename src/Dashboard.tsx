@@ -112,7 +112,14 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
       .then((r) => r.json())
       .then((json) => {
-        console.log('[DASHBOARD] overview:', json)
+        console.log('[DASHBOARD] overview raw:', json)
+        console.log('[DASHBOARD] overview.data:', json.data)
+        console.log('[DASHBOARD] summary:', json.data?.summary)
+        console.log('[DASHBOARD] totalInflow:', json.data?.summary?.totalInflow)
+        console.log('[DASHBOARD] totalOutflow:', json.data?.summary?.totalOutflow)
+        console.log('[DASHBOARD] netCashflow:', json.data?.summary?.netCashflow)
+        console.log('[DASHBOARD] lateInvoiceCount:', json.data?.lateInvoiceCount)
+        console.log('[DASHBOARD] runwayDays:', json.data?.runwayDays)
         setOverview(json.data ?? json)
       })
       .catch(() => { setOverview(MOCK_OVERVIEW) })
@@ -140,6 +147,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     breakEven: overview?.summary?.totalOutflow ?? 0,
     runwayDays: overview?.runwayDays ?? 0,
   }
+  console.log('[DASHBOARD] kpi mapped:', kpi)
 
   const transactions: Transaction[] = overview?.recentTransactions ?? []
 
