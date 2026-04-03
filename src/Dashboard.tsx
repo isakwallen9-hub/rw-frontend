@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { Banknote, AlertCircle, BarChart2, Clock } from 'lucide-react'
-import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
+import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
 import { fetchWithAuth } from './utils/fetchWithAuth'
@@ -102,7 +102,8 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
   // KPI detail modal
   const [kpiModal, setKpiModal] = useState<'liquidAssets' | 'overdueInvoices' | 'runway' | 'breakEven' | null>(null)
-  const [runwayData, setRunwayData] = useState<CashflowDay[]>([])
+  const [runwayForecast, setRunwayForecast] = useState<{ date: string; balance: number }[]>([])
+  const [runwayMeta, setRunwayMeta] = useState<{ currentBalance: number; monthlyBurnRate: number; runwayDays: number } | null>(null)
   const [loadingRunway, setLoadingRunway] = useState(false)
 
   // AI Explain modal
@@ -235,15 +236,21 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
   const openKpiModal = (type: typeof kpiModal) => {
     setKpiModal(type)
-    if (type === 'runway' && runwayData.length === 0) {
+    if (type === 'runway' && runwayForecast.length === 0) {
       setLoadingRunway(true)
       fetchWithAuth(`${API_URL}api/v1/cashflow/runway`)
         .then(r => r.json())
         .then(json => {
-          const rows: CashflowDay[] = Array.isArray(json.data?.series) ? json.data.series : Array.isArray(json.data) ? json.data : []
-          setRunwayData(rows)
+          const d = json.data ?? {}
+          setRunwayMeta({ currentBalance: d.currentBalance ?? 0, monthlyBurnRate: d.monthlyBurnRate ?? 0, runwayDays: d.runwayDays ?? 0 })
+          const fmtDate = (iso: string) => {
+            const dt = new Date(iso)
+            return isNaN(dt.getTime()) ? iso : dt.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
+          }
+          const forecast = Array.isArray(d.forecast) ? d.forecast.map((f: { date: string; balance: number }) => ({ date: fmtDate(f.date), balance: f.balance })) : []
+          setRunwayForecast(forecast)
         })
-        .catch(() => setRunwayData([]))
+        .catch(() => { setRunwayForecast([]); setRunwayMeta(null) })
         .finally(() => setLoadingRunway(false))
     }
   }
@@ -470,19 +477,40 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                   <span className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                   Hämtar prognos...
                 </div>
-              ) : runwayData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={runwayData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line type="monotone" dataKey="inflow" name="Inflöde" stroke="#2563eb" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="outflow" name="Utflöde" stroke="#ef4444" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : <p className="text-sm text-gray-400 text-center py-8">Ingen prognosdata tillgänglig.</p>
+              ) : (
+                <>
+                  {runwayMeta && (
+                    <div className="grid grid-cols-3 gap-3 mb-5">
+                      <div className="bg-gray-50 rounded-xl px-3 py-3 text-center">
+                        <p className="text-xs text-gray-400 mb-1">Nuvarande saldo</p>
+                        <p className="text-sm font-bold text-primary">{fmt(runwayMeta.currentBalance)}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-xl px-3 py-3 text-center">
+                        <p className="text-xs text-gray-400 mb-1">Burn rate / mån</p>
+                        <p className="text-sm font-bold text-red-500">{fmt(runwayMeta.monthlyBurnRate)}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-xl px-3 py-3 text-center">
+                        <p className="text-xs text-gray-400 mb-1">Runway</p>
+                        <p className="text-sm font-bold text-accent">{runwayMeta.runwayDays} dagar</p>
+                      </div>
+                    </div>
+                  )}
+                  {runwayForecast.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={runwayForecast} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                        <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
+                        <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+                        <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 2" label={{ value: 'Noll', fill: '#ef4444', fontSize: 11 }} />
+                        <Line type="monotone" dataKey="balance" name="Saldo" stroke="#2563eb" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-sm text-gray-400 text-center py-8">Ingen prognosdata tillgänglig.</p>
+                  )}
+                </>
+              )
             )}
 
             <button onClick={() => setKpiModal(null)} className="mt-5 w-full text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg transition-colors">
