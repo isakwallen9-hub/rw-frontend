@@ -13,8 +13,21 @@ type InvoiceRow = { customer: string; invoiceNr: string; amount: string; dueDate
 async function parseErrorMessage(res: Response): Promise<string> {
   try {
     const json = await res.json()
-    return json?.error?.message ?? json?.message ?? `HTTP ${res.status}`
-  } catch { return `HTTP ${res.status}` }
+    const raw = json?.error?.message ?? json?.message ?? ''
+    if (raw) return toSwedishError(raw)
+    return `Något gick fel (HTTP ${res.status}). Försök igen.`
+  } catch { return `Något gick fel (HTTP ${res.status}). Försök igen.` }
+}
+
+function toSwedishError(msg: string): string {
+  if (/unauthorized|401/i.test(msg)) return 'Du är inte inloggad. Logga in och försök igen.'
+  if (/forbidden|403/i.test(msg)) return 'Du saknar behörighet att utföra denna åtgärd.'
+  if (/not found|404/i.test(msg)) return 'Resursen hittades inte. Kontakta support om felet kvarstår.'
+  if (/timeout|ETIMEDOUT/i.test(msg)) return 'Anslutningen tog för lång tid. Kontrollera din internetanslutning.'
+  if (/network|fetch/i.test(msg)) return 'Nätverksfel. Kontrollera din internetanslutning och försök igen.'
+  if (/session/i.test(msg)) return 'Din session är ogiltig. Logga in på nytt.'
+  if (/invalid.*file|file.*invalid/i.test(msg)) return 'Filen verkar ha fel format. Kontrollera att det är en giltig CSV- eller Excel-fil.'
+  return msg
 }
 
 function readFileAsRows(file: File): Promise<Record<string, unknown>[]> {
@@ -53,15 +66,18 @@ export default function Onboarding() {
   const [completedSteps, setCompletedSteps] = useState<boolean[]>([false, false, false, false])
   const [stepLoading, setStepLoading] = useState(false)
   const [stepError, setStepError] = useState('')
+  const [stepSuccess, setStepSuccess] = useState('')
   const [progressLabel, setProgressLabel] = useState('')
 
-  const [bankFile, setBankFile]       = useState<File | null>(null)
-  const [bankRows, setBankRows]       = useState<BankRow[]>([])
-  const bankRef                       = useRef<HTMLInputElement>(null)
+  const [bankFile, setBankFile]         = useState<File | null>(null)
+  const [bankRows, setBankRows]         = useState<BankRow[]>([])
+  const [bankTotalRows, setBankTotalRows] = useState(0)
+  const bankRef                         = useRef<HTMLInputElement>(null)
 
-  const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
-  const [invoiceRows, setInvoiceRows] = useState<InvoiceRow[]>([])
-  const invoiceRef                    = useRef<HTMLInputElement>(null)
+  const [invoiceFile, setInvoiceFile]         = useState<File | null>(null)
+  const [invoiceRows, setInvoiceRows]         = useState<InvoiceRow[]>([])
+  const [invoiceTotalRows, setInvoiceTotalRows] = useState(0)
+  const invoiceRef                            = useRef<HTMLInputElement>(null)
 
   const [costs, setCosts]             = useState({ rent: '', staff: '', leasing: '', other: '' })
   const [paymentDays, setPaymentDays] = useState('30')
@@ -72,25 +88,31 @@ export default function Onboarding() {
 
   const handleBankFile = (file: File) => {
     setBankFile(file)
-    readFileAsRows(file).then(rows => setBankRows(rows.slice(0, 5).map(r => ({
-      date:        String(r['Datum']       ?? r['Date']        ?? ''),
-      description: String(r['Text']        ?? r['Beskrivning'] ?? r['Description'] ?? ''),
-      amount:      String(r['Belopp']      ?? r['Amount']      ?? ''),
-    })))).catch(() => {})
+    readFileAsRows(file).then(rows => {
+      setBankTotalRows(rows.length)
+      setBankRows(rows.slice(0, 5).map(r => ({
+        date:        String(r['Datum']       ?? r['Date']        ?? ''),
+        description: String(r['Text']        ?? r['Beskrivning'] ?? r['Description'] ?? ''),
+        amount:      String(r['Belopp']      ?? r['Amount']      ?? ''),
+      })))
+    }).catch(() => {})
   }
 
   const handleInvoiceFile = (file: File) => {
     setInvoiceFile(file)
-    readFileAsRows(file).then(rows => setInvoiceRows(rows.slice(0, 5).map(r => {
-      const status = String(r['Status'] ?? '')
-      return {
-        customer:  String(r['Kund']          ?? r['Customer']  ?? ''),
-        invoiceNr: String(r['Fakturanr']     ?? r['Invoice']   ?? r['Faktura'] ?? ''),
-        amount:    String(r['Belopp']        ?? r['Amount']    ?? ''),
-        dueDate:   String(r['Förfallodatum'] ?? r['DueDate']   ?? r['Due']     ?? ''),
-        status:    status === 'Betald' ? 'Betald' : 'Obetald',
-      }
-    }))).catch(() => {})
+    readFileAsRows(file).then(rows => {
+      setInvoiceTotalRows(rows.length)
+      setInvoiceRows(rows.slice(0, 5).map(r => {
+        const status = String(r['Status'] ?? '')
+        return {
+          customer:  String(r['Kund']          ?? r['Customer']  ?? ''),
+          invoiceNr: String(r['Fakturanr']     ?? r['Invoice']   ?? r['Faktura'] ?? ''),
+          amount:    String(r['Belopp']        ?? r['Amount']    ?? ''),
+          dueDate:   String(r['Förfallodatum'] ?? r['DueDate']   ?? r['Due']     ?? ''),
+          status:    status === 'Betald' ? 'Betald' : 'Obetald',
+        }
+      }))
+    }).catch(() => {})
   }
 
   const runImportFlow = async (file: File) => {
@@ -119,31 +141,36 @@ export default function Onboarding() {
     if (!commitRes.ok) throw new Error(`Bekräftelse misslyckades: ${await parseErrorMessage(commitRes)}`)
   }
 
-  const goBack  = () => { setStepError(''); setProgressLabel(''); setStep(s => Math.max(0, s - 1)) }
+  const goBack  = () => { setStepError(''); setStepSuccess(''); setProgressLabel(''); setStep(s => Math.max(0, s - 1)) }
   const doReset = () => {
     setStep(0); setCompletedSteps([false, false, false, false])
-    setStepError(''); setProgressLabel('')
-    setBankFile(null); setBankRows([])
-    setInvoiceFile(null); setInvoiceRows([])
+    setStepError(''); setStepSuccess(''); setProgressLabel('')
+    setBankFile(null); setBankRows([]); setBankTotalRows(0)
+    setInvoiceFile(null); setInvoiceRows([]); setInvoiceTotalRows(0)
     setCosts({ rent: '', staff: '', leasing: '', other: '' })
     setPaymentDays('30'); setPaymentType('Per projekt')
   }
 
+  const advanceAfterSuccess = (msg: string, nextStep: number) => {
+    setStepSuccess(msg)
+    setTimeout(() => { setStepSuccess(''); setStep(nextStep) }, 1500)
+  }
+
   const run = async (fn: () => Promise<void>) => {
-    setStepLoading(true); setStepError('')
+    setStepLoading(true); setStepError(''); setStepSuccess('')
     try { await fn() }
-    catch (err) { setStepError(err instanceof Error ? err.message : 'Okänt fel') }
+    catch (err) { setStepError(err instanceof Error ? err.message : 'Något gick fel. Försök igen.') }
     setStepLoading(false); setProgressLabel('')
   }
 
   const saveStep1 = () => run(async () => {
     if (!bankFile) throw new Error('Välj en fil innan du fortsätter.')
-    await runImportFlow(bankFile); markComplete(0); setStep(1)
+    await runImportFlow(bankFile); markComplete(0); advanceAfterSuccess(`Bankdata importerad — ${bankTotalRows} rader uppladdade.`, 1)
   })
 
   const saveStep2 = () => run(async () => {
     if (!invoiceFile) throw new Error('Välj en fil innan du fortsätter.')
-    await runImportFlow(invoiceFile); markComplete(1); setStep(2)
+    await runImportFlow(invoiceFile); markComplete(1); advanceAfterSuccess(`Fakturadata importerad — ${invoiceTotalRows} rader uppladdade.`, 2)
   })
 
   const saveStep3 = () => run(async () => {
@@ -160,7 +187,7 @@ export default function Onboarding() {
       })
       if (!res.ok) throw new Error(`${entry.name}: ${await parseErrorMessage(res)}`)
     }
-    markComplete(2); setStep(3)
+    markComplete(2); advanceAfterSuccess('Fasta kostnader sparade.', 3)
   })
 
   const saveStep4 = () => run(async () => {
@@ -236,6 +263,14 @@ export default function Onboarding() {
           ))}
         </div>
 
+        {/* Progress bar */}
+        <div className="w-full bg-gray-200 rounded-full h-1.5 mb-8">
+          <div
+            className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
+            style={{ width: `${((step + (completedSteps[step] ? 1 : 0)) / STEPS.length) * 100}%` }}
+          />
+        </div>
+
         {/* Card */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-1">{stepTitles[step]}</h2>
@@ -245,6 +280,12 @@ export default function Onboarding() {
           {step === 0 && (
             <>
               <UploadZone file={bankFile} inputRef={bankRef} onFile={handleBankFile} />
+              {bankTotalRows > 0 && (
+                <p className="mt-3 text-sm text-green-700 font-medium flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  {bankTotalRows} rader hittade — visar 5 nedan
+                </p>
+              )}
               {bankRows.length > 0 && (
                 <PreviewTable headers={['Datum', 'Beskrivning', 'Belopp']}>
                   {bankRows.map((r, i) => (
@@ -263,6 +304,12 @@ export default function Onboarding() {
           {step === 1 && (
             <>
               <UploadZone file={invoiceFile} inputRef={invoiceRef} onFile={handleInvoiceFile} />
+              {invoiceTotalRows > 0 && (
+                <p className="mt-3 text-sm text-green-700 font-medium flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  {invoiceTotalRows} rader hittade — visar 5 nedan
+                </p>
+              )}
               {invoiceRows.length > 0 && (
                 <PreviewTable headers={['Kund', 'Faktura', 'Belopp', 'Förfaller', 'Status']}>
                   {invoiceRows.map((r, i) => (
@@ -313,6 +360,16 @@ export default function Onboarding() {
                   <option>Annat</option>
                 </select>
               </div>
+            </div>
+          )}
+
+          {/* Success */}
+          {stepSuccess && (
+            <div className="mt-6 flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+              <svg className="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <p className="text-sm text-green-700 font-medium">{stepSuccess}</p>
             </div>
           )}
 
