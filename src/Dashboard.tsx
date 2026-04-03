@@ -55,10 +55,13 @@ interface Transaction {
 }
 
 interface Recommendation {
+  id?: string
   title: string
   description: string
+  how?: string
   estimatedValue: number
   priority: 'high' | 'medium' | 'low'
+  targets?: { type: string; id: string; label: string; value: number }[]
 }
 
 interface OverviewData {
@@ -158,7 +161,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       .then((r) => r.json())
       .then((json) => {
         console.log('[DASHBOARD] recommendations:', json)
-        setRecommendations(json.data ?? json ?? [])
+        const actions = json.data?.actions ?? json.data ?? json ?? []
+        setRecommendations(actions.map((a: Record<string, unknown>) => ({
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          how: a.how,
+          estimatedValue: Array.isArray(a.targets) ? (a.targets as { value: number }[]).reduce((sum, t) => sum + (t.value ?? 0), 0) : 0,
+          priority: (a.impact as 'high' | 'medium' | 'low') ?? 'medium',
+          targets: a.targets,
+        })))
       })
       .catch(() => { setRecommendations(MOCK_RECOMMENDATIONS) })
       .finally(() => setLoadingRec(false))
@@ -345,35 +357,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <SkeletonList rows={3} />
             ) : recommendations.length > 0 ? (
               <div className="flex flex-col gap-3">
-                {recommendations.map((r, i) => {
-                  const p = PRIORITY_COLORS[r.priority ?? 'medium']
-                  return (
-                    <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full shrink-0 mt-0.5 ${p.dot}`} />
-                          <span className="font-semibold text-primary text-sm">{r.title}</span>
-                        </div>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${p.badge}`}>{p.label}</span>
-                      </div>
-                      <p className="text-gray-500 text-sm mb-4 pl-4">{r.description}</p>
-                      <div className="flex items-center justify-between pl-4">
-                        <span className="text-green-600 text-sm font-semibold">{fmt(r.estimatedValue ?? 0)}</span>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => explainThis('recommendation', { title: r.title, description: r.description, estimatedValue: r.estimatedValue })}
-                            className="text-xs font-medium text-accent border border-accent/30 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1"
-                          >
-                            <SparkleIcon /> Förklara
-                          </button>
-                          <button className="text-xs font-semibold text-white bg-accent px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
-                            Åtgärda
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                {recommendations.map((r, i) => (
+                  <RecommendationCard key={r.id ?? i} r={r} onExplain={() => explainThis('recommendation', { title: r.title, description: r.description, estimatedValue: r.estimatedValue })} />
+                ))}
               </div>
             ) : (
               <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-gray-400 text-sm">
@@ -611,6 +597,50 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <SparkleIcon className="w-6 h-6" />
           </button>
         )}
+      </div>
+    </div>
+  )
+}
+
+function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: () => void }) {
+  const [expanded, setExpanded] = useState(false)
+  const p = PRIORITY_COLORS[r.priority ?? 'medium']
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full shrink-0 mt-0.5 ${p.dot}`} />
+          <span className="font-semibold text-primary text-sm">{r.title}</span>
+        </div>
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${p.badge}`}>{p.label}</span>
+      </div>
+      <p className="text-gray-500 text-sm mb-3 pl-4">{r.description}</p>
+      {r.how && (
+        <div className="pl-4 mb-3">
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className="text-xs text-accent font-medium flex items-center gap-1 hover:underline"
+          >
+            {expanded ? '▾' : '▸'} Hur gör jag?
+          </button>
+          {expanded && (
+            <p className="text-gray-600 text-sm mt-2 leading-relaxed border-l-2 border-accent/30 pl-3">{r.how}</p>
+          )}
+        </div>
+      )}
+      <div className="flex items-center justify-between pl-4">
+        <span className="text-green-600 text-sm font-semibold">{fmt(r.estimatedValue ?? 0)}</span>
+        <div className="flex gap-2">
+          <button
+            onClick={onExplain}
+            className="text-xs font-medium text-accent border border-accent/30 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1"
+          >
+            <SparkleIcon /> Förklara
+          </button>
+          <button className="text-xs font-semibold text-white bg-accent px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
+            Åtgärda
+          </button>
+        </div>
       </div>
     </div>
   )
