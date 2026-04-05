@@ -129,15 +129,24 @@ export default function Onboarding() {
       body: JSON.stringify({ orgId, fileName: file.name, fileType, rows }),
     })
     if (!uploadRes.ok) throw new Error(`Uppladdning misslyckades: ${await parseErrorMessage(uploadRes)}`)
-    const { data: { sessionId } } = await uploadRes.json()
+    const uploadJson = await uploadRes.json()
+    const sessionId = uploadJson?.data?.sessionId
+    console.log('[IMPORT] upload response:', uploadJson)
+    console.log('[IMPORT] sessionId:', sessionId)
     if (!sessionId) throw new Error('Ingen sessionId i svaret från servern.')
 
     setProgressLabel('Validerar...')
-    const validateRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/validate`, { method: 'POST' })
+    const validateUrl = `${API_URL}api/v1/data-import/${sessionId}/validate`
+    console.log('[IMPORT] validate URL:', validateUrl)
+    const validateRes = await fetchWithAuth(validateUrl, { method: 'POST' })
+    console.log('[IMPORT] validate status:', validateRes.status)
     if (!validateRes.ok) throw new Error(`Validering misslyckades: ${await parseErrorMessage(validateRes)}`)
 
     setProgressLabel('Bekräftar...')
-    const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/commit`, { method: 'POST' })
+    const commitUrl = `${API_URL}api/v1/data-import/${sessionId}/commit`
+    console.log('[IMPORT] commit URL:', commitUrl)
+    const commitRes = await fetchWithAuth(commitUrl, { method: 'POST' })
+    console.log('[IMPORT] commit status:', commitRes.status)
     if (!commitRes.ok) throw new Error(`Bekräftelse misslyckades: ${await parseErrorMessage(commitRes)}`)
   }
 
