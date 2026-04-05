@@ -130,7 +130,7 @@ export default function Runway() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                     <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} width={90} />
-                    <Tooltip formatter={(value: number) => fmt(value)} />
+                    <Tooltip formatter={(value: unknown) => fmt(Number(value ?? 0))} />
                     <Legend />
                     <ReferenceLine
                       y={0}

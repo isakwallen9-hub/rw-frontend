@@ -89,7 +89,7 @@ export default function Breakeven() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 13 }} />
                   <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip formatter={(value: number) => fmt(value)} />
+                  <Tooltip formatter={(value: unknown) => fmt(Number(value ?? 0))} />
                   <Legend />
                   <Bar dataKey="value" name="Belopp" radius={[6, 6, 0, 0]}>
                     {chartData.map((entry, index) => (
