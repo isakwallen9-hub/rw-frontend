@@ -86,6 +86,11 @@ function fmt(amount: number) {
   return amount.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 })
 }
 
+function formatLabel(dateStr: string): string {
+  const d = new Date(dateStr)
+  return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
+}
+
 const PRIORITY_COLORS = {
   high: { dot: 'bg-red-500', badge: 'bg-red-100 text-red-700', label: 'Hög' },
   medium: { dot: 'bg-yellow-400', badge: 'bg-yellow-100 text-yellow-700', label: 'Medium' },
@@ -314,9 +319,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               </button>
             </div>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={cashflowDays} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+              <LineChart data={cashflowDays.map(p => ({ ...p, label: formatLabel(p.date) }))} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                 <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
