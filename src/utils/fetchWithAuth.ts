@@ -1,4 +1,4 @@
-const API_URL = 'https://divine-warmth-production.up.railway.app/'
+const API_URL = import.meta.env.VITE_API_URL as string
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = localStorage.getItem('accessToken')

@@ -6,7 +6,7 @@ import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
 import { fetchWithAuth } from './utils/fetchWithAuth'
 
-const API_URL = 'https://divine-warmth-production.up.railway.app/'
+const API_URL = import.meta.env.VITE_API_URL as string
 
 const MOCK_OVERVIEW: OverviewData = {
   data: {

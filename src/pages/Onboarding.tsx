@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
-const API_URL = 'https://divine-warmth-production.up.railway.app/'
+const API_URL = import.meta.env.VITE_API_URL as string
 
 const STEPS = ['Bankdata', 'Fakturor', 'Kostnader', 'Villkor']
 

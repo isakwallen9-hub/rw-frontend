@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const API_URL = 'https://divine-warmth-production.up.railway.app/'
+const API_URL = import.meta.env.VITE_API_URL as string
 
 export default function Register() {
   const navigate = useNavigate()

@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { SkeletonCard } from '../components/Skeleton'
 
-const API_URL = 'https://divine-warmth-production.up.railway.app/'
+const API_URL = import.meta.env.VITE_API_URL as string
 
 interface UserProfile {
   firstName: string

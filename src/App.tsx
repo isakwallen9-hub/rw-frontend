@@ -9,6 +9,7 @@ import Cashflow from './pages/Cashflow'
 import Invoices from './pages/Invoices'
 import Runway from './pages/Runway'
 import Breakeven from './pages/Breakeven'
+import Analytics from './pages/Analytics'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('accessToken')
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/invoices" element={<PrivateRoute><Invoices /></PrivateRoute>} />
         <Route path="/runway" element={<PrivateRoute><Runway /></PrivateRoute>} />
         <Route path="/breakeven" element={<PrivateRoute><Breakeven /></PrivateRoute>} />
+        <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
