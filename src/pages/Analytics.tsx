@@ -160,7 +160,7 @@ export default function Analytics() {
           .then(r => r.json())
           .then(json => {
             console.log('analytics response:', JSON.stringify(json))
-            const data = Array.isArray(json?.data) ? json.data : []
+            const data = Array.isArray(json?.data?.data) ? json.data.data : []
             return { metric, data }
           })
       )
