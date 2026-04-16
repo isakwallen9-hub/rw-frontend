@@ -134,14 +134,42 @@ export default function Analytics() {
   const fetchData = useCallback(() => {
     setLoading(true)
     setError('')
-    const params = new URLSearchParams({ groupBy, show: series.join(','), period })
-    if (period === 'custom') { params.set('from', customFrom); params.set('to', customTo) }
 
-    fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
-      .then(r => r.json())
-      .then(json => {
-        const data = json?.data ?? json ?? []
-        setRows(Array.isArray(data) ? data : [])
+    const now = new Date()
+    let fromDate: Date
+    if (period === 'custom') {
+      fromDate = new Date(customFrom)
+    } else if (period === '30d') {
+      fromDate = new Date(now.getTime() - 30 * 86400000)
+    } else if (period === '90d') {
+      fromDate = new Date(now.getTime() - 90 * 86400000)
+    } else if (period === '6m') {
+      fromDate = new Date(now)
+      fromDate.setMonth(fromDate.getMonth() - 6)
+    } else {
+      fromDate = new Date(now)
+      fromDate.setFullYear(fromDate.getFullYear() - 1)
+    }
+    const toDate = period === 'custom' ? new Date(customTo) : now
+    const fromISO = fromDate.toISOString().replace(/\.\d{3}Z$/, 'Z').split('T')[0] + 'T00:00:00Z'
+    const toISO = toDate.toISOString().replace(/\.\d{3}Z$/, 'Z').split('T')[0] + 'T00:00:00Z'
+
+    Promise.all(
+      series.map(metric =>
+        fetchWithAuth(`${API_URL}api/v1/analytics/compare?${new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })}`)
+          .then(r => r.json())
+          .then(json => ({ metric, data: Array.isArray(json?.data) ? json.data : [] }))
+      )
+    )
+      .then(results => {
+        const merged: Record<string, AnalyticsRow> = {}
+        for (const { metric, data } of results) {
+          for (const row of data) {
+            if (!merged[row.label]) merged[row.label] = { label: row.label }
+            merged[row.label][metric] = row[metric] ?? row.value ?? 0
+          }
+        }
+        setRows(Object.values(merged))
       })
       .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
       .finally(() => setLoading(false))
