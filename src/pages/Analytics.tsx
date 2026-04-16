@@ -158,18 +158,19 @@ export default function Analytics() {
       series.map(metric =>
         fetchWithAuth(`${API_URL}api/v1/analytics/compare?${new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })}`)
           .then(r => r.json())
-          .then(json => ({ metric, data: Array.isArray(json?.data) ? json.data : [] }))
+          .then(json => {
+            console.log('analytics response:', JSON.stringify(json))
+            const data = Array.isArray(json?.data) ? json.data : []
+            return { metric, data }
+          })
       )
     )
       .then(results => {
-        for (const result of results) {
-          console.log('analytics response:', JSON.stringify(result))
-        }
         const merged: Record<string, AnalyticsRow> = {}
         for (const { metric, data } of results) {
           for (const row of data) {
             if (!merged[row.label]) merged[row.label] = { label: row.label }
-            merged[row.label][metric] = row[metric] ?? row.value ?? 0
+            merged[row.label][metric] = row.value ?? 0
           }
         }
         const mergedRows = Object.values(merged)
