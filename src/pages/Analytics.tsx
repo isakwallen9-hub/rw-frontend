@@ -162,6 +162,9 @@ export default function Analytics() {
       )
     )
       .then(results => {
+        for (const result of results) {
+          console.log('analytics response:', JSON.stringify(result))
+        }
         const merged: Record<string, AnalyticsRow> = {}
         for (const { metric, data } of results) {
           for (const row of data) {
@@ -169,7 +172,9 @@ export default function Analytics() {
             merged[row.label][metric] = row[metric] ?? row.value ?? 0
           }
         }
-        setRows(Object.values(merged))
+        const mergedRows = Object.values(merged)
+        console.log('analytics rows:', mergedRows)
+        setRows(mergedRows)
       })
       .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
       .finally(() => setLoading(false))
