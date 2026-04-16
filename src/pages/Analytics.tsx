@@ -165,7 +165,7 @@ export default function Analytics() {
       .then(r => r.json())
       .then(json => {
         console.log('categories response:', JSON.stringify(json))
-        const cats = Array.isArray(json?.data) ? json.data : []
+        const cats = Array.isArray(json?.data?.categories) ? json.data.categories : []
         console.log('categories to set:', cats)
         setCategories(cats)
       })
