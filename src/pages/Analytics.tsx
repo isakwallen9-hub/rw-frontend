@@ -27,6 +27,10 @@ interface SavedChart {
   chartType: ChartType
   customFrom: string
   customTo: string
+  category: string
+  compareMode: boolean
+  compareCatA: string
+  compareCatB: string
 }
 
 interface AnalyticsRow {
@@ -45,11 +49,11 @@ function toDateInput(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
-function exportCsv(rows: AnalyticsRow[], series: ShowType[]) {
-  const headers = ['Period/Kategori', ...series.map(s => SHOW_LABEL[s])]
+function exportCsv(rows: AnalyticsRow[], columns: { key: string; label: string }[]) {
+  const headers = ['Period/Kategori', ...columns.map(c => c.label)]
   const lines = [
     headers.join(';'),
-    ...rows.map(r => [r.label, ...series.map(s => String(r[s] ?? 0))].join(';')),
+    ...rows.map(r => [r.label, ...columns.map(c => String(r[c.key] ?? 0))].join(';')),
   ]
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -93,6 +97,8 @@ const SHOW_LABEL: Record<ShowType, string> = {
   net: 'Netto',
 }
 
+const COMPARE_COLORS = ['#2563eb', '#7c3aed']
+
 function loadSaved(): SavedChart[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) ?? '[]') } catch { return [] }
 }
@@ -106,6 +112,27 @@ function deleteSaved(id: string) {
   localStorage.setItem(LS_KEY, JSON.stringify(loadSaved().filter(c => c.id !== id)))
 }
 
+function computeDates(period: Period, customFrom: string, customTo: string) {
+  const now = new Date()
+  let fromDate: Date
+  if (period === 'custom') {
+    fromDate = new Date(customFrom)
+  } else if (period === '30d') {
+    fromDate = new Date(now.getTime() - 30 * 86400000)
+  } else if (period === '90d') {
+    fromDate = new Date(now.getTime() - 90 * 86400000)
+  } else if (period === '6m') {
+    fromDate = new Date(now); fromDate.setMonth(fromDate.getMonth() - 6)
+  } else {
+    fromDate = new Date(now); fromDate.setFullYear(fromDate.getFullYear() - 1)
+  }
+  const toDate = period === 'custom' ? new Date(customTo) : now
+  return {
+    fromISO: fromDate.toISOString().split('T')[0] + 'T00:00:00Z',
+    toISO: toDate.toISOString().split('T')[0] + 'T00:00:00Z',
+  }
+}
+
 export default function Analytics() {
   const navigate = useNavigate()
   const today = toDateInput(new Date())
@@ -117,6 +144,12 @@ export default function Analytics() {
   const [customFrom, setCustomFrom] = useState(toDateInput(new Date(Date.now() - 30 * 86400000)))
   const [customTo, setCustomTo] = useState(today)
 
+  const [categories, setCategories] = useState<string[]>([])
+  const [category, setCategory] = useState('')
+  const [compareMode, setCompareMode] = useState(false)
+  const [compareCatA, setCompareCatA] = useState('')
+  const [compareCatB, setCompareCatB] = useState('')
+
   const [rows, setRows] = useState<AnalyticsRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -124,6 +157,17 @@ export default function Analytics() {
   const [savedCharts, setSavedCharts] = useState<SavedChart[]>(loadSaved)
   const [saveName, setSaveName] = useState('')
   const [saveOpen, setSaveOpen] = useState(false)
+
+  // Fetch available categories once on mount
+  useEffect(() => {
+    fetchWithAuth(`${API_URL}api/v1/analytics/categories`)
+      .then(r => r.json())
+      .then(json => {
+        const cats = Array.isArray(json?.data) ? json.data : []
+        setCategories(cats)
+      })
+      .catch(() => {})
+  }, [])
 
   const toggleSeries = (s: ShowType) => {
     setSeries(prev =>
@@ -135,51 +179,68 @@ export default function Analytics() {
     setLoading(true)
     setError('')
 
-    const now = new Date()
-    let fromDate: Date
-    if (period === 'custom') {
-      fromDate = new Date(customFrom)
-    } else if (period === '30d') {
-      fromDate = new Date(now.getTime() - 30 * 86400000)
-    } else if (period === '90d') {
-      fromDate = new Date(now.getTime() - 90 * 86400000)
-    } else if (period === '6m') {
-      fromDate = new Date(now)
-      fromDate.setMonth(fromDate.getMonth() - 6)
-    } else {
-      fromDate = new Date(now)
-      fromDate.setFullYear(fromDate.getFullYear() - 1)
-    }
-    const toDate = period === 'custom' ? new Date(customTo) : now
-    const fromISO = fromDate.toISOString().replace(/\.\d{3}Z$/, 'Z').split('T')[0] + 'T00:00:00Z'
-    const toISO = toDate.toISOString().replace(/\.\d{3}Z$/, 'Z').split('T')[0] + 'T00:00:00Z'
+    const { fromISO, toISO } = computeDates(period, customFrom, customTo)
 
-    Promise.all(
-      series.map(metric =>
-        fetchWithAuth(`${API_URL}api/v1/analytics/compare?${new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })}`)
-          .then(r => r.json())
-          .then(json => {
-            console.log('analytics response:', JSON.stringify(json))
-            const data = Array.isArray(json?.data?.data) ? json.data.data : []
-            return { metric, data }
-          })
+    if (compareMode && compareCatA && compareCatB) {
+      // Compare two categories: one fetch per category, same metric
+      const metric = series[0]
+      Promise.all(
+        ([compareCatA, compareCatB] as const).map((cat, idx) => {
+          const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO, category: cat })
+          return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
+            .then(r => r.json())
+            .then(json => {
+              console.log('analytics response:', JSON.stringify(json))
+              const data = Array.isArray(json?.data?.data) ? json.data.data : []
+              return { key: idx === 0 ? 'catA' : 'catB', data }
+            })
+        })
       )
-    )
-      .then(results => {
-        const merged: Record<string, AnalyticsRow> = {}
-        for (const { metric, data } of results) {
-          for (const row of data) {
-            if (!merged[row.label]) merged[row.label] = { label: row.label }
-            merged[row.label][metric] = row.value ?? 0
+        .then(results => {
+          const merged: Record<string, AnalyticsRow> = {}
+          for (const { key, data } of results) {
+            for (const row of data) {
+              if (!merged[row.label]) merged[row.label] = { label: row.label }
+              merged[row.label][key] = row.value ?? 0
+            }
           }
-        }
-        const mergedRows = Object.values(merged)
-        console.log('analytics rows:', mergedRows)
-        setRows(mergedRows)
-      })
-      .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
-      .finally(() => setLoading(false))
-  }, [groupBy, series, period, customFrom, customTo])
+          const mergedRows = Object.values(merged)
+          console.log('analytics rows:', mergedRows)
+          setRows(mergedRows)
+        })
+        .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
+        .finally(() => setLoading(false))
+    } else {
+      // Normal mode: one fetch per selected metric, optional category filter
+      Promise.all(
+        series.map(metric => {
+          const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
+          if (category) params.set('category', category)
+          return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
+            .then(r => r.json())
+            .then(json => {
+              console.log('analytics response:', JSON.stringify(json))
+              const data = Array.isArray(json?.data?.data) ? json.data.data : []
+              return { metric, data }
+            })
+        })
+      )
+        .then(results => {
+          const merged: Record<string, AnalyticsRow> = {}
+          for (const { metric, data } of results) {
+            for (const row of data) {
+              if (!merged[row.label]) merged[row.label] = { label: row.label }
+              merged[row.label][metric] = row.value ?? 0
+            }
+          }
+          const mergedRows = Object.values(merged)
+          console.log('analytics rows:', mergedRows)
+          setRows(mergedRows)
+        })
+        .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
+        .finally(() => setLoading(false))
+    }
+  }, [groupBy, series, period, customFrom, customTo, category, compareMode, compareCatA, compareCatB])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -189,6 +250,7 @@ export default function Analytics() {
       id: Date.now().toString(),
       name: saveName.trim(),
       groupBy, series, period, chartType, customFrom, customTo,
+      category, compareMode, compareCatA, compareCatB,
     }
     saveTo(chart)
     setSavedCharts(loadSaved())
@@ -203,6 +265,10 @@ export default function Analytics() {
     setChartType(c.chartType)
     setCustomFrom(c.customFrom)
     setCustomTo(c.customTo)
+    setCategory(c.category ?? '')
+    setCompareMode(c.compareMode ?? false)
+    setCompareCatA(c.compareCatA ?? '')
+    setCompareCatB(c.compareCatB ?? '')
   }
 
   const handleDelete = (id: string) => {
@@ -216,33 +282,48 @@ export default function Analytics() {
     tickLine: false as const,
   }
 
-  const renderChart = () => (
-    <ResponsiveContainer width="100%" height={300}>
-      {chartType === 'bar' ? (
-        <BarChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="label" {...commonAxisProps} />
-          <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
-          <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
-          {series.map(s => (
-            <Bar key={s} dataKey={s} name={SHOW_LABEL[s]} fill={SERIES_COLOR[s]} radius={[4, 4, 0, 0]} />
-          ))}
-        </BarChart>
-      ) : (
-        <LineChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="label" {...commonAxisProps} />
-          <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
-          <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
-          {series.map(s => (
-            <Line key={s} type="monotone" dataKey={s} name={SHOW_LABEL[s]} stroke={SERIES_COLOR[s]} strokeWidth={2} dot={false} />
-          ))}
-        </LineChart>
-      )}
-    </ResponsiveContainer>
-  )
+  const exportColumns = compareMode && compareCatA && compareCatB
+    ? [{ key: 'catA', label: compareCatA }, { key: 'catB', label: compareCatB }]
+    : series.map(s => ({ key: s, label: SHOW_LABEL[s] }))
+
+  const catSeries = [
+    { key: 'catA', label: compareCatA, color: COMPARE_COLORS[0] },
+    { key: 'catB', label: compareCatB, color: COMPARE_COLORS[1] },
+  ]
+
+  const renderChart = () => {
+    const isCompare = compareMode && compareCatA && compareCatB
+
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        {chartType === 'bar' ? (
+          <BarChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="label" {...commonAxisProps} />
+            <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
+            <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            {isCompare
+              ? catSeries.map(cs => <Bar key={cs.key} dataKey={cs.key} name={cs.label} fill={cs.color} radius={[4, 4, 0, 0]} />)
+              : series.map(s => <Bar key={s} dataKey={s} name={SHOW_LABEL[s]} fill={SERIES_COLOR[s]} radius={[4, 4, 0, 0]} />)
+            }
+          </BarChart>
+        ) : (
+          <LineChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="label" {...commonAxisProps} />
+            <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
+            <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            {isCompare
+              ? catSeries.map(cs => <Line key={cs.key} type="monotone" dataKey={cs.key} name={cs.label} stroke={cs.color} strokeWidth={2} dot={false} />)
+              : series.map(s => <Line key={s} type="monotone" dataKey={s} name={SHOW_LABEL[s]} stroke={SERIES_COLOR[s]} strokeWidth={2} dot={false} />)
+            }
+          </LineChart>
+        )}
+      </ResponsiveContainer>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -274,7 +355,7 @@ export default function Analytics() {
         )}
 
         {/* Filters */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-6">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-4">
           <div className="flex flex-wrap gap-5 items-end">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Gruppera efter</label>
@@ -284,23 +365,24 @@ export default function Analytics() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Visa</label>
-              <div className="flex gap-1">
-                {SHOW_OPTIONS.map(o => (
-                  <button key={o.value} onClick={() => toggleSeries(o.value)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                      series.includes(o.value)
-                        ? 'text-white border-transparent'
-                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-                    }`}
-                    style={series.includes(o.value) ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}
-                  >
-                    {o.label}
-                  </button>
-                ))}
+            {!compareMode && (
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Visa</label>
+                <div className="flex gap-1">
+                  {SHOW_OPTIONS.map(o => (
+                    <button key={o.value} onClick={() => toggleSeries(o.value)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                        series.includes(o.value)
+                          ? 'text-white border-transparent'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                      }`}
+                      style={series.includes(o.value) ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Period</label>
@@ -324,6 +406,17 @@ export default function Analytics() {
               </div>
             </div>
 
+            {!compareMode && categories.length > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori</label>
+                <select value={category} onChange={e => setCategory(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
+                  <option value="">Alla kategorier</option>
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+            )}
+
             {period === 'custom' && (
               <div className="flex items-center gap-2">
                 <div>
@@ -341,13 +434,61 @@ export default function Analytics() {
               </div>
             )}
           </div>
+
+          {/* Compare category toggle + selectors */}
+          {categories.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => { setCompareMode(m => !m); setCompareCatA(''); setCompareCatB('') }}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                    compareMode ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                  }`}>
+                  Jämför kategori
+                </button>
+
+                {compareMode && (
+                  <div className="flex items-center gap-2">
+                    <select value={compareCatA} onChange={e => setCompareCatA(e.target.value)}
+                      className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
+                      <option value="">Välj kategori A</option>
+                      {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                    <span className="text-gray-400 text-sm font-medium">vs</span>
+                    <select value={compareCatB} onChange={e => setCompareCatB(e.target.value)}
+                      className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
+                      <option value="">Välj kategori B</option>
+                      {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                    {compareMode && (
+                      <div className="flex gap-1 ml-2">
+                        {SHOW_OPTIONS.map(o => (
+                          <button key={o.value}
+                            onClick={() => setSeries([o.value])}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                              series[0] === o.value ? 'text-white border-transparent' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                            }`}
+                            style={series[0] === o.value ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}>
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Chart */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-gray-700">
-              {series.map(s => SHOW_LABEL[s]).join(' & ')} — {PERIOD_OPTIONS.find(p => p.value === period)?.label}
+              {compareMode && compareCatA && compareCatB
+                ? `${compareCatA} vs ${compareCatB} — ${SHOW_LABEL[series[0]]}`
+                : `${series.map(s => SHOW_LABEL[s]).join(' & ')}${category ? ` — ${category}` : ''}`
+              } — {PERIOD_OPTIONS.find(p => p.value === period)?.label}
             </p>
             <div className="flex gap-2">
               {!saveOpen && (
@@ -357,7 +498,7 @@ export default function Analytics() {
                 </button>
               )}
               {rows.length > 0 && (
-                <button onClick={() => exportCsv(rows, series)}
+                <button onClick={() => exportCsv(rows, exportColumns)}
                   className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors">
                   Exportera CSV
                 </button>
@@ -390,6 +531,10 @@ export default function Analytics() {
             <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
           ) : error ? (
             <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{error}</div>
+          ) : compareMode && (!compareCatA || !compareCatB) ? (
+            <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+              Välj två kategorier för att jämföra.
+            </div>
           ) : rows.length === 0 ? (
             <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
               Ingen data tillgänglig för valda filter.
@@ -404,8 +549,8 @@ export default function Analytics() {
               <thead>
                 <tr className="border-b border-gray-100 text-xs text-gray-400">
                   <th className="text-left px-5 py-3 font-medium">Period / Kategori</th>
-                  {series.map(s => (
-                    <th key={s} className="text-right px-5 py-3 font-medium">{SHOW_LABEL[s]}</th>
+                  {exportColumns.map(col => (
+                    <th key={col.key} className="text-right px-5 py-3 font-medium">{col.label}</th>
                   ))}
                 </tr>
               </thead>
@@ -413,13 +558,13 @@ export default function Analytics() {
                 {rows.map((row, i) => (
                   <tr key={i} className={i !== 0 ? 'border-t border-gray-50' : ''}>
                     <td className="px-5 py-3 text-gray-700">{row.label}</td>
-                    {series.map(s => (
-                      <td key={s} className={`px-5 py-3 text-right font-medium ${
-                        s === 'net'
-                          ? Number(row[s] ?? 0) >= 0 ? 'text-green-600' : 'text-red-500'
-                          : s === 'outflow' ? 'text-red-500' : 'text-blue-600'
+                    {exportColumns.map(col => (
+                      <td key={col.key} className={`px-5 py-3 text-right font-medium ${
+                        col.key === 'net'
+                          ? Number(row[col.key] ?? 0) >= 0 ? 'text-green-600' : 'text-red-500'
+                          : col.key === 'outflow' ? 'text-red-500' : 'text-blue-600'
                       }`}>
-                        {fmt(Number(row[s] ?? 0))}
+                        {fmt(Number(row[col.key] ?? 0))}
                       </td>
                     ))}
                   </tr>
