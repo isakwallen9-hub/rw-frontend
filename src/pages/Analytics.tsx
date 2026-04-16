@@ -166,6 +166,7 @@ export default function Analytics() {
       .then(json => {
         console.log('categories response:', JSON.stringify(json))
         const cats = Array.isArray(json?.data) ? json.data : []
+        console.log('categories to set:', cats)
         setCategories(cats)
       })
       .catch(() => {})
@@ -283,6 +284,8 @@ export default function Analytics() {
     axisLine: false as const,
     tickLine: false as const,
   }
+
+  console.log('categories state:', categories)
 
   const exportColumns = compareMode && compareCatA && compareCatB
     ? [{ key: 'catA', label: compareCatA }, { key: 'catB', label: compareCatB }]
