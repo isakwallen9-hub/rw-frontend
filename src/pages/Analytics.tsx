@@ -160,9 +160,11 @@ export default function Analytics() {
 
   // Fetch available categories once on mount
   useEffect(() => {
+    console.log('fetching categories...')
     fetchWithAuth(`${API_URL}api/v1/analytics/categories`)
       .then(r => r.json())
       .then(json => {
+        console.log('categories response:', JSON.stringify(json))
         const cats = Array.isArray(json?.data) ? json.data : []
         setCategories(cats)
       })
