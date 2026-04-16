@@ -12,6 +12,8 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const LS_KEY = 'rw_saved_charts'
+const MAX_CATS = 5
+const CAT_COLORS = ['#2563eb', '#7c3aed', '#f59e0b', '#10b981', '#ef4444']
 
 type GroupBy = 'category' | 'day' | 'week' | 'month'
 type ShowType = 'inflow' | 'outflow' | 'net'
@@ -27,10 +29,7 @@ interface SavedChart {
   chartType: ChartType
   customFrom: string
   customTo: string
-  category: string
-  compareMode: boolean
-  compareCatA: string
-  compareCatB: string
+  selectedCats: string[]
 }
 
 interface AnalyticsRow {
@@ -97,8 +96,6 @@ const SHOW_LABEL: Record<ShowType, string> = {
   net: 'Netto',
 }
 
-const COMPARE_COLORS = ['#2563eb', '#7c3aed']
-
 function loadSaved(): SavedChart[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) ?? '[]') } catch { return [] }
 }
@@ -145,10 +142,7 @@ export default function Analytics() {
   const [customTo, setCustomTo] = useState(today)
 
   const [categories, setCategories] = useState<string[]>([])
-  const [category, setCategory] = useState('')
-  const [compareMode, setCompareMode] = useState(false)
-  const [compareCatA, setCompareCatA] = useState('')
-  const [compareCatB, setCompareCatB] = useState('')
+  const [selectedCats, setSelectedCats] = useState<string[]>([])
 
   const [rows, setRows] = useState<AnalyticsRow[]>([])
   const [loading, setLoading] = useState(false)
@@ -158,7 +152,7 @@ export default function Analytics() {
   const [saveName, setSaveName] = useState('')
   const [saveOpen, setSaveOpen] = useState(false)
 
-  // Fetch available categories once on mount
+  // Fetch available categories on mount
   useEffect(() => {
     console.log('fetching categories...')
     fetchWithAuth(`${API_URL}api/v1/analytics/categories`)
@@ -172,11 +166,28 @@ export default function Analytics() {
       .catch(() => {})
   }, [])
 
+  const toggleCat = (cat: string) => {
+    setSelectedCats(prev =>
+      prev.includes(cat)
+        ? prev.filter(c => c !== cat)
+        : prev.length < MAX_CATS ? [...prev, cat] : prev
+    )
+  }
+
   const toggleSeries = (s: ShowType) => {
     setSeries(prev =>
       prev.includes(s) ? (prev.length > 1 ? prev.filter(x => x !== s) : prev) : [...prev, s]
     )
   }
+
+  const catMode = selectedCats.length > 0
+
+  // Build per-category series definitions (stable keys: cat_0, cat_1, ...)
+  const catSeriesDef = selectedCats.map((cat, idx) => ({
+    key: `cat_${idx}`,
+    label: cat,
+    color: CAT_COLORS[idx],
+  }))
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -184,18 +195,18 @@ export default function Analytics() {
 
     const { fromISO, toISO } = computeDates(period, customFrom, customTo)
 
-    if (compareMode && compareCatA && compareCatB) {
-      // Compare two categories: one fetch per category, same metric
+    if (selectedCats.length > 0) {
+      // Multi-category mode: one fetch per selected category, same metric
       const metric = series[0]
       Promise.all(
-        ([compareCatA, compareCatB] as const).map((cat, idx) => {
+        selectedCats.map((cat, idx) => {
           const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO, category: cat })
           return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
             .then(r => r.json())
             .then(json => {
               console.log('analytics response:', JSON.stringify(json))
               const data = Array.isArray(json?.data?.data) ? json.data.data : []
-              return { key: idx === 0 ? 'catA' : 'catB', data }
+              return { key: `cat_${idx}`, data }
             })
         })
       )
@@ -214,11 +225,10 @@ export default function Analytics() {
         .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
         .finally(() => setLoading(false))
     } else {
-      // Normal mode: one fetch per selected metric, optional category filter
+      // Normal mode: one fetch per selected metric
       Promise.all(
         series.map(metric => {
           const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
-          if (category) params.set('category', category)
           return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
             .then(r => r.json())
             .then(json => {
@@ -243,7 +253,7 @@ export default function Analytics() {
         .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
         .finally(() => setLoading(false))
     }
-  }, [groupBy, series, period, customFrom, customTo, category, compareMode, compareCatA, compareCatB])
+  }, [groupBy, series, period, customFrom, customTo, selectedCats])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -252,8 +262,7 @@ export default function Analytics() {
     const chart: SavedChart = {
       id: Date.now().toString(),
       name: saveName.trim(),
-      groupBy, series, period, chartType, customFrom, customTo,
-      category, compareMode, compareCatA, compareCatB,
+      groupBy, series, period, chartType, customFrom, customTo, selectedCats,
     }
     saveTo(chart)
     setSavedCharts(loadSaved())
@@ -268,10 +277,7 @@ export default function Analytics() {
     setChartType(c.chartType)
     setCustomFrom(c.customFrom)
     setCustomTo(c.customTo)
-    setCategory(c.category ?? '')
-    setCompareMode(c.compareMode ?? false)
-    setCompareCatA(c.compareCatA ?? '')
-    setCompareCatB(c.compareCatB ?? '')
+    setSelectedCats(c.selectedCats ?? [])
   }
 
   const handleDelete = (id: string) => {
@@ -287,48 +293,39 @@ export default function Analytics() {
 
   console.log('categories state:', categories)
 
-  const exportColumns = compareMode && compareCatA && compareCatB
-    ? [{ key: 'catA', label: compareCatA }, { key: 'catB', label: compareCatB }]
+  const exportColumns = catMode
+    ? catSeriesDef.map(cs => ({ key: cs.key, label: cs.label }))
     : series.map(s => ({ key: s, label: SHOW_LABEL[s] }))
 
-  const catSeries = [
-    { key: 'catA', label: compareCatA, color: COMPARE_COLORS[0] },
-    { key: 'catB', label: compareCatB, color: COMPARE_COLORS[1] },
-  ]
-
-  const renderChart = () => {
-    const isCompare = compareMode && compareCatA && compareCatB
-
-    return (
-      <ResponsiveContainer width="100%" height={300}>
-        {chartType === 'bar' ? (
-          <BarChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="label" {...commonAxisProps} />
-            <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
-            <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            {isCompare
-              ? catSeries.map(cs => <Bar key={cs.key} dataKey={cs.key} name={cs.label} fill={cs.color} radius={[4, 4, 0, 0]} />)
-              : series.map(s => <Bar key={s} dataKey={s} name={SHOW_LABEL[s]} fill={SERIES_COLOR[s]} radius={[4, 4, 0, 0]} />)
-            }
-          </BarChart>
-        ) : (
-          <LineChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="label" {...commonAxisProps} />
-            <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
-            <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            {isCompare
-              ? catSeries.map(cs => <Line key={cs.key} type="monotone" dataKey={cs.key} name={cs.label} stroke={cs.color} strokeWidth={2} dot={false} />)
-              : series.map(s => <Line key={s} type="monotone" dataKey={s} name={SHOW_LABEL[s]} stroke={SERIES_COLOR[s]} strokeWidth={2} dot={false} />)
-            }
-          </LineChart>
-        )}
-      </ResponsiveContainer>
-    )
-  }
+  const renderChart = () => (
+    <ResponsiveContainer width="100%" height={300}>
+      {chartType === 'bar' ? (
+        <BarChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis dataKey="label" {...commonAxisProps} />
+          <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
+          <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+          <Legend wrapperStyle={{ fontSize: 12 }} />
+          {catMode
+            ? catSeriesDef.map(cs => <Bar key={cs.key} dataKey={cs.key} name={cs.label} fill={cs.color} radius={[4, 4, 0, 0]} />)
+            : series.map(s => <Bar key={s} dataKey={s} name={SHOW_LABEL[s]} fill={SERIES_COLOR[s]} radius={[4, 4, 0, 0]} />)
+          }
+        </BarChart>
+      ) : (
+        <LineChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis dataKey="label" {...commonAxisProps} />
+          <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
+          <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+          <Legend wrapperStyle={{ fontSize: 12 }} />
+          {catMode
+            ? catSeriesDef.map(cs => <Line key={cs.key} type="monotone" dataKey={cs.key} name={cs.label} stroke={cs.color} strokeWidth={2} dot={false} />)
+            : series.map(s => <Line key={s} type="monotone" dataKey={s} name={SHOW_LABEL[s]} stroke={SERIES_COLOR[s]} strokeWidth={2} dot={false} />)
+          }
+        </LineChart>
+      )}
+    </ResponsiveContainer>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -370,24 +367,27 @@ export default function Analytics() {
               </select>
             </div>
 
-            {!compareMode && (
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Visa</label>
-                <div className="flex gap-1">
-                  {SHOW_OPTIONS.map(o => (
-                    <button key={o.value} onClick={() => toggleSeries(o.value)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                        series.includes(o.value)
-                          ? 'text-white border-transparent'
-                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-                      }`}
-                      style={series.includes(o.value) ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}>
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                {catMode ? 'Visa metric' : 'Visa'}
+              </label>
+              <div className="flex gap-1">
+                {SHOW_OPTIONS.map(o => (
+                  <button key={o.value}
+                    onClick={() => catMode ? setSeries([o.value]) : toggleSeries(o.value)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                      (catMode ? series[0] === o.value : series.includes(o.value))
+                        ? 'text-white border-transparent'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                    }`}
+                    style={(catMode ? series[0] === o.value : series.includes(o.value))
+                      ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] }
+                      : {}}>
+                    {o.label}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
 
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Period</label>
@@ -411,17 +411,6 @@ export default function Analytics() {
               </div>
             </div>
 
-            {!compareMode && categories.length > 0 && (
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori</label>
-                <select value={category} onChange={e => setCategory(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
-                  <option value="">Alla kategorier</option>
-                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-              </div>
-            )}
-
             {period === 'custom' && (
               <div className="flex items-center gap-2">
                 <div>
@@ -440,47 +429,42 @@ export default function Analytics() {
             )}
           </div>
 
-          {/* Compare category toggle + selectors */}
+          {/* Category multi-select chips */}
           {categories.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => { setCompareMode(m => !m); setCompareCatA(''); setCompareCatB('') }}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                    compareMode ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-                  }`}>
-                  Jämför kategori
-                </button>
-
-                {compareMode && (
-                  <div className="flex items-center gap-2">
-                    <select value={compareCatA} onChange={e => setCompareCatA(e.target.value)}
-                      className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
-                      <option value="">Välj kategori A</option>
-                      {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                    <span className="text-gray-400 text-sm font-medium">vs</span>
-                    <select value={compareCatB} onChange={e => setCompareCatB(e.target.value)}
-                      className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
-                      <option value="">Välj kategori B</option>
-                      {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                    {compareMode && (
-                      <div className="flex gap-1 ml-2">
-                        {SHOW_OPTIONS.map(o => (
-                          <button key={o.value}
-                            onClick={() => setSeries([o.value])}
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                              series[0] === o.value ? 'text-white border-transparent' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-                            }`}
-                            style={series[0] === o.value ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}>
-                            {o.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-medium text-gray-500">Kategorier</span>
+                {selectedCats.length > 0 && (
+                  <button onClick={() => setSelectedCats([])}
+                    className="text-xs text-gray-400 hover:text-gray-600 underline">
+                    Rensa
+                  </button>
                 )}
+                {selectedCats.length >= MAX_CATS && (
+                  <span className="text-xs text-amber-500">Max {MAX_CATS} kategorier valda</span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {categories.map(cat => {
+                  const idx = selectedCats.indexOf(cat)
+                  const isSelected = idx !== -1
+                  const isDisabled = !isSelected && selectedCats.length >= MAX_CATS
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => !isDisabled && toggleCat(cat)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        isSelected
+                          ? 'text-white border-transparent'
+                          : isDisabled
+                          ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                      }`}
+                      style={isSelected ? { backgroundColor: CAT_COLORS[idx], borderColor: CAT_COLORS[idx] } : {}}>
+                      {cat}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -490,9 +474,9 @@ export default function Analytics() {
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-gray-700">
-              {compareMode && compareCatA && compareCatB
-                ? `${compareCatA} vs ${compareCatB} — ${SHOW_LABEL[series[0]]}`
-                : `${series.map(s => SHOW_LABEL[s]).join(' & ')}${category ? ` — ${category}` : ''}`
+              {catMode
+                ? `${selectedCats.join(', ')} — ${SHOW_LABEL[series[0]]}`
+                : series.map(s => SHOW_LABEL[s]).join(' & ')
               } — {PERIOD_OPTIONS.find(p => p.value === period)?.label}
             </p>
             <div className="flex gap-2">
@@ -536,10 +520,6 @@ export default function Analytics() {
             <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
           ) : error ? (
             <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{error}</div>
-          ) : compareMode && (!compareCatA || !compareCatB) ? (
-            <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
-              Välj två kategorier för att jämföra.
-            </div>
           ) : rows.length === 0 ? (
             <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
               Ingen data tillgänglig för valda filter.
@@ -565,7 +545,9 @@ export default function Analytics() {
                     <td className="px-5 py-3 text-gray-700">{row.label}</td>
                     {exportColumns.map(col => (
                       <td key={col.key} className={`px-5 py-3 text-right font-medium ${
-                        col.key === 'net'
+                        catMode
+                          ? 'text-gray-800'
+                          : col.key === 'net'
                           ? Number(row[col.key] ?? 0) >= 0 ? 'text-green-600' : 'text-red-500'
                           : col.key === 'outflow' ? 'text-red-500' : 'text-blue-600'
                       }`}>
