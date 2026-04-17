@@ -8,12 +8,15 @@ import {
   LineChart, Line,
   XAxis, YAxis,
   CartesianGrid, Tooltip, Legend,
+  Cell,
 } from 'recharts'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const LS_KEY = 'rw_saved_charts'
 const MAX_CATS = 5
 const CAT_COLORS = ['#2563eb', '#7c3aed', '#f59e0b', '#10b981', '#ef4444']
+const MONTH_NAMES = ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December']
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec']
 
 type GroupBy = 'category' | 'day' | 'week' | 'month'
 type ShowType = 'inflow' | 'outflow' | 'net'
@@ -38,6 +41,14 @@ interface AnalyticsRow {
   outflow?: number
   net?: number
   [key: string]: unknown
+}
+
+interface SeasonalMonth {
+  month: number
+  label?: string
+  avgInflow: number
+  avgOutflow: number
+  avgNet: number
 }
 
 function fmt(amount: number): string {
@@ -144,6 +155,11 @@ export default function Analytics() {
   const [categories, setCategories] = useState<string[]>([])
   const [selectedCats, setSelectedCats] = useState<string[]>([])
 
+  const [seasonalData, setSeasonalData] = useState<SeasonalMonth[]>([])
+  const [seasonalLoading, setSeasonalLoading] = useState(true)
+  const [seasonalError, setSeasonalError] = useState('')
+  const [seasonalMetric, setSeasonalMetric] = useState<ShowType>('net')
+
   const [rows, setRows] = useState<AnalyticsRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -151,6 +167,22 @@ export default function Analytics() {
   const [savedCharts, setSavedCharts] = useState<SavedChart[]>(loadSaved)
   const [saveName, setSaveName] = useState('')
   const [saveOpen, setSaveOpen] = useState(false)
+
+  // Fetch seasonal data on mount
+  useEffect(() => {
+    fetchWithAuth(`${API_URL}api/v1/analytics/seasonal`)
+      .then(r => r.json())
+      .then(json => {
+        const months: SeasonalMonth[] = Array.isArray(json?.data)
+          ? json.data
+          : Array.isArray(json?.data?.months)
+          ? json.data.months
+          : []
+        setSeasonalData(months)
+      })
+      .catch(() => setSeasonalError('Kunde inte hämta säsongsdata.'))
+      .finally(() => setSeasonalLoading(false))
+  }, [])
 
   // Fetch available categories on mount
   useEffect(() => {
@@ -292,6 +324,29 @@ export default function Analytics() {
   }
 
   console.log('categories state:', categories)
+
+  // Seasonal derived values
+  const seasonalKey = seasonalMetric === 'inflow' ? 'avgInflow' : seasonalMetric === 'outflow' ? 'avgOutflow' : 'avgNet'
+  const seasonalAvg = seasonalData.length
+    ? seasonalData.reduce((s, m) => s + (m[seasonalKey as keyof SeasonalMonth] as number), 0) / seasonalData.length
+    : 0
+  const seasonalChartData = seasonalData.map(m => ({
+    label: m.label ?? MONTH_SHORT[(m.month - 1) % 12],
+    fullLabel: m.label ?? MONTH_NAMES[(m.month - 1) % 12],
+    value: m[seasonalKey as keyof SeasonalMonth] as number,
+    avgInflow: m.avgInflow,
+    avgOutflow: m.avgOutflow,
+    avgNet: m.avgNet,
+  }))
+  const bestMonth = seasonalChartData.length
+    ? seasonalChartData.reduce((a, b) => b.avgNet > a.avgNet ? b : a)
+    : null
+  const worstMonth = seasonalChartData.length
+    ? seasonalChartData.reduce((a, b) => b.avgNet < a.avgNet ? b : a)
+    : null
+  const overallAvgNet = seasonalData.length
+    ? seasonalData.reduce((s, m) => s + m.avgNet, 0) / seasonalData.length
+    : 0
 
   const exportColumns = catMode
     ? catSeriesDef.map(cs => ({ key: cs.key, label: cs.label }))
@@ -561,8 +616,89 @@ export default function Analytics() {
           </div>
         )}
 
-        <div className="bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-8 text-center text-gray-400 text-sm">
-          Egna grafer — kommer snart
+        {/* Seasonal analysis */}
+        <div className="mt-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-1">Säsongsmönster</h2>
+          <p className="text-sm text-gray-500 mb-4">Genomsnittliga värden per månad baserat på din historiska data.</p>
+
+          {/* Metric toggle */}
+          <div className="flex gap-1 mb-4">
+            {SHOW_OPTIONS.map(o => (
+              <button key={o.value} onClick={() => setSeasonalMetric(o.value)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                  seasonalMetric === o.value ? 'text-white border-transparent' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                }`}
+                style={seasonalMetric === o.value ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}>
+                {o.label}
+              </button>
+            ))}
+          </div>
+
+          {seasonalLoading ? (
+            <div className="h-[260px] bg-gray-100 rounded-2xl animate-pulse" />
+          ) : seasonalError ? (
+            <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{seasonalError}</div>
+          ) : seasonalData.length === 0 ? (
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm h-[260px] flex items-center justify-center text-gray-400 text-sm">
+              Ingen säsongsdata tillgänglig.
+            </div>
+          ) : (
+            <>
+              {/* Summary cards */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+                  <p className="text-xs text-gray-400 mb-1">Bästa månaden</p>
+                  <p className="text-base font-bold text-green-600">{bestMonth?.fullLabel ?? '—'}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{bestMonth ? fmt(bestMonth.avgNet) + ' i snitt' : ''}</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+                  <p className="text-xs text-gray-400 mb-1">Sämsta månaden</p>
+                  <p className="text-base font-bold text-red-500">{worstMonth?.fullLabel ?? '—'}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{worstMonth ? fmt(worstMonth.avgNet) + ' i snitt' : ''}</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+                  <p className="text-xs text-gray-400 mb-1">Genomsnittligt netto</p>
+                  <p className={`text-base font-bold ${overallAvgNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {fmt(overallAvgNet)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">per månad</p>
+                </div>
+              </div>
+
+              {/* Bar chart */}
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-4">
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={seasonalChartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={50} />
+                    <Tooltip
+                      formatter={(v: unknown) => fmt(Number(v ?? 0))}
+                      labelFormatter={(label: unknown) => {
+                        const m = seasonalChartData.find(d => d.label === String(label))
+                        return m?.fullLabel ?? String(label)
+                      }}
+                    />
+                    <Bar dataKey="value" name={SHOW_LABEL[seasonalMetric]} radius={[4, 4, 0, 0]}>
+                      {seasonalChartData.map((entry, idx) => (
+                        <Cell key={idx} fill={entry.value >= seasonalAvg ? '#10b981' : '#ef4444'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+                <p className="text-xs text-gray-400 mt-3 text-center">
+                  Grönt = över genomsnittet ({fmt(Math.round(seasonalAvg))}) · Rött = under genomsnittet
+                </p>
+              </div>
+
+              {/* Insight text */}
+              {bestMonth && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-3 text-sm text-blue-700">
+                  Baserat på din historiska data brukar <strong>{bestMonth.fullLabel}</strong> vara din starkaste månad med ett genomsnittligt netto på {fmt(bestMonth.avgNet)}.
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
