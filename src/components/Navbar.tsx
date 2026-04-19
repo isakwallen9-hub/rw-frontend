@@ -25,6 +25,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-6 text-sm text-gray-500">
           <button onClick={() => navigate('/dashboard')} className="hover:text-primary transition-colors">Dashboard</button>
           <button onClick={() => navigate('/analytics')} className="hover:text-primary transition-colors">Analys</button>
+          <button onClick={() => navigate('/simulate')} className="hover:text-primary transition-colors">Simulera</button>
           <button onClick={() => navigate('/profile')} className="hover:text-primary transition-colors">Profil</button>
           <button onClick={handleLogout} className="text-red-500 hover:text-red-600 transition-colors">Logga ut</button>
         </div>
@@ -61,6 +62,12 @@ export default function Navbar() {
             className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
           >
             Analys
+          </button>
+          <button
+            onClick={() => { navigate('/simulate'); setMenuOpen(false) }}
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
+          >
+            Simulera
           </button>
           <button
             onClick={() => { navigate('/profile'); setMenuOpen(false) }}
