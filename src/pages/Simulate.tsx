@@ -150,10 +150,10 @@ export default function Simulate() {
         const summary = data.summary ?? {}
         setResult({
           forecast,
-          baselineNet: summary.baselineNet ?? 0,
-          simulatedNet: summary.simulatedNet ?? 0,
-          baselineEndBalance: summary.baselineEndBalance ?? 0,
-          simulatedEndBalance: summary.simulatedEndBalance ?? 0,
+          baselineNet: summary.baselineTotalNet ?? 0,
+          simulatedNet: summary.simulatedTotalNet ?? 0,
+          baselineEndBalance: summary.baselineClosingBalance ?? 0,
+          simulatedEndBalance: summary.simulatedClosingBalance ?? 0,
         })
       })
       .catch(() => setError('Kunde inte köra simulering. Kontrollera din anslutning och försök igen.'))
