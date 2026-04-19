@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
@@ -15,8 +15,16 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
-type ScenarioType = 'remove_category' | 'change_amount' | 'add_revenue'
+type ScenarioType =
+  | 'remove_category'
+  | 'change_amount'
+  | 'add_revenue'
+  | 'change_revenue_percent'
+  | 'change_expenses_percent'
+  | 'one_time_expense'
+
 type Frequency = 'daily' | 'weekly' | 'monthly'
+type Granularity = 'day' | 'week' | 'month'
 
 interface Scenario {
   id: string
@@ -25,6 +33,7 @@ interface Scenario {
   changePercent?: number
   amount?: number
   frequency?: Frequency
+  date?: string
 }
 
 interface ForecastPoint {
@@ -46,15 +55,51 @@ function fmt(amount: number): string {
   return amount.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 })
 }
 
+function fmtPct(a: number, b: number): string {
+  if (b === 0) return '—'
+  const pct = ((a - b) / Math.abs(b)) * 100
+  return (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%'
+}
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
   return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
+}
+
+function toDateInput(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+// Aggregate daily forecast to weekly/monthly by taking last value per bucket
+function aggregateForecast(data: ForecastPoint[], granularity: Granularity): ForecastPoint[] {
+  if (granularity === 'day') return data
+  const buckets = new Map<string, ForecastPoint>()
+  for (const point of data) {
+    const d = new Date(point.date)
+    let key: string
+    let label: string
+    if (granularity === 'week') {
+      const dow = d.getDay()
+      const monday = new Date(d)
+      monday.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1))
+      key = monday.toISOString().slice(0, 10)
+      label = monday.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
+    } else {
+      key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      label = d.toLocaleDateString('sv-SE', { month: 'short', year: '2-digit' })
+    }
+    buckets.set(key, { ...point, label })
+  }
+  return Array.from(buckets.values())
 }
 
 const SCENARIO_LABELS: Record<ScenarioType, string> = {
   remove_category: 'Ta bort kategori',
   change_amount: 'Ändra belopp',
   add_revenue: 'Lägg till intäkt',
+  change_revenue_percent: 'Ändra alla intäkter med %',
+  change_expenses_percent: 'Ändra alla kostnader med %',
+  one_time_expense: 'Lägg till engångskostnad',
 }
 
 const FREQ_LABELS: Record<Frequency, string> = {
@@ -64,31 +109,46 @@ const FREQ_LABELS: Record<Frequency, string> = {
 }
 
 function scenarioChip(s: Scenario): string {
-  if (s.type === 'remove_category') return `Ta bort: ${s.category}`
-  if (s.type === 'change_amount') {
-    const sign = (s.changePercent ?? 0) >= 0 ? '+' : ''
-    return `${s.category}: ${sign}${s.changePercent}%`
+  const sign = (s.changePercent ?? 0) >= 0 ? '+' : ''
+  switch (s.type) {
+    case 'remove_category': return `Ta bort: ${s.category}`
+    case 'change_amount': return `${s.category}: ${sign}${s.changePercent}%`
+    case 'add_revenue': return `+${fmt(s.amount ?? 0)} ${FREQ_LABELS[s.frequency ?? 'monthly']}`
+    case 'change_revenue_percent': return `Alla intäkter: ${sign}${s.changePercent}%`
+    case 'change_expenses_percent': return `Alla kostnader: ${sign}${s.changePercent}%`
+    case 'one_time_expense': return `-${fmt(s.amount ?? 0)} den ${s.date ?? ''}`
   }
-  return `+${fmt(s.amount ?? 0)} ${FREQ_LABELS[s.frequency ?? 'monthly']}`
 }
+
+// Which types need a category dropdown
+const NEEDS_CATEGORY: ScenarioType[] = ['remove_category', 'change_amount']
+// Which types need a percent input
+const NEEDS_PERCENT: ScenarioType[] = ['change_amount', 'change_revenue_percent', 'change_expenses_percent']
+// Which types need amount + frequency
+const NEEDS_AMOUNT_FREQ: ScenarioType[] = ['add_revenue']
+// Which types need amount + date
+const NEEDS_AMOUNT_DATE: ScenarioType[] = ['one_time_expense']
 
 export default function Simulate() {
   const navigate = useNavigate()
+  const todayStr = toDateInput(new Date())
 
   const [categories, setCategories] = useState<string[]>([])
   const [scenarios, setScenarios] = useState<Scenario[]>([])
 
-  // Add-scenario form state
+  // Form
   const [addType, setAddType] = useState<ScenarioType>('remove_category')
   const [addCategory, setAddCategory] = useState('')
   const [addPercent, setAddPercent] = useState('0')
   const [addAmount, setAddAmount] = useState('')
   const [addFrequency, setAddFrequency] = useState<Frequency>('monthly')
+  const [addDate, setAddDate] = useState(todayStr)
 
-  // Simulation
+  // Results
   const [result, setResult] = useState<SimulateResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [granularity, setGranularity] = useState<Granularity>('week')
 
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/analytics/categories`)
@@ -103,16 +163,25 @@ export default function Simulate() {
 
   const handleAdd = () => {
     const scenario: Scenario = { id: Date.now().toString(), type: addType }
-    if (addType === 'remove_category' || addType === 'change_amount') {
+
+    if (NEEDS_CATEGORY.includes(addType)) {
       if (!addCategory) return
       scenario.category = addCategory
-      if (addType === 'change_amount') scenario.changePercent = Number(addPercent)
-    } else {
-      const amt = Number(addAmount)
-      if (!amt) return
-      scenario.amount = amt
+    }
+    if (NEEDS_PERCENT.includes(addType)) {
+      scenario.changePercent = Number(addPercent)
+    }
+    if (NEEDS_AMOUNT_FREQ.includes(addType)) {
+      if (!addAmount) return
+      scenario.amount = Number(addAmount)
       scenario.frequency = addFrequency
     }
+    if (NEEDS_AMOUNT_DATE.includes(addType)) {
+      if (!addAmount) return
+      scenario.amount = Number(addAmount)
+      scenario.date = addDate
+    }
+
     setScenarios(prev => [...prev, scenario])
     setResult(null)
   }
@@ -127,7 +196,6 @@ export default function Simulate() {
     setLoading(true)
     setError('')
 
-    // Strip internal id before sending to API
     const payload = scenarios.map(({ id: _id, ...rest }) => rest)
 
     fetchWithAuth(`${API_URL}api/v1/analytics/simulate`, {
@@ -161,6 +229,11 @@ export default function Simulate() {
       .finally(() => setLoading(false))
   }
 
+  const displayData = useMemo(
+    () => result ? aggregateForecast(result.forecast, granularity) : [],
+    [result, granularity]
+  )
+
   const netDiff = result ? result.simulatedNet - result.baselineNet : 0
   const balanceDiff = result ? result.simulatedEndBalance - result.baselineEndBalance : 0
 
@@ -192,8 +265,8 @@ export default function Simulate() {
               </select>
             </div>
 
-            {/* Category (remove_category + change_amount) */}
-            {(addType === 'remove_category' || addType === 'change_amount') && (
+            {/* Category */}
+            {NEEDS_CATEGORY.includes(addType) && (
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori</label>
                 <select value={addCategory} onChange={e => setAddCategory(e.target.value)}
@@ -206,32 +279,24 @@ export default function Simulate() {
               </div>
             )}
 
-            {/* Percent (change_amount) */}
-            {addType === 'change_amount' && (
+            {/* Percent */}
+            {NEEDS_PERCENT.includes(addType) && (
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">Förändring (%)</label>
-                <input
-                  type="number"
-                  value={addPercent}
-                  onChange={e => setAddPercent(e.target.value)}
+                <input type="number" value={addPercent} onChange={e => setAddPercent(e.target.value)}
                   placeholder="t.ex. -20"
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 w-28"
-                />
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 w-28" />
               </div>
             )}
 
-            {/* Amount + frequency (add_revenue) */}
-            {addType === 'add_revenue' && (
+            {/* Amount + frequency */}
+            {NEEDS_AMOUNT_FREQ.includes(addType) && (
               <>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
-                  <input
-                    type="number"
-                    value={addAmount}
-                    onChange={e => setAddAmount(e.target.value)}
+                  <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
                     placeholder="t.ex. 10000"
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 w-32"
-                  />
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 w-32" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">Frekvens</label>
@@ -241,6 +306,23 @@ export default function Simulate() {
                     <option value="weekly">Veckovis</option>
                     <option value="monthly">Månadsvis</option>
                   </select>
+                </div>
+              </>
+            )}
+
+            {/* Amount + date (one_time_expense) */}
+            {NEEDS_AMOUNT_DATE.includes(addType) && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
+                  <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
+                    placeholder="t.ex. 5000"
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 w-32" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Datum</label>
+                  <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500" />
                 </div>
               </>
             )}
@@ -284,57 +366,68 @@ export default function Simulate() {
           <>
             {/* Summary cards */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-                <p className="text-xs text-gray-400 mb-2">Netto (90 dagar)</p>
-                <div className="flex items-end gap-4">
+              {/* Net card */}
+              <div className={`bg-white rounded-2xl border shadow-sm px-5 py-4 border-l-4 ${netDiff >= 0 ? 'border-l-green-400 border-gray-100' : 'border-l-red-400 border-gray-100'}`}>
+                <p className="text-xs text-gray-400 mb-3">Netto (90 dagar)</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-2xl font-bold ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {netDiff >= 0 ? '↑' : '↓'}
+                  </span>
                   <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Baseline</p>
-                    <p className="text-base font-bold text-gray-700">{fmt(result.baselineNet)}</p>
-                  </div>
-                  <span className="text-gray-300 mb-1 text-lg">→</span>
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Simulerat</p>
-                    <p className={`text-base font-bold ${result.simulatedNet >= result.baselineNet ? 'text-green-600' : 'text-red-500'}`}>
+                    <p className={`text-lg font-bold leading-tight ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                       {fmt(result.simulatedNet)}
                     </p>
+                    <p className="text-xs text-gray-400">vs {fmt(result.baselineNet)} baseline</p>
                   </div>
                 </div>
-                <p className={`text-xs mt-2 font-semibold ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {netDiff >= 0 ? '+' : ''}{fmt(netDiff)} skillnad
+                <p className={`text-xs font-semibold ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {netDiff >= 0 ? '+' : ''}{fmt(netDiff)} · {fmtPct(result.simulatedNet, result.baselineNet)}
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-                <p className="text-xs text-gray-400 mb-2">Slutsaldo (dag 90)</p>
-                <div className="flex items-end gap-4">
+              {/* Balance card */}
+              <div className={`bg-white rounded-2xl border shadow-sm px-5 py-4 border-l-4 ${balanceDiff >= 0 ? 'border-l-green-400 border-gray-100' : 'border-l-red-400 border-gray-100'}`}>
+                <p className="text-xs text-gray-400 mb-3">Slutsaldo (dag 90)</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-2xl font-bold ${balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {balanceDiff >= 0 ? '↑' : '↓'}
+                  </span>
                   <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Baseline</p>
-                    <p className="text-base font-bold text-gray-700">{fmt(result.baselineEndBalance)}</p>
-                  </div>
-                  <span className="text-gray-300 mb-1 text-lg">→</span>
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Simulerat</p>
-                    <p className={`text-base font-bold ${result.simulatedEndBalance >= result.baselineEndBalance ? 'text-green-600' : 'text-red-500'}`}>
+                    <p className={`text-lg font-bold leading-tight ${balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                       {fmt(result.simulatedEndBalance)}
                     </p>
+                    <p className="text-xs text-gray-400">vs {fmt(result.baselineEndBalance)} baseline</p>
                   </div>
                 </div>
-                <p className={`text-xs mt-2 font-semibold ${balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {balanceDiff >= 0 ? '+' : ''}{fmt(balanceDiff)} skillnad
+                <p className={`text-xs font-semibold ${balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {balanceDiff >= 0 ? '+' : ''}{fmt(balanceDiff)} · {fmtPct(result.simulatedEndBalance, result.baselineEndBalance)}
                 </p>
               </div>
             </div>
 
             {/* Forecast chart */}
             <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
-              <p className="text-sm font-semibold text-gray-700 mb-4">Prognos — nästa 90 dagar</p>
-              {result.forecast.length === 0 ? (
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-semibold text-gray-700">Prognos — nästa 90 dagar</p>
+                <div className="flex gap-1">
+                  {(['day', 'week', 'month'] as Granularity[]).map(g => (
+                    <button key={g} onClick={() => setGranularity(g)}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                        granularity === g ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                      }`}>
+                      {g === 'day' ? 'Dag' : g === 'week' ? 'Vecka' : 'Månad'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {displayData.length === 0 ? (
                 <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
                   Ingen prognosdata returnerades.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={result.forecast} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+                  <LineChart data={displayData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                     <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={55} />
