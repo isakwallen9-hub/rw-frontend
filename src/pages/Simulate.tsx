@@ -138,6 +138,7 @@ export default function Simulate() {
       .then(r => r.json())
       .then(json => {
         console.log('simulate response:', JSON.stringify(json))
+        console.log('summary:', JSON.stringify(json?.data?.summary))
         const data = json?.data ?? {}
         const baseline: { date: string; balance?: number; value?: number }[] = Array.isArray(data.baseline) ? data.baseline : []
         const simulated: { date: string; balance?: number; value?: number }[] = Array.isArray(data.simulated) ? data.simulated : []
