@@ -11,6 +11,7 @@ import Runway from './pages/Runway'
 import Breakeven from './pages/Breakeven'
 import Analytics from './pages/Analytics'
 import Simulate from './pages/Simulate'
+import Import from './pages/Import'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('accessToken')
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/breakeven" element={<PrivateRoute><Breakeven /></PrivateRoute>} />
         <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
         <Route path="/simulate" element={<PrivateRoute><Simulate /></PrivateRoute>} />
+        <Route path="/import" element={<PrivateRoute><Import /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
