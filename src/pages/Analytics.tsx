@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
@@ -159,6 +159,10 @@ export default function Analytics() {
   const [seasonalLoading, setSeasonalLoading] = useState(true)
   const [seasonalError, setSeasonalError] = useState('')
   const [seasonalMetric, setSeasonalMetric] = useState<ShowType>('net')
+  const [seasonalCategory, setSeasonalCategory] = useState('')
+  const [seasonalCategoryB, setSeasonalCategoryB] = useState('')
+  const [seasonalDataB, setSeasonalDataB] = useState<SeasonalMonth[]>([])
+  const [seasonalLoadingB, setSeasonalLoadingB] = useState(false)
 
   const [rows, setRows] = useState<AnalyticsRow[]>([])
   const [loading, setLoading] = useState(false)
@@ -168,9 +172,23 @@ export default function Analytics() {
   const [saveName, setSaveName] = useState('')
   const [saveOpen, setSaveOpen] = useState(false)
 
-  // Fetch seasonal data on mount
+  // Period comparison state
+  const [compareMode, setCompareMode] = useState(false)
+  const [periodAFrom, setPeriodAFrom] = useState(toDateInput(new Date(Date.now() - 60 * 86400000)))
+  const [periodATo, setPeriodATo] = useState(toDateInput(new Date(Date.now() - 30 * 86400000)))
+  const [periodBFrom, setPeriodBFrom] = useState(toDateInput(new Date(Date.now() - 30 * 86400000)))
+  const [periodBTo, setPeriodBTo] = useState(today)
+  const [compareRows, setCompareRows] = useState<{ label: string; a: number; b: number }[]>([])
+  const [compareLoading, setCompareLoading] = useState(false)
+  const [compareError, setCompareError] = useState('')
+
+  // Fetch seasonal data — re-runs when category A changes
   useEffect(() => {
-    fetchWithAuth(`${API_URL}api/v1/analytics/seasonal`)
+    setSeasonalLoading(true)
+    setSeasonalError('')
+    const params = seasonalCategory ? new URLSearchParams({ category: seasonalCategory }) : null
+    const url = params ? `${API_URL}api/v1/analytics/seasonal?${params}` : `${API_URL}api/v1/analytics/seasonal`
+    fetchWithAuth(url)
       .then(r => r.json())
       .then(json => {
         const months: SeasonalMonth[] = Array.isArray(json?.data)
@@ -182,7 +200,26 @@ export default function Analytics() {
       })
       .catch(() => setSeasonalError('Kunde inte hämta säsongsdata.'))
       .finally(() => setSeasonalLoading(false))
-  }, [])
+  }, [seasonalCategory])
+
+  // Fetch seasonal data for category B comparison
+  useEffect(() => {
+    if (!seasonalCategoryB) { setSeasonalDataB([]); return }
+    setSeasonalLoadingB(true)
+    const url = `${API_URL}api/v1/analytics/seasonal?${new URLSearchParams({ category: seasonalCategoryB })}`
+    fetchWithAuth(url)
+      .then(r => r.json())
+      .then(json => {
+        const months: SeasonalMonth[] = Array.isArray(json?.data)
+          ? json.data
+          : Array.isArray(json?.data?.months)
+          ? json.data.months
+          : []
+        setSeasonalDataB(months)
+      })
+      .catch(() => {})
+      .finally(() => setSeasonalLoadingB(false))
+  }, [seasonalCategoryB])
 
   // Fetch available categories on mount
   useEffect(() => {
@@ -289,6 +326,49 @@ export default function Analytics() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
+  const fetchCompare = useCallback(() => {
+    if (!compareMode) return
+    setCompareLoading(true)
+    setCompareError('')
+    const metric = series[0]
+    const fromAISO = periodAFrom + 'T00:00:00Z'
+    const toAISO   = periodATo   + 'T00:00:00Z'
+    const fromBISO = periodBFrom + 'T00:00:00Z'
+    const toBISO   = periodBTo   + 'T00:00:00Z'
+    Promise.all([
+      fetchWithAuth(`${API_URL}api/v1/analytics/compare?${new URLSearchParams({ groupBy, metric, from: fromAISO, to: toAISO })}`)
+        .then(r => r.json())
+        .then(json => Array.isArray(json?.data?.data) ? json.data.data : []),
+      fetchWithAuth(`${API_URL}api/v1/analytics/compare?${new URLSearchParams({ groupBy, metric, from: fromBISO, to: toBISO })}`)
+        .then(r => r.json())
+        .then(json => Array.isArray(json?.data?.data) ? json.data.data : []),
+    ])
+      .then(([dataA, dataB]) => {
+        const merged: Record<string, { label: string; a: number; b: number }> = {}
+        for (const row of dataA) {
+          if (!merged[row.label]) merged[row.label] = { label: row.label, a: 0, b: 0 }
+          merged[row.label].a = row.value ?? 0
+        }
+        for (const row of dataB) {
+          if (!merged[row.label]) merged[row.label] = { label: row.label, a: 0, b: 0 }
+          merged[row.label].b = row.value ?? 0
+        }
+        setCompareRows(Object.values(merged))
+      })
+      .catch(() => setCompareError('Kunde inte hämta jämförelsedata. Försök igen.'))
+      .finally(() => setCompareLoading(false))
+  }, [compareMode, groupBy, series, periodAFrom, periodATo, periodBFrom, periodBTo])
+
+  useEffect(() => { fetchCompare() }, [fetchCompare])
+
+  const compareSummary = useMemo(() => {
+    const totalA = compareRows.reduce((s, r) => s + r.a, 0)
+    const totalB = compareRows.reduce((s, r) => s + r.b, 0)
+    const diff = totalB - totalA
+    const pct = totalA !== 0 ? ((totalB - totalA) / Math.abs(totalA)) * 100 : null
+    return { totalA, totalB, diff, pct }
+  }, [compareRows])
+
   const handleSave = () => {
     if (!saveName.trim()) return
     const chart: SavedChart = {
@@ -330,14 +410,19 @@ export default function Analytics() {
   const seasonalAvg = seasonalData.length
     ? seasonalData.reduce((s, m) => s + (m[seasonalKey as keyof SeasonalMonth] as number), 0) / seasonalData.length
     : 0
-  const seasonalChartData = seasonalData.map(m => ({
-    label: m.label ?? MONTH_SHORT[(m.month - 1) % 12],
-    fullLabel: m.label ?? MONTH_NAMES[(m.month - 1) % 12],
-    value: m[seasonalKey as keyof SeasonalMonth] as number,
-    avgInflow: m.avgInflow,
-    avgOutflow: m.avgOutflow,
-    avgNet: m.avgNet,
-  }))
+  const seasonalChartData = seasonalData.map(m => {
+    const mb = seasonalDataB.find(d => d.month === m.month)
+    return {
+      label: m.label ?? MONTH_SHORT[(m.month - 1) % 12],
+      fullLabel: m.label ?? MONTH_NAMES[(m.month - 1) % 12],
+      value: m[seasonalKey as keyof SeasonalMonth] as number,
+      valueB: mb ? (mb[seasonalKey as keyof SeasonalMonth] as number) : undefined,
+      avgInflow: m.avgInflow,
+      avgOutflow: m.avgOutflow,
+      avgNet: m.avgNet,
+    }
+  })
+  const hasSeasonalCompare = seasonalCategoryB !== '' && seasonalDataB.length > 0
   const bestMonth = seasonalChartData.length
     ? seasonalChartData.reduce((a, b) => b.avgNet > a.avgNet ? b : a)
     : null
@@ -484,6 +569,36 @@ export default function Analytics() {
             )}
           </div>
 
+          {/* Period comparison date pickers */}
+          {compareMode && (
+            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-6">
+              <div>
+                <p className="text-xs font-semibold text-blue-600 mb-1.5">Period A</p>
+                <div className="flex items-center gap-2">
+                  <input type="date" value={periodAFrom} max={periodATo}
+                    onChange={e => setPeriodAFrom(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" />
+                  <span className="text-xs text-gray-400">till</span>
+                  <input type="date" value={periodATo} min={periodAFrom} max={today}
+                    onChange={e => setPeriodATo(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-purple-600 mb-1.5">Period B</p>
+                <div className="flex items-center gap-2">
+                  <input type="date" value={periodBFrom} max={periodBTo}
+                    onChange={e => setPeriodBFrom(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" />
+                  <span className="text-xs text-gray-400">till</span>
+                  <input type="date" value={periodBTo} min={periodBFrom} max={today}
+                    onChange={e => setPeriodBTo(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Category multi-select chips */}
           {categories.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
@@ -534,14 +649,24 @@ export default function Analytics() {
                 : series.map(s => SHOW_LABEL[s]).join(' & ')
               } — {PERIOD_OPTIONS.find(p => p.value === period)?.label}
             </p>
-            <div className="flex gap-2">
-              {!saveOpen && (
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setCompareMode(v => !v)}
+                className={`text-xs font-medium border px-3 py-1.5 rounded-lg transition-colors ${
+                  compareMode
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                {compareMode ? '× Stäng jämförelse' : 'Jämför perioder'}
+              </button>
+              {!saveOpen && !compareMode && (
                 <button onClick={() => setSaveOpen(true)}
                   className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors">
                   Spara graf
                 </button>
               )}
-              {rows.length > 0 && (
+              {!compareMode && rows.length > 0 && (
                 <button onClick={() => exportCsv(rows, exportColumns)}
                   className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors">
                   Exportera CSV
@@ -571,7 +696,41 @@ export default function Analytics() {
             </div>
           )}
 
-          {loading ? (
+          {compareMode ? (
+            compareLoading ? (
+              <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
+            ) : compareError ? (
+              <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{compareError}</div>
+            ) : compareRows.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+                Ingen data — välj datumintervall för Period A och Period B ovan.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                {chartType === 'bar' ? (
+                  <BarChart data={compareRows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="label" {...commonAxisProps} />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
+                    <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="a" name="Period A" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="b" name="Period B" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                ) : (
+                  <LineChart data={compareRows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="label" {...commonAxisProps} />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
+                    <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Line type="monotone" dataKey="a" name="Period A" stroke="#2563eb" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="b" name="Period B" stroke="#7c3aed" strokeWidth={2} dot={false} />
+                  </LineChart>
+                )}
+              </ResponsiveContainer>
+            )
+          ) : loading ? (
             <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
           ) : error ? (
             <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{error}</div>
@@ -581,6 +740,41 @@ export default function Analytics() {
             </div>
           ) : renderChart()}
         </div>
+
+        {/* Period comparison summary */}
+        {compareMode && !compareLoading && !compareError && compareRows.length > 0 && (
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-4">
+            <h3 className="text-sm font-bold text-gray-700 mb-4">
+              Sammanfattning — {SHOW_LABEL[series[0]]}
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-[11px] text-blue-500 font-semibold uppercase tracking-widest mb-1">Period A</p>
+                <p className="text-xl font-bold text-gray-900">{fmt(compareSummary.totalA)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{periodAFrom} – {periodATo}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[11px] text-purple-500 font-semibold uppercase tracking-widest mb-1">Period B</p>
+                <p className="text-xl font-bold text-gray-900">{fmt(compareSummary.totalB)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{periodBFrom} – {periodBTo}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Förändring</p>
+                <p className={`text-xl font-bold ${compareSummary.diff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {compareSummary.diff >= 0 ? '+' : ''}{fmt(compareSummary.diff)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Förändring %</p>
+                <p className={`text-xl font-bold ${(compareSummary.pct ?? 0) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {compareSummary.pct !== null
+                    ? `${compareSummary.pct >= 0 ? '+' : ''}${compareSummary.pct.toFixed(1)}%`
+                    : '—'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Table */}
         {!loading && !error && rows.length > 0 && (
@@ -621,17 +815,48 @@ export default function Analytics() {
           <h2 className="text-lg font-bold text-gray-900 mb-1">Säsongsmönster</h2>
           <p className="text-sm text-gray-500 mb-4">Genomsnittliga värden per månad baserat på din historiska data.</p>
 
-          {/* Metric toggle */}
-          <div className="flex gap-1 mb-4">
-            {SHOW_OPTIONS.map(o => (
-              <button key={o.value} onClick={() => setSeasonalMetric(o.value)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                  seasonalMetric === o.value ? 'text-white border-transparent' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-                }`}
-                style={seasonalMetric === o.value ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}>
-                {o.label}
-              </button>
-            ))}
+          {/* Controls row: metric toggle + category dropdowns */}
+          <div className="flex flex-wrap items-end gap-4 mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Metric</label>
+              <div className="flex gap-1">
+                {SHOW_OPTIONS.map(o => (
+                  <button key={o.value} onClick={() => setSeasonalMetric(o.value)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                      seasonalMetric === o.value ? 'text-white border-transparent' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                    }`}
+                    style={seasonalMetric === o.value ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori A</label>
+              <select
+                value={seasonalCategory}
+                onChange={e => { setSeasonalCategory(e.target.value); setSeasonalCategoryB('') }}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white"
+              >
+                <option value="">Alla produkter</option>
+                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Jämför med (B)</label>
+              <select
+                value={seasonalCategoryB}
+                onChange={e => setSeasonalCategoryB(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white"
+              >
+                <option value="">Ingen jämförelse</option>
+                {categories.filter(c => c !== seasonalCategory).map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {seasonalLoading ? (
@@ -644,29 +869,41 @@ export default function Analytics() {
             </div>
           ) : (
             <>
-              {/* Summary cards */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-                  <p className="text-xs text-gray-400 mb-1">Bästa månaden</p>
-                  <p className="text-base font-bold text-green-600">{bestMonth?.fullLabel ?? '—'}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{bestMonth ? fmt(bestMonth.avgNet) + ' i snitt' : ''}</p>
+              {/* Summary cards — only for single category view */}
+              {!hasSeasonalCompare && (
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+                    <p className="text-xs text-gray-400 mb-1">Bästa månaden</p>
+                    <p className="text-base font-bold text-green-600">{bestMonth?.fullLabel ?? '—'}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{bestMonth ? fmt(bestMonth.avgNet) + ' i snitt' : ''}</p>
+                  </div>
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+                    <p className="text-xs text-gray-400 mb-1">Sämsta månaden</p>
+                    <p className="text-base font-bold text-red-500">{worstMonth?.fullLabel ?? '—'}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{worstMonth ? fmt(worstMonth.avgNet) + ' i snitt' : ''}</p>
+                  </div>
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+                    <p className="text-xs text-gray-400 mb-1">Genomsnittligt netto</p>
+                    <p className={`text-base font-bold ${overallAvgNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      {fmt(overallAvgNet)}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">per månad</p>
+                  </div>
                 </div>
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-                  <p className="text-xs text-gray-400 mb-1">Sämsta månaden</p>
-                  <p className="text-base font-bold text-red-500">{worstMonth?.fullLabel ?? '—'}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{worstMonth ? fmt(worstMonth.avgNet) + ' i snitt' : ''}</p>
-                </div>
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-                  <p className="text-xs text-gray-400 mb-1">Genomsnittligt netto</p>
-                  <p className={`text-base font-bold ${overallAvgNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {fmt(overallAvgNet)}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">per månad</p>
-                </div>
-              </div>
+              )}
 
               {/* Bar chart */}
               <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-semibold text-gray-700">
+                    {hasSeasonalCompare
+                      ? `${seasonalCategory || 'Alla produkter'} vs ${seasonalCategoryB} — ${SHOW_LABEL[seasonalMetric]}`
+                      : `${seasonalCategory || 'Alla produkter'} — ${SHOW_LABEL[seasonalMetric]}`}
+                  </p>
+                  {seasonalLoadingB && (
+                    <span className="text-xs text-gray-400 animate-pulse">Laddar Period B...</span>
+                  )}
+                </div>
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={seasonalChartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -679,22 +916,33 @@ export default function Analytics() {
                         return m?.fullLabel ?? String(label)
                       }}
                     />
-                    <Bar dataKey="value" name={SHOW_LABEL[seasonalMetric]} radius={[4, 4, 0, 0]}>
-                      {seasonalChartData.map((entry, idx) => (
-                        <Cell key={idx} fill={entry.value >= seasonalAvg ? '#10b981' : '#ef4444'} />
-                      ))}
-                    </Bar>
+                    {hasSeasonalCompare ? (
+                      <>
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <Bar dataKey="value" name={seasonalCategory || 'Alla produkter'} fill="#2563eb" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="valueB" name={seasonalCategoryB} fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                      </>
+                    ) : (
+                      <Bar dataKey="value" name={SHOW_LABEL[seasonalMetric]} radius={[4, 4, 0, 0]}>
+                        {seasonalChartData.map((entry, idx) => (
+                          <Cell key={idx} fill={entry.value >= seasonalAvg ? '#10b981' : '#ef4444'} />
+                        ))}
+                      </Bar>
+                    )}
                   </BarChart>
                 </ResponsiveContainer>
-                <p className="text-xs text-gray-400 mt-3 text-center">
-                  Grönt = över genomsnittet ({fmt(Math.round(seasonalAvg))}) · Rött = under genomsnittet
-                </p>
+                {!hasSeasonalCompare && (
+                  <p className="text-xs text-gray-400 mt-3 text-center">
+                    Grönt = över genomsnittet ({fmt(Math.round(seasonalAvg))}) · Rött = under genomsnittet
+                  </p>
+                )}
               </div>
 
               {/* Insight text */}
-              {bestMonth && (
+              {!hasSeasonalCompare && bestMonth && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-3 text-sm text-blue-700">
-                  Baserat på din historiska data brukar <strong>{bestMonth.fullLabel}</strong> vara din starkaste månad med ett genomsnittligt netto på {fmt(bestMonth.avgNet)}.
+                  Baserat på din historiska data brukar <strong>{bestMonth.fullLabel}</strong> vara din starkaste månad
+                  {seasonalCategory ? ` för ${seasonalCategory}` : ''} med ett genomsnittligt netto på {fmt(bestMonth.avgNet)}.
                 </div>
               )}
             </>
