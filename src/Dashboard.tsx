@@ -91,7 +91,29 @@ interface ChatMessage {
 }
 
 function fmt(amount: number) {
-  return amount.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 })
+  return amount.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+function translateAlert(msg: string): string {
+  // "3 invoices are overdue based on your 30-day payment terms"
+  const m1 = msg.match(/(\d+)\s+invoices?\s+(?:is|are)\s+overdue\s+based\s+on\s+your\s+(\d+)-day\s+payment\s+terms?/i)
+  if (m1) return `${m1[1]} fakturor är förfallna baserat på dina ${m1[2]} dagars betalningsvillkor.`
+
+  // "X overdue invoices"
+  const m2 = msg.match(/(\d+)\s+overdue\s+invoices?/i)
+  if (m2) return `${m2[1]} förfallna fakturor kräver uppföljning.`
+
+  // "Cash runway is below X days"
+  const m3 = msg.match(/cash\s+runway\s+is\s+below\s+(\d+)\s+days?/i)
+  if (m3) return `Kassaflödet räcker i mindre än ${m3[1]} dagar. Åtgärda snarast.`
+
+  // Generic English patterns
+  if (/negative\s+cashflow/i.test(msg)) return 'Negativt kassaflöde — utgifterna överstiger inkomsterna.'
+  if (/low\s+cash\s+balance/i.test(msg)) return 'Lågt kassasaldo — bevaka likviditeten.'
+  if (/overdue/i.test(msg)) return 'Du har förfallna fakturor som kräver uppföljning.'
+  if (/runway/i.test(msg)) return 'Låg likviditet — kontrollera ditt kassaflöde.'
+
+  return msg
 }
 
 function formatLabel(dateStr: string): string {
@@ -144,31 +166,19 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
     fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
       .then((r) => r.json())
-      .then((json) => {
-        console.log('[DASHBOARD] overview raw:', json)
-        console.log('[DASHBOARD] overview.data:', json.data)
-        console.log('[DASHBOARD] summary:', json.data?.summary)
-        console.log('[DASHBOARD] totalInflow:', json.data?.summary?.totalInflow)
-        console.log('[DASHBOARD] totalOutflow:', json.data?.summary?.totalOutflow)
-        console.log('[DASHBOARD] netCashflow:', json.data?.summary?.netCashflow)
-        console.log('[DASHBOARD] lateInvoiceCount:', json.data?.lateInvoiceCount)
-        console.log('[DASHBOARD] runwayDays:', json.data?.runwayDays)
-        console.log('[KPI CHECK] liquidAssets:', json?.data?.summary?.totalInflow)
-        console.log('[KPI CHECK] overdueInvoices:', json?.data?.lateInvoiceCount)
-        console.log('[KPI CHECK] breakEven:', json?.data?.summary?.totalOutflow)
-        setOverview(json)
-      })
+      .then((json) => { setOverview(json) })
       .catch(() => { setOverview(MOCK_OVERVIEW) })
       .finally(() => setLoadingOverview(false))
 
     fetchWithAuth(`${API_URL}api/v1/cashflow/current`)
       .then((r) => r.json())
       .then((json) => {
-        console.log('[CASHFLOW] raw response:', json)
-        console.log('[CASHFLOW] json.data:', json.data)
-        console.log('[CASHFLOW] json.data.series:', json.data?.series)
-        const rows: CashflowDay[] = Array.isArray(json.data?.series) ? json.data.series : []
-        console.log('[CASHFLOW] rows set:', rows.length, rows[0])
+        const raw: Record<string, unknown>[] = Array.isArray(json.data?.series) ? json.data.series : []
+        const rows: CashflowDay[] = raw.map(r => ({
+          date:    String(r.date    ?? r.Date    ?? r.day  ?? ''),
+          inflow:  Number(r.inflow  ?? r.in      ?? r.income  ?? 0),
+          outflow: Number(r.outflow ?? r.out     ?? r.expense ?? 0),
+        }))
         setCashflowDays(rows)
       })
       .catch(() => setCashflowError('Kunde inte hämta kassaflödesdata.'))
@@ -177,7 +187,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     fetchWithAuth(`${API_URL}api/v1/recommendations/top3`)
       .then((r) => r.json())
       .then((json) => {
-        console.log('[DASHBOARD] recommendations:', json)
         const actions = json.data?.actions ?? json.data ?? json ?? []
         setRecommendations(actions.map((a: Record<string, unknown>) => ({
           id: a.id,
@@ -199,14 +208,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
   const cashflowData: CashflowMonth[] = overview?.data?.cashflow ?? []
 
-  console.log('[DASHBOARD] overview state at render:', overview)
   const kpi = useMemo(() => ({
     liquidAssets: overview?.data?.summary?.totalInflow ?? 0,
     overdueInvoices: overview?.data?.lateInvoiceCount ?? 0,
     breakEven: overview?.data?.summary?.totalOutflow ?? 0,
-    runwayDays: overview?.data?.runwayDays ?? 0,
+    runwayDays: overview?.data?.runwayDays ?? null,
   }), [overview])
-  console.log('[DASHBOARD] kpi mapped:', { liquidAssets: kpi.liquidAssets, breakEven: kpi.breakEven, overdueInvoices: kpi.overdueInvoices, runwayDays: kpi.runwayDays })
 
   const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
 
@@ -324,7 +331,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                   <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${cfg.iconBg} ${cfg.text}`}>
                     {cfg.icon}
                   </span>
-                  <p className={`text-sm flex-1 font-medium ${cfg.text}`}>{alert.message}</p>
+                  <p className={`text-sm flex-1 font-medium ${cfg.text}`}>{translateAlert(alert.message)}</p>
                   <div className="flex items-center gap-2 shrink-0">
                     {alert.link && (
                       <button onClick={() => navigate(alert.link!)} className={`text-xs font-semibold underline ${cfg.text} hover:opacity-70`}>
@@ -352,8 +359,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           const liquidTrend: KpiTrend = netCashflow > 0 ? 'up' : netCashflow < 0 ? 'down' : 'neutral'
           const overdueTrend: KpiTrend = kpi.overdueInvoices === 0 ? 'up' : 'down'
           const breakEvenTrend: KpiTrend = kpi.liquidAssets > kpi.breakEven ? 'up' : kpi.liquidAssets < kpi.breakEven ? 'down' : 'neutral'
-          const runwayTrend: KpiTrend = kpi.runwayDays > 90 ? 'up' : kpi.runwayDays > 30 ? 'neutral' : 'down'
-          const runwayAccent: KpiAccent = kpi.runwayDays > 90 ? 'green' : kpi.runwayDays > 30 ? 'yellow' : 'red'
+          const rd = kpi.runwayDays ?? 0
+          const runwayTrend: KpiTrend = rd === 0 ? 'neutral' : rd > 90 ? 'up' : rd > 30 ? 'neutral' : 'down'
+          const runwayAccent: KpiAccent = rd === 0 ? 'blue' : rd > 90 ? 'green' : rd > 30 ? 'yellow' : 'red'
           return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <KpiCard
@@ -392,13 +400,13 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <KpiCard
                 icon={<Clock className="w-5 h-5" />}
                 label="Runway"
-                value={`${kpi.runwayDays} dagar`}
-                subtitle="Beräknat kassaflöde"
+                value={rd === 0 ? 'Beräknas när du har importerat data' : `${rd} dagar`}
+                subtitle={rd === 0 ? '' : 'Beräknat kassaflöde'}
                 trend={runwayTrend}
-                trendLabel={kpi.runwayDays > 90 ? 'Stark likviditet' : kpi.runwayDays > 30 ? 'Bevaka noggrant' : 'Kritiskt lågt'}
+                trendLabel={rd === 0 ? 'Importera data' : rd > 90 ? 'Stark likviditet' : rd > 30 ? 'Bevaka noggrant' : 'Kritiskt lågt'}
                 accent={runwayAccent}
                 onClick={() => navigate('/runway')}
-                onExplain={() => explainThis('diagnosis', { type: 'runway', value: kpi.runwayDays })}
+                onExplain={() => explainThis('diagnosis', { type: 'runway', value: rd })}
               />
             </div>
           )
