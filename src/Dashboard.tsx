@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, AlertCircle, BarChart2, Clock } from 'lucide-react'
+import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
@@ -75,7 +75,7 @@ interface Alert {
 
 interface OverviewData {
   data?: {
-    summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string }
+    summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string; grossMarginPercent?: number | null }
     lateInvoiceCount?: number
     runwayDays?: number | null
     latestSnapshot?: unknown
@@ -151,10 +151,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [explainError, setExplainError] = useState('')
 
   // AI Coach panel
-  const [coachOpen, setCoachOpen] = useState(false)
-  const [coachHistory, setCoachHistory] = useState<ChatMessage[]>([])
-  const [coachInput, setCoachInput] = useState('')
-  const [coachLoading, setCoachLoading] = useState(false)
+  const [coachOpen, setCoachOpen]           = useState(false)
+  const [coachHistory, setCoachHistory]     = useState<ChatMessage[]>([])
+  const [coachInput, setCoachInput]         = useState('')
+  const [coachLoading, setCoachLoading]     = useState(false)
+  const [coachInitialized, setCoachInitialized] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -213,9 +214,30 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     overdueInvoices: overview?.data?.lateInvoiceCount ?? 0,
     breakEven: overview?.data?.summary?.totalOutflow ?? 0,
     runwayDays: overview?.data?.runwayDays ?? null,
+    grossMargin: overview?.data?.summary?.grossMarginPercent ?? null,
   }), [overview])
 
   const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
+
+  // Proactive coach analysis on first open — placed after kpi/cashflowData are declared
+  useEffect(() => {
+    if (!coachOpen || coachInitialized) return
+    setCoachInitialized(true)
+    setCoachLoading(true)
+    fetchWithAuth(`${API_URL}api/v1/ai-explanations/assist`, {
+      method: 'POST',
+      body: JSON.stringify({ question: '', context: { kpi, cashflow: cashflowData }, proactive: true }),
+    })
+      .then(r => r.json())
+      .then(json => {
+        const msg = json.data?.message ?? 'Hej! Jag är din ekonomicoach. Ställ mig en fråga om ditt kassaflöde eller åtgärder.'
+        setCoachHistory([{ role: 'ai', text: msg }])
+      })
+      .catch(() => {
+        setCoachHistory([{ role: 'ai', text: 'Hej! Jag är din ekonomicoach. Ställ en fråga om ditt kassaflöde, fakturor eller åtgärder.' }])
+      })
+      .finally(() => setCoachLoading(false))
+  }, [coachOpen, coachInitialized, kpi, cashflowData])
 
   const recentCashflowRows = useMemo(() => {
     const fmtDate = (d: string) => {
@@ -277,10 +299,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   }
 
 
-  const sendCoachMessage = async () => {
-    const question = coachInput.trim()
+  const sendCoachMessage = async (forcedQuestion?: string) => {
+    const question = (forcedQuestion ?? coachInput).trim()
     if (!question || coachLoading) return
-    setCoachInput('')
+    if (!forcedQuestion) setCoachInput('')
     setCoachHistory((prev) => [...prev, { role: 'user', text: question }])
     setCoachLoading(true)
     try {
@@ -362,8 +384,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           const rd = kpi.runwayDays ?? 0
           const runwayTrend: KpiTrend = rd === 0 ? 'neutral' : rd > 90 ? 'up' : rd > 30 ? 'neutral' : 'down'
           const runwayAccent: KpiAccent = rd === 0 ? 'blue' : rd > 90 ? 'green' : rd > 30 ? 'yellow' : 'red'
+          const gm = kpi.grossMargin
+          const gmTrend: KpiTrend = gm === null ? 'neutral' : gm > 30 ? 'up' : gm >= 10 ? 'neutral' : 'down'
+          const gmAccent: KpiAccent = gm === null ? 'blue' : gm > 30 ? 'green' : gm >= 10 ? 'yellow' : 'red'
           return (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <KpiCard
                 icon={<Banknote className="w-5 h-5" />}
                 label="Likvida medel"
@@ -407,6 +432,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 accent={runwayAccent}
                 onClick={() => navigate('/runway')}
                 onExplain={() => explainThis('diagnosis', { type: 'runway', value: rd })}
+              />
+              <KpiCard
+                icon={<TrendingUp className="w-5 h-5" />}
+                label="Bruttomarginal"
+                value={gm === null ? 'Importera data' : `${gm.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`}
+                subtitle={gm === null ? '' : 'Av totalt inflöde'}
+                trend={gmTrend}
+                trendLabel={gm === null ? 'Importera data' : gm > 30 ? 'Bra marginal' : gm >= 10 ? 'Acceptabel marginal' : 'Låg marginal'}
+                accent={gmAccent}
+                onExplain={() => explainThis('diagnosis', { type: 'grossMargin', value: gm })}
               />
             </div>
           )
@@ -582,19 +617,19 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             </div>
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
-              {coachHistory.length === 0 && (
-                <div className="text-center text-gray-400 text-sm mt-4">
-                  <p className="font-medium text-gray-500 mb-1">Hej! Jag är din ekonomicoach.</p>
-                  <p>Ställ en fråga om ditt kassaflöde, fakturor eller åtgärder.</p>
-                  <div className="flex flex-col gap-2 mt-4">
-                    {['Vad betyder runway 47 dagar?', 'Hur förbättrar jag mitt kassaflöde?', 'Vilka fakturor bör jag prioritera?'].map((q) => (
-                      <button key={q} onClick={() => { setCoachInput(q) }} className="text-xs text-left border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors text-gray-600">
-                        {q}
-                      </button>
-                    ))}
+
+              {/* Initial proactive loading */}
+              {coachHistory.length === 0 && coachLoading && (
+                <div className="text-center text-gray-400 text-sm mt-6 flex flex-col items-center gap-3">
+                  <span className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  <div>
+                    <p className="font-medium text-gray-600">Analyserar din ekonomi...</p>
+                    <p className="text-xs text-gray-400 mt-1">Din ekonomicoach analyserar just nu din situation.</p>
                   </div>
                 </div>
               )}
+
+              {/* Chat messages */}
               {coachHistory.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
@@ -606,7 +641,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                   </div>
                 </div>
               ))}
-              {coachLoading && (
+
+              {/* Follow-up loading dots */}
+              {coachLoading && coachHistory.length > 0 && (
                 <div className="flex justify-start">
                   <div className="bg-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
                     <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -615,6 +652,22 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                   </div>
                 </div>
               )}
+
+              {/* Quick questions — shown after proactive reply, before user sends anything */}
+              {!coachLoading && coachHistory.length > 0 && coachHistory.every(m => m.role === 'ai') && (
+                <div className="flex flex-col gap-2 mt-1">
+                  {['Hur mår mitt företag?', 'Riskerar jag kassabrist?', 'Vad bör jag prioritera nu?'].map(q => (
+                    <button
+                      key={q}
+                      onClick={() => sendCoachMessage(q)}
+                      className="text-xs text-left border border-gray-200 rounded-xl px-3 py-2.5 hover:bg-gray-50 hover:border-accent/40 transition-colors text-gray-600 font-medium"
+                    >
+                      {q} →
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div ref={chatEndRef} />
             </div>
             {/* Input */}
@@ -627,7 +680,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               />
               <button
-                onClick={sendCoachMessage}
+                onClick={() => sendCoachMessage()}
                 disabled={coachLoading || !coachInput.trim()}
                 className="bg-accent text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
               >
