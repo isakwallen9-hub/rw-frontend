@@ -73,6 +73,13 @@ interface Alert {
   linkLabel?: string
 }
 
+interface TopProduct {
+  name?: string
+  category?: string
+  totalInflow: number
+  transactionCount: number
+}
+
 interface OverviewData {
   data?: {
     summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string; grossMarginPercent?: number | null }
@@ -82,6 +89,7 @@ interface OverviewData {
     alerts?: Alert[]
     cashflow?: CashflowMonth[]
     recentTransactions?: Transaction[]
+    topProducts?: TopProduct[]
   }
 }
 
@@ -218,6 +226,13 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   }), [overview])
 
   const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
+
+  const topProducts = useMemo(() => {
+    const raw = overview?.data?.topProducts ?? []
+    return raw
+      .slice(0, 5)
+      .map(p => ({ ...p, label: p.name ?? p.category ?? 'Okänd' }))
+  }, [overview])
 
   // Proactive coach analysis on first open — placed after kpi/cashflowData are declared
   useEffect(() => {
@@ -573,6 +588,51 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             )}
           </div>
         </div>
+
+        {/* Toppprodukter */}
+        {!loadingOverview && (
+          <div>
+            <h2 className="text-base font-bold text-gray-800 mb-4">Toppprodukter</h2>
+            {topProducts.length > 0 ? (() => {
+              const maxInflow = Math.max(...topProducts.map(p => p.totalInflow), 1)
+              return (
+                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
+                    <span>Kategori</span>
+                    <span className="text-right pr-6">Inflöde</span>
+                    <span className="text-right pr-6">Antal</span>
+                    <span className="text-right">Snitt</span>
+                  </div>
+                  {topProducts.map((p, i) => {
+                    const barPct = (p.totalInflow / maxInflow) * 100
+                    const avg = p.transactionCount > 0 ? p.totalInflow / p.transactionCount : 0
+                    return (
+                      <div
+                        key={i}
+                        className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 ${i !== 0 ? 'border-t border-gray-50' : ''}`}
+                      >
+                        {/* Bar behind the row */}
+                        <div
+                          className="absolute inset-y-0 left-0 bg-blue-50 rounded-none transition-all duration-500"
+                          style={{ width: `${barPct}%` }}
+                        />
+                        {/* Content */}
+                        <span className="relative text-sm font-semibold text-gray-800 truncate pr-4">{p.label}</span>
+                        <span className="relative text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap">{fmt(p.totalInflow)}</span>
+                        <span className="relative text-sm text-gray-400 text-right pr-6 whitespace-nowrap">{p.transactionCount} st</span>
+                        <span className="relative text-sm text-gray-500 text-right whitespace-nowrap">{fmt(avg)}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })() : (
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center text-gray-400 text-sm">
+                Importera data för att se dina toppprodukter.
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
 
