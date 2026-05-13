@@ -87,9 +87,16 @@ interface TopCustomer {
   transactionCount: number
 }
 
+interface CostTrend {
+  direction: 'up' | 'down' | 'stable'
+  changePercent?: number | null
+  currentPeriod?: number | null
+  previousPeriod?: number | null
+}
+
 interface OverviewData {
   data?: {
-    summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string; grossMarginPercent?: number | null }
+    summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string; grossMarginPercent?: number | null; costTrend?: CostTrend | null }
     lateInvoiceCount?: number
     runwayDays?: number | null
     latestSnapshot?: unknown
@@ -231,6 +238,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     breakEven: overview?.data?.summary?.totalOutflow ?? 0,
     runwayDays: overview?.data?.runwayDays ?? null,
     grossMargin: overview?.data?.summary?.grossMarginPercent ?? null,
+    costTrend: overview?.data?.summary?.costTrend ?? null,
   }), [overview])
 
   const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
@@ -406,7 +414,18 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           const netCashflow = overview?.data?.summary?.netCashflow ?? 0
           const liquidTrend: KpiTrend = netCashflow > 0 ? 'up' : netCashflow < 0 ? 'down' : 'neutral'
           const overdueTrend: KpiTrend = kpi.overdueInvoices === 0 ? 'up' : 'down'
-          const breakEvenTrend: KpiTrend = kpi.liquidAssets > kpi.breakEven ? 'up' : kpi.liquidAssets < kpi.breakEven ? 'down' : 'neutral'
+          const ct = kpi.costTrend
+          const breakEvenTrend: KpiTrend = ct
+            ? (ct.direction === 'up' ? 'down' : ct.direction === 'down' ? 'up' : 'neutral')
+            : (kpi.liquidAssets > kpi.breakEven ? 'up' : kpi.liquidAssets < kpi.breakEven ? 'down' : 'neutral')
+          const fmtPct = (n: number) => n.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+          const breakEvenTrendLabel = ct
+            ? (ct.direction === 'up'
+                ? `↑ Kostnader ökar${ct.changePercent != null ? ` ${fmtPct(ct.changePercent)}%` : ''}`
+                : ct.direction === 'down'
+                ? `↓ Kostnader minskar${ct.changePercent != null ? ` ${fmtPct(Math.abs(ct.changePercent))}%` : ''}`
+                : '→ Kostnader stabila')
+            : (kpi.liquidAssets > kpi.breakEven ? 'Inflöde > utflöde' : kpi.liquidAssets < kpi.breakEven ? 'Utflöde > inflöde' : 'I balans')
           const rd = kpi.runwayDays ?? 0
           const runwayTrend: KpiTrend = rd === 0 ? 'neutral' : rd > 90 ? 'up' : rd > 30 ? 'neutral' : 'down'
           const runwayAccent: KpiAccent = rd === 0 ? 'blue' : rd > 90 ? 'green' : rd > 30 ? 'yellow' : 'red'
@@ -443,7 +462,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 value={fmt(kpi.breakEven)}
                 subtitle="Totalt utflöde"
                 trend={breakEvenTrend}
-                trendLabel={breakEvenTrend === 'up' ? 'Inflöde > utflöde' : breakEvenTrend === 'down' ? 'Utflöde > inflöde' : 'I balans'}
+                trendLabel={breakEvenTrendLabel}
                 accent="purple"
                 onClick={() => navigate('/breakeven')}
                 onExplain={() => explainThis('diagnosis', { type: 'breakEven', value: kpi.breakEven })}
@@ -469,6 +488,34 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 accent={gmAccent}
                 onExplain={() => explainThis('diagnosis', { type: 'grossMargin', value: gm })}
               />
+            </div>
+          )
+        })()}
+
+        {/* Kostnadsutveckling info-kort */}
+        {!loadingOverview && kpi.costTrend && (
+          kpi.costTrend.currentPeriod != null && kpi.costTrend.previousPeriod != null
+        ) && (() => {
+          const ct = kpi.costTrend!
+          const dirConfig = {
+            up:     { label: '↑ Ökning',    cls: 'text-red-600 bg-red-50' },
+            down:   { label: '↓ Minskning', cls: 'text-green-700 bg-green-50' },
+            stable: { label: '→ Stabil',    cls: 'text-gray-500 bg-gray-100' },
+          }[ct.direction]
+          return (
+            <div className="bg-white border border-gray-100 rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <span className="text-gray-400 font-medium">Kostnadsutveckling</span>
+              <span className="text-gray-300">·</span>
+              <span className="text-gray-700">
+                Denna period <span className="font-semibold">{fmt(ct.currentPeriod!)}</span>
+              </span>
+              <span className="text-gray-300">vs</span>
+              <span className="text-gray-500">
+                Förra perioden <span className="font-medium">{fmt(ct.previousPeriod!)}</span>
+              </span>
+              <span className={`ml-auto text-xs font-semibold px-2.5 py-0.5 rounded-full ${dirConfig.cls}`}>
+                {dirConfig.label}{ct.changePercent != null ? ` ${Math.abs(ct.changePercent).toLocaleString('sv-SE', { maximumFractionDigits: 1 })}%` : ''}
+              </span>
             </div>
           )
         })()}
