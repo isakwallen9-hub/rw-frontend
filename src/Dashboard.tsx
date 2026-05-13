@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp } from 'lucide-react'
+import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, Copy, ChevronDown, Trash2 } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
 import { fetchWithAuth } from './utils/fetchWithAuth'
 
 const API_URL = import.meta.env.VITE_API_URL as string
+const LS_COACH_KEY = 'rw_coach_history'
 
 const MOCK_OVERVIEW: OverviewData = {
   data: {
@@ -175,10 +176,18 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
   // AI Coach panel
   const [coachOpen, setCoachOpen]           = useState(false)
-  const [coachHistory, setCoachHistory]     = useState<ChatMessage[]>([])
+  const [coachMinimized, setCoachMinimized] = useState(false)
+  const [coachHistory, setCoachHistory]     = useState<ChatMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem(LS_COACH_KEY)
+      return saved ? (JSON.parse(saved) as ChatMessage[]) : []
+    } catch { return [] }
+  })
   const [coachInput, setCoachInput]         = useState('')
   const [coachLoading, setCoachLoading]     = useState(false)
-  const [coachInitialized, setCoachInitialized] = useState(false)
+  const [coachInitialized, setCoachInitialized] = useState(() => {
+    try { return (localStorage.getItem(LS_COACH_KEY) ?? '[]') !== '[]' } catch { return false }
+  })
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -229,6 +238,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [coachHistory, coachLoading])
+
+  useEffect(() => {
+    localStorage.setItem(LS_COACH_KEY, JSON.stringify(coachHistory))
+  }, [coachHistory])
 
   const cashflowData: CashflowMonth[] = overview?.data?.cashflow ?? []
 
@@ -332,6 +345,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     setExplainLoading(false)
   }
 
+
+  const clearCoach = () => {
+    setCoachHistory([])
+    setCoachInitialized(false)
+    localStorage.removeItem(LS_COACH_KEY)
+  }
 
   const sendCoachMessage = async (forcedQuestion?: string) => {
     const question = (forcedQuestion ?? coachInput).trim()
@@ -697,88 +716,105 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       )}
 
       {/* AI Coach Panel */}
-      <div className={`fixed bottom-0 right-0 z-40 flex flex-col transition-all duration-300 ${coachOpen ? 'w-full sm:w-96 h-[520px]' : 'w-auto h-auto'}`}>
+      <div className={`fixed bottom-0 right-0 z-40 flex flex-col transition-all duration-300 ${
+        coachOpen
+          ? coachMinimized ? 'w-full sm:w-96 h-14' : 'w-full sm:w-96 h-[520px]'
+          : 'w-auto h-auto'
+      }`}>
         {coachOpen && (
           <div className="flex flex-col h-full bg-white border border-gray-200 rounded-t-2xl sm:rounded-2xl sm:mb-20 sm:mr-6 shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 bg-primary">
+            <div className="flex items-center justify-between px-5 py-4 bg-primary shrink-0">
               <div className="flex items-center gap-2 text-white font-semibold text-sm">
                 <SparkleIcon className="w-4 h-4" /> Ekonomicoach
               </div>
-              <button onClick={() => setCoachOpen(false)} className="text-white/70 hover:text-white text-xl leading-none">&times;</button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={clearCoach}
+                  title="Rensa konversation"
+                  className="text-white/60 hover:text-white transition-colors p-0.5 rounded"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setCoachMinimized(v => !v)}
+                  title={coachMinimized ? 'Expandera' : 'Minimera'}
+                  className="text-white/60 hover:text-white transition-colors p-0.5 rounded"
+                >
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${coachMinimized ? 'rotate-180' : ''}`} />
+                </button>
+                <button onClick={() => setCoachOpen(false)} className="text-white/60 hover:text-white text-xl leading-none ml-1">&times;</button>
+              </div>
             </div>
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
 
-              {/* Initial proactive loading */}
-              {coachHistory.length === 0 && coachLoading && (
-                <div className="text-center text-gray-400 text-sm mt-6 flex flex-col items-center gap-3">
-                  <span className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                  <div>
-                    <p className="font-medium text-gray-600">Analyserar din ekonomi...</p>
-                    <p className="text-xs text-gray-400 mt-1">Din ekonomicoach analyserar just nu din situation.</p>
-                  </div>
-                </div>
-              )}
+            {!coachMinimized && (
+              <>
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
 
-              {/* Chat messages */}
-              {coachHistory.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-accent text-white rounded-br-sm'
-                      : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-                  }`}>
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
+                  {/* Initial proactive loading */}
+                  {coachHistory.length === 0 && coachLoading && (
+                    <div className="text-center text-gray-400 text-sm mt-6 flex flex-col items-center gap-3">
+                      <span className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                      <div>
+                        <p className="font-medium text-gray-600">Analyserar din ekonomi...</p>
+                        <p className="text-xs text-gray-400 mt-1">Din ekonomicoach analyserar just nu din situation.</p>
+                      </div>
+                    </div>
+                  )}
 
-              {/* Follow-up loading dots */}
-              {coachLoading && coachHistory.length > 0 && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              )}
-
-              {/* Quick questions — shown after proactive reply, before user sends anything */}
-              {!coachLoading && coachHistory.length > 0 && coachHistory.every(m => m.role === 'ai') && (
-                <div className="flex flex-col gap-2 mt-1">
-                  {['Hur mår mitt företag?', 'Riskerar jag kassabrist?', 'Vad bör jag prioritera nu?'].map(q => (
-                    <button
-                      key={q}
-                      onClick={() => sendCoachMessage(q)}
-                      className="text-xs text-left border border-gray-200 rounded-xl px-3 py-2.5 hover:bg-gray-50 hover:border-accent/40 transition-colors text-gray-600 font-medium"
-                    >
-                      {q} →
-                    </button>
+                  {/* Chat messages */}
+                  {coachHistory.map((msg, i) => (
+                    <CoachMessage key={i} msg={msg} />
                   ))}
-                </div>
-              )}
 
-              <div ref={chatEndRef} />
-            </div>
-            {/* Input */}
-            <div className="border-t border-gray-100 px-4 py-3 flex gap-2">
-              <input
-                value={coachInput}
-                onChange={(e) => setCoachInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCoachMessage() } }}
-                placeholder="Skriv din fråga..."
-                className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-              />
-              <button
-                onClick={() => sendCoachMessage()}
-                disabled={coachLoading || !coachInput.trim()}
-                className="bg-accent text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
-              >
-                Skicka
-              </button>
-            </div>
+                  {/* Follow-up loading dots */}
+                  {coachLoading && coachHistory.length > 0 && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick questions — shown after proactive reply, before user sends anything */}
+                  {!coachLoading && coachHistory.length > 0 && coachHistory.every(m => m.role === 'ai') && (
+                    <div className="flex flex-col gap-2 mt-1">
+                      {['Hur mår mitt företag?', 'Riskerar jag kassabrist?', 'Vad bör jag prioritera nu?'].map(q => (
+                        <button
+                          key={q}
+                          onClick={() => sendCoachMessage(q)}
+                          className="text-xs text-left border border-gray-200 rounded-xl px-3 py-2.5 hover:bg-gray-50 hover:border-accent/40 transition-colors text-gray-600 font-medium"
+                        >
+                          {q} →
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div ref={chatEndRef} />
+                </div>
+                {/* Input */}
+                <div className="border-t border-gray-100 px-4 py-3 flex gap-2 shrink-0">
+                  <input
+                    value={coachInput}
+                    onChange={(e) => setCoachInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCoachMessage() } }}
+                    placeholder="Skriv din fråga..."
+                    className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                  />
+                  <button
+                    onClick={() => sendCoachMessage()}
+                    disabled={coachLoading || !coachInput.trim()}
+                    className="bg-accent text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                  >
+                    Skicka
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -971,6 +1007,65 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
             {t.arrow} {trendLabel}
           </span>
         )}
+      </div>
+    </div>
+  )
+}
+
+function parseNumberedList(text: string): string[] | null {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+  const items = lines.filter(l => /^\d+\.\s/.test(l)).map(l => l.replace(/^\d+\.\s*/, ''))
+  return items.length >= 2 ? items : null
+}
+
+function CoachMessage({ msg }: { msg: ChatMessage }) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = () => {
+    navigator.clipboard.writeText(msg.text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    }).catch(() => {})
+  }
+
+  if (msg.role === 'user') {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed bg-accent text-white rounded-br-sm">
+          {msg.text}
+        </div>
+      </div>
+    )
+  }
+
+  const items = parseNumberedList(msg.text)
+
+  return (
+    <div className="flex justify-start">
+      <div className="max-w-[85%] relative group/msg">
+        <div className="px-4 py-2.5 rounded-2xl text-sm leading-relaxed bg-gray-100 text-gray-800 rounded-bl-sm">
+          {items ? (
+            <ol className="flex flex-col gap-2">
+              {items.map((item, i) => (
+                <li key={i} className="flex gap-2 items-start">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ol>
+          ) : msg.text}
+        </div>
+        <button
+          onClick={copy}
+          title="Kopiera"
+          className="absolute top-1.5 right-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200"
+        >
+          {copied
+            ? <span className="text-[10px] font-bold text-green-500">✓</span>
+            : <Copy className="w-3 h-3" />}
+        </button>
       </div>
     </div>
   )
