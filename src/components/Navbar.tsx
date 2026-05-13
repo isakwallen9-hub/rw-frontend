@@ -27,6 +27,7 @@ export default function Navbar() {
           <button onClick={() => navigate('/analytics')} className="hover:text-primary transition-colors">Analys</button>
           <button onClick={() => navigate('/simulate')} className="hover:text-primary transition-colors">Simulera</button>
           <button onClick={() => navigate('/import')} className="hover:text-primary transition-colors">Importera</button>
+          <button onClick={() => navigate('/diagnosis')} className="hover:text-primary transition-colors">Diagnos</button>
           <button onClick={() => navigate('/profile')} className="hover:text-primary transition-colors">Profil</button>
           <button onClick={handleLogout} className="text-red-500 hover:text-red-600 transition-colors">Logga ut</button>
         </div>
@@ -75,6 +76,12 @@ export default function Navbar() {
             className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
           >
             Importera
+          </button>
+          <button
+            onClick={() => { navigate('/diagnosis'); setMenuOpen(false) }}
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
+          >
+            Diagnos
           </button>
           <button
             onClick={() => { navigate('/profile'); setMenuOpen(false) }}
