@@ -80,6 +80,13 @@ interface TopProduct {
   transactionCount: number
 }
 
+interface TopCustomer {
+  name?: string
+  customerName?: string
+  totalInflow: number
+  transactionCount: number
+}
+
 interface OverviewData {
   data?: {
     summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string; grossMarginPercent?: number | null }
@@ -90,6 +97,7 @@ interface OverviewData {
     cashflow?: CashflowMonth[]
     recentTransactions?: Transaction[]
     topProducts?: TopProduct[]
+    topCustomers?: TopCustomer[]
   }
 }
 
@@ -229,9 +237,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
   const topProducts = useMemo(() => {
     const raw = overview?.data?.topProducts ?? []
-    return raw
-      .slice(0, 5)
-      .map(p => ({ ...p, label: p.name ?? p.category ?? 'Okänd' }))
+    return raw.slice(0, 5).map(p => ({ ...p, label: p.name ?? p.category ?? 'Okänd' }))
+  }, [overview])
+
+  const topCustomers = useMemo(() => {
+    const raw = overview?.data?.topCustomers ?? []
+    return raw.slice(0, 5).map(c => ({ ...c, label: c.name ?? c.customerName ?? 'Okänd' }))
   }, [overview])
 
   // Proactive coach analysis on first open — placed after kpi/cashflowData are declared
@@ -589,48 +600,22 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           </div>
         </div>
 
-        {/* Toppprodukter */}
+        {/* Toppprodukter + Toppkunder */}
         {!loadingOverview && (
-          <div>
-            <h2 className="text-base font-bold text-gray-800 mb-4">Toppprodukter</h2>
-            {topProducts.length > 0 ? (() => {
-              const maxInflow = Math.max(...topProducts.map(p => p.totalInflow), 1)
-              return (
-                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
-                    <span>Kategori</span>
-                    <span className="text-right pr-6">Inflöde</span>
-                    <span className="text-right pr-6">Antal</span>
-                    <span className="text-right">Snitt</span>
-                  </div>
-                  {topProducts.map((p, i) => {
-                    const barPct = (p.totalInflow / maxInflow) * 100
-                    const avg = p.transactionCount > 0 ? p.totalInflow / p.transactionCount : 0
-                    return (
-                      <div
-                        key={i}
-                        className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 ${i !== 0 ? 'border-t border-gray-50' : ''}`}
-                      >
-                        {/* Bar behind the row */}
-                        <div
-                          className="absolute inset-y-0 left-0 bg-blue-50 rounded-none transition-all duration-500"
-                          style={{ width: `${barPct}%` }}
-                        />
-                        {/* Content */}
-                        <span className="relative text-sm font-semibold text-gray-800 truncate pr-4">{p.label}</span>
-                        <span className="relative text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap">{fmt(p.totalInflow)}</span>
-                        <span className="relative text-sm text-gray-400 text-right pr-6 whitespace-nowrap">{p.transactionCount} st</span>
-                        <span className="relative text-sm text-gray-500 text-right whitespace-nowrap">{fmt(avg)}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })() : (
-              <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center text-gray-400 text-sm">
-                Importera data för att se dina toppprodukter.
-              </div>
-            )}
+          <div className="grid md:grid-cols-2 gap-6">
+
+            {/* Toppprodukter */}
+            <div>
+              <h2 className="text-base font-bold text-gray-800 mb-4">Toppprodukter</h2>
+              <RankList items={topProducts} emptyText="Importera data för att se dina toppprodukter." rowLabel="Kategori" barColor="bg-blue-50" />
+            </div>
+
+            {/* Toppkunder */}
+            <div>
+              <h2 className="text-base font-bold text-gray-800 mb-4">Toppkunder</h2>
+              <RankList items={topCustomers} emptyText="Importera data för att se dina toppkunder." rowLabel="Kund" barColor="bg-purple-50" />
+            </div>
+
           </div>
         )}
 
@@ -940,6 +925,45 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
           </span>
         )}
       </div>
+    </div>
+  )
+}
+
+function RankList({ items, emptyText, rowLabel, barColor }: {
+  items: { label: string; totalInflow: number; transactionCount: number }[]
+  emptyText: string
+  rowLabel: string
+  barColor: string
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center text-gray-400 text-sm">
+        {emptyText}
+      </div>
+    )
+  }
+  const maxInflow = Math.max(...items.map(p => p.totalInflow), 1)
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+      <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
+        <span>{rowLabel}</span>
+        <span className="text-right pr-6">Inflöde</span>
+        <span className="text-right pr-6">Antal</span>
+        <span className="text-right">Snitt</span>
+      </div>
+      {items.map((p, i) => {
+        const barPct = (p.totalInflow / maxInflow) * 100
+        const avg = p.transactionCount > 0 ? p.totalInflow / p.transactionCount : 0
+        return (
+          <div key={i} className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 ${i !== 0 ? 'border-t border-gray-50' : ''}`}>
+            <div className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-500`} style={{ width: `${barPct}%` }} />
+            <span className="relative text-sm font-semibold text-gray-800 truncate pr-4">{p.label}</span>
+            <span className="relative text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap">{fmt(p.totalInflow)}</span>
+            <span className="relative text-sm text-gray-400 text-right pr-6 whitespace-nowrap">{p.transactionCount} st</span>
+            <span className="relative text-sm text-gray-500 text-right whitespace-nowrap">{fmt(avg)}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }
