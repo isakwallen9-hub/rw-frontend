@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = import.meta.env.VITE_API_URL as string
@@ -19,18 +19,67 @@ function detectColumn(headers: string[], hints: string[]): string | null {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
-function readFileAsRows(file: File): Promise<Record<string, unknown>[]> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const workbook = XLSX.read(e.target?.result, { type: 'array' })
-        resolve(XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]))
-      } catch { reject(new Error('kunde inte läsa filen')) }
+function extractCellValue(raw: unknown): unknown {
+  if (raw === null || raw === undefined) return ''
+  if (raw instanceof Date) return raw.toISOString().slice(0, 10)
+  if (typeof raw !== 'object') return raw
+  const v = raw as Record<string, unknown>
+  if (Array.isArray(v.richText)) return (v.richText as { text: string }[]).map(r => r.text).join('')
+  if (v.result !== undefined) return extractCellValue(v.result)
+  if (typeof v.text === 'string') return v.text
+  if (typeof v.error === 'string') return ''
+  return String(raw)
+}
+
+function parseCsv(buffer: ArrayBuffer): Record<string, unknown>[] {
+  const text = new TextDecoder('utf-8').decode(buffer)
+  const lines = text.split(/\r?\n/).filter(l => l.trim())
+  if (lines.length < 2) return []
+  const delim = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ','
+  const parseRow = (line: string): string[] => {
+    const out: string[] = []; let cur = '', inQ = false
+    for (const ch of line) {
+      if (ch === '"') inQ = !inQ
+      else if (ch === delim && !inQ) { out.push(cur.trim()); cur = '' }
+      else cur += ch
     }
-    reader.onerror = () => reject(new Error('kunde inte läsa filen'))
-    reader.readAsArrayBuffer(file)
-  })
+    return [...out, cur.trim()]
+  }
+  const headers = parseRow(lines[0]).map(h => h.replace(/^"|"$/g, ''))
+  return lines.slice(1)
+    .map(line => {
+      const vals = parseRow(line)
+      const obj: Record<string, unknown> = {}
+      headers.forEach((h, i) => { obj[h] = (vals[i] ?? '').replace(/^"|"$/g, '') })
+      return obj
+    })
+    .filter(row => Object.values(row).some(v => v !== ''))
+}
+
+async function readFileAsRows(file: File): Promise<Record<string, unknown>[]> {
+  const buffer = await file.arrayBuffer()
+  try {
+    if (file.name.toLowerCase().endsWith('.csv')) return parseCsv(buffer)
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(buffer)
+    const ws = workbook.worksheets[0]
+    if (!ws || ws.rowCount < 2) return []
+    const headers: string[] = []
+    ws.getRow(1).eachCell({ includeEmpty: false }, cell => {
+      headers.push(String(extractCellValue(cell.value) ?? ''))
+    })
+    if (!headers.length) return []
+    const rows: Record<string, unknown>[] = []
+    ws.eachRow((row, n) => {
+      if (n === 1) return
+      const obj: Record<string, unknown> = {}
+      headers.forEach((h, i) => { obj[h] = extractCellValue(row.getCell(i + 1).value) })
+      if (Object.values(obj).some(v => v !== '' && v !== null)) rows.push(obj)
+    })
+    return rows
+  } catch {
+    throw new Error('kunde inte läsa filen')
+  }
 }
 
 async function getOrgId(): Promise<string> {
