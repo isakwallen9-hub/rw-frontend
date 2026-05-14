@@ -223,13 +223,10 @@ export default function Analytics() {
 
   // Fetch available categories on mount
   useEffect(() => {
-    console.log('fetching categories...')
     fetchWithAuth(`${API_URL}api/v1/analytics/categories`)
       .then(r => r.json())
       .then(json => {
-        console.log('categories response:', JSON.stringify(json))
         const cats = Array.isArray(json?.data?.categories) ? json.data.categories : []
-        console.log('categories to set:', cats)
         setCategories(cats)
       })
       .catch(() => {})
@@ -273,7 +270,6 @@ export default function Analytics() {
           return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
             .then(r => r.json())
             .then(json => {
-              console.log('analytics response:', JSON.stringify(json))
               const data = Array.isArray(json?.data?.data) ? json.data.data : []
               return { key: `cat_${idx}`, data }
             })
@@ -287,9 +283,7 @@ export default function Analytics() {
               merged[row.label][key] = row.value ?? 0
             }
           }
-          const mergedRows = Object.values(merged)
-          console.log('analytics rows:', mergedRows)
-          setRows(mergedRows)
+          setRows(Object.values(merged))
         })
         .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
         .finally(() => setLoading(false))
@@ -301,7 +295,6 @@ export default function Analytics() {
           return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
             .then(r => r.json())
             .then(json => {
-              console.log('analytics response:', JSON.stringify(json))
               const data = Array.isArray(json?.data?.data) ? json.data.data : []
               return { metric, data }
             })
@@ -315,9 +308,7 @@ export default function Analytics() {
               merged[row.label][metric] = row.value ?? 0
             }
           }
-          const mergedRows = Object.values(merged)
-          console.log('analytics rows:', mergedRows)
-          setRows(mergedRows)
+          setRows(Object.values(merged))
         })
         .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
         .finally(() => setLoading(false))
@@ -402,8 +393,6 @@ export default function Analytics() {
     axisLine: false as const,
     tickLine: false as const,
   }
-
-  console.log('categories state:', categories)
 
   // Seasonal derived values
   const seasonalKey = seasonalMetric === 'inflow' ? 'avgInflow' : seasonalMetric === 'outflow' ? 'avgOutflow' : 'avgNet'

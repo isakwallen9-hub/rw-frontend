@@ -24,7 +24,6 @@ export default function Register() {
         body: JSON.stringify(form),
       })
       const json = await res.json()
-      console.log('[REGISTER] response:', JSON.stringify(json, null, 2))
       if (!res.ok) throw new Error(json?.error?.message ?? 'Registrering misslyckades')
       navigate('/login', { state: { message: 'Konto skapat! Logga in.' } })
     } catch (err: any) {

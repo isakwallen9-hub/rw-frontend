@@ -17,7 +17,6 @@ export default function Login() {
     setLoading(true)
     setError('')
     const payload = { email, password, organisationSlug: slug }
-    console.log('[LOGIN] POST', `${API_URL}api/v1/auth/login`, payload)
     try {
       const res = await fetch(`${API_URL}api/v1/auth/login`, {
         method: 'POST',
@@ -25,12 +24,10 @@ export default function Login() {
         body: JSON.stringify(payload),
       })
       const json = await res.json()
-      console.log('[LOGIN] full response:', JSON.stringify(json, null, 2))
       if (!res.ok) throw new Error(json?.error?.message ?? 'Login failed')
       const data = json.data ?? json
       const accessToken = data.accessToken ?? data.token ?? data.access_token
       const refreshToken = data.refreshToken ?? data.refresh_token
-      console.log('[LOGIN] extracted accessToken:', accessToken)
       if (!accessToken) {
         setError('Inloggning lyckades men ingen token returnerades. Kontakta support.')
         setLoading(false)
@@ -38,10 +35,8 @@ export default function Login() {
       }
       localStorage.setItem('accessToken', accessToken)
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
-      console.log('[LOGIN] localStorage accessToken:', localStorage.getItem('accessToken'))
       navigate('/dashboard')
     } catch (err: any) {
-      console.error('[LOGIN] error:', err.message)
       setError('Fel workspace, e-post eller lösenord.')
     }
     setLoading(false)

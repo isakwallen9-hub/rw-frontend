@@ -24,7 +24,6 @@ export default function Profile() {
     fetchWithAuth(`${API_URL}api/v1/auth/me`)
       .then((r) => r.json())
       .then((json) => {
-        console.log('[PROFILE] me response:', json)
         setProfile(json.data ?? json)
       })
       .catch(() => setError('Kunde inte hämta profilinformation.'))
