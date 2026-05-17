@@ -1,13 +1,24 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { clearUserImportHistory } from '../utils/jwtUser'
+
+const API_URL = import.meta.env.VITE_API_URL as string
 
 export default function Navbar() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    clearUserImportHistory()
     localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
+    try {
+      await fetch(`${API_URL}api/v1/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {
+      // best-effort
+    }
     navigate('/login')
   }
 

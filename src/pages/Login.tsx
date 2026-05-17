@@ -20,6 +20,7 @@ export default function Login() {
     try {
       const res = await fetch(`${API_URL}api/v1/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
@@ -27,14 +28,12 @@ export default function Login() {
       if (!res.ok) throw new Error(json?.error?.message ?? 'Login failed')
       const data = json.data ?? json
       const accessToken = data.accessToken ?? data.token ?? data.access_token
-      const refreshToken = data.refreshToken ?? data.refresh_token
       if (!accessToken) {
         setError('Inloggning lyckades men ingen token returnerades. Kontakta support.')
         setLoading(false)
         return
       }
       localStorage.setItem('accessToken', accessToken)
-      if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
       navigate('/dashboard')
     } catch (err: any) {
       setError('Fel workspace, e-post eller lösenord.')

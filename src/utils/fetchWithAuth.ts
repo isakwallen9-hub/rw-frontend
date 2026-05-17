@@ -1,19 +1,28 @@
+import { clearUserImportHistory } from './jwtUser'
+
 const API_URL = import.meta.env.VITE_API_URL as string
 
-function getToken(key: 'accessToken' | 'refreshToken'): string | null {
-  const val = localStorage.getItem(key)
-  // Guard against the literal strings "null" / "undefined" that can end up in storage
+function getToken(): string | null {
+  const val = localStorage.getItem('accessToken')
   return val && val !== 'null' && val !== 'undefined' ? val : null
 }
 
-function clearSession() {
+async function clearSession() {
+  clearUserImportHistory()
   localStorage.removeItem('accessToken')
-  localStorage.removeItem('refreshToken')
+  try {
+    await fetch(`${API_URL}api/v1/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch {
+    // best-effort — navigate regardless
+  }
   window.location.href = '/login'
 }
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
-  const token = getToken('accessToken')
+  const token = getToken()
 
   const response = await fetch(url, {
     ...options,
@@ -25,28 +34,19 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   })
 
   if (response.status === 401) {
-    const refreshToken = getToken('refreshToken')
-    if (!refreshToken) {
-      clearSession()
-      return response
-    }
-
     const refreshResponse = await fetch(`${API_URL}api/v1/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
+      credentials: 'include',
     })
 
     if (refreshResponse.ok) {
       const json = await refreshResponse.json()
       const d = json.data ?? json
-      const newAccess  = d.accessToken  ?? d.access_token  ?? d.token
-      const newRefresh = d.refreshToken ?? d.refresh_token
+      const newAccess = d.accessToken ?? d.access_token ?? d.token
 
-      if (!newAccess) { clearSession(); return refreshResponse }
+      if (!newAccess) { await clearSession(); return refreshResponse }
 
       localStorage.setItem('accessToken', newAccess)
-      if (newRefresh) localStorage.setItem('refreshToken', newRefresh)
 
       return fetch(url, {
         ...options,
@@ -57,7 +57,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
         },
       })
     } else {
-      clearSession()
+      await clearSession()
       return refreshResponse
     }
   }
@@ -66,7 +66,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 }
 
 export async function fetchFormWithAuth(url: string, formData: FormData): Promise<Response> {
-  const token = getToken('accessToken')
+  const token = getToken()
 
   const response = await fetch(url, {
     method: 'POST',
@@ -74,7 +74,7 @@ export async function fetchFormWithAuth(url: string, formData: FormData): Promis
     body: formData,
   })
 
-  if (response.status === 401) clearSession()
+  if (response.status === 401) await clearSession()
 
   return response
 }

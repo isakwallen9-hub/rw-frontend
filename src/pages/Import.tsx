@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import ExcelJS from 'exceljs'
 import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import { getImportHistoryKey } from '../utils/jwtUser'
 
 const API_URL = import.meta.env.VITE_API_URL as string
-const LS_HISTORY_KEY = 'rw_import_history'
 
 // ── Column auto-detection ───────────────────────────────────────────────────
 const DATE_HINTS     = ['datum', 'date', 'dag', 'tid', 'bokf', 'trans', 'time']
@@ -30,14 +30,14 @@ interface ImportRecord {
 }
 
 function loadHistory(): ImportRecord[] {
-  try { return JSON.parse(localStorage.getItem(LS_HISTORY_KEY) ?? '[]') }
+  try { return JSON.parse(localStorage.getItem(getImportHistoryKey()) ?? '[]') }
   catch { return [] }
 }
 
 function pushHistory(record: Omit<ImportRecord, 'id'>) {
   const existing = loadHistory()
   const updated = [{ ...record, id: Date.now().toString() }, ...existing].slice(0, 20)
-  localStorage.setItem(LS_HISTORY_KEY, JSON.stringify(updated))
+  localStorage.setItem(getImportHistoryKey(), JSON.stringify(updated))
 }
 
 // ── Friendly error messages ─────────────────────────────────────────────────
