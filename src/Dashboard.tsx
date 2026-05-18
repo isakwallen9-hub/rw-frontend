@@ -166,6 +166,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [cashflowDays, setCashflowDays] = useState<CashflowDay[]>([])
   const [loadingCashflow, setLoadingCashflow] = useState(true)
   const [cashflowError, setCashflowError] = useState('')
+  const [runwayDays, setRunwayDays] = useState<number | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
 
   // AI Explain modal
@@ -217,6 +218,14 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       .catch(() => setCashflowError('Kunde inte hämta kassaflödesdata.'))
       .finally(() => setLoadingCashflow(false))
 
+    fetchWithAuth(`${API_URL}api/v1/cashflow/runway`)
+      .then(r => r.json())
+      .then(json => {
+        const rd = json?.data?.runwayDays ?? null
+        if (rd !== null) setRunwayDays(Number(rd))
+      })
+      .catch(() => {})
+
     fetchWithAuth(`${API_URL}api/v1/recommendations/top3`)
       .then((r) => r.json())
       .then((json) => {
@@ -249,10 +258,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     liquidAssets: overview?.data?.summary?.totalInflow ?? 0,
     overdueInvoices: overview?.data?.lateInvoiceCount ?? 0,
     breakEven: overview?.data?.summary?.totalOutflow ?? 0,
-    runwayDays: overview?.data?.runwayDays ?? null,
+    runwayDays: runwayDays ?? overview?.data?.runwayDays ?? null,
     grossMargin: overview?.data?.summary?.grossMarginPercent ?? null,
     costTrend: overview?.data?.summary?.costTrend ?? null,
-  }), [overview])
+  }), [overview, runwayDays])
 
   const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
 
