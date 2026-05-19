@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, Copy, ChevronDown, Trash2 } from 'lucide-react'
+import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, Copy, ChevronDown, Trash2, FileDown } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
@@ -168,6 +168,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [cashflowError, setCashflowError] = useState('')
   const [runwayDays, setRunwayDays] = useState<number | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
 
   // AI Explain modal
   const [explainOpen, setExplainOpen] = useState(false)
@@ -382,11 +383,53 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     setCoachLoading(false)
   }
 
+  const downloadReport = async () => {
+    setDownloadingPdf(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/export/pdf`, { method: 'POST' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `ekonomirapport-${new Date().toISOString().slice(0, 10)}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      // best-effort — no user-visible error needed for a download
+    }
+    setDownloadingPdf(false)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8">
+
+        {/* Page header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold text-gray-800">Översikt</h1>
+          <button
+            onClick={downloadReport}
+            disabled={downloadingPdf}
+            className="flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
+            {downloadingPdf ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                Genererar rapport...
+              </>
+            ) : (
+              <>
+                <FileDown className="w-4 h-4" />
+                Ladda ner rapport
+              </>
+            )}
+          </button>
+        </div>
 
         {/* Onboarding-banner */}
         {!loadingOverview && !hasData && (
