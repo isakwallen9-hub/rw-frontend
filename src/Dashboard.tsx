@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, Copy, ChevronDown, Trash2, FileDown } from 'lucide-react'
+import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, Copy, ChevronDown, Trash2, FileDown, Sheet } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
@@ -169,6 +169,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [runwayDays, setRunwayDays] = useState<number | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [exportingExcel, setExportingExcel] = useState(false)
 
   // AI Explain modal
   const [explainOpen, setExplainOpen] = useState(false)
@@ -383,6 +384,26 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     setCoachLoading(false)
   }
 
+  const exportExcel = async () => {
+    setExportingExcel(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/export/excel`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `transaktioner-${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      // best-effort
+    }
+    setExportingExcel(false)
+  }
+
   const downloadReport = async () => {
     setDownloadingPdf(true)
     try {
@@ -412,23 +433,42 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Page header */}
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold text-gray-800">Översikt</h1>
-          <button
-            onClick={downloadReport}
-            disabled={downloadingPdf}
-            className="flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
-          >
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportExcel}
+              disabled={exportingExcel}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 shadow-sm"
+            >
+              {exportingExcel ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin shrink-0" />
+                  Exporterar...
+                </>
+              ) : (
+                <>
+                  <Sheet className="w-4 h-4 text-green-600" />
+                  Exportera transaktioner
+                </>
+              )}
+            </button>
+            <button
+              onClick={downloadReport}
+              disabled={downloadingPdf}
+              className="flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
+            >
             {downloadingPdf ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
-                Genererar rapport...
-              </>
-            ) : (
-              <>
-                <FileDown className="w-4 h-4" />
-                Ladda ner rapport
-              </>
-            )}
-          </button>
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                  Genererar rapport...
+                </>
+              ) : (
+                <>
+                  <FileDown className="w-4 h-4" />
+                  Ladda ner rapport
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Onboarding-banner */}
