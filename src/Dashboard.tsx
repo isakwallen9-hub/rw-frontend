@@ -170,6 +170,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [exportingExcel, setExportingExcel] = useState(false)
+  const [exportError, setExportError] = useState('')
 
   // AI Explain modal
   const [explainOpen, setExplainOpen] = useState(false)
@@ -334,7 +335,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   }, [cashflowDays])
 
   const hasData = !loadingOverview && (
-    kpi.liquidAssets !== 0 || kpi.overdueInvoices !== 0 || kpi.runwayDays !== 0 || cashflowData.length > 0 || transactions.length > 0
+    kpi.liquidAssets !== 0 || kpi.overdueInvoices !== 0 || (kpi.runwayDays !== null && kpi.runwayDays !== 0) || cashflowData.length > 0 || transactions.length > 0
   )
 
   const explainThis = async (contextType: string, data: object) => {
@@ -384,22 +385,30 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     setCoachLoading(false)
   }
 
+  const triggerDownload = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const showExportError = (msg: string) => {
+    setExportError(msg)
+    setTimeout(() => setExportError(''), 4000)
+  }
+
   const exportExcel = async () => {
     setExportingExcel(true)
     try {
       const res = await fetchWithAuth(`${API_URL}api/v1/export/excel`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `transaktioner-${new Date().toISOString().slice(0, 10)}.xlsx`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      triggerDownload(await res.blob(), `transaktioner-${new Date().toISOString().slice(0, 10)}.xlsx`)
     } catch {
-      // best-effort
+      showExportError('Exporten misslyckades. Försök igen.')
     }
     setExportingExcel(false)
   }
@@ -409,17 +418,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     try {
       const res = await fetchWithAuth(`${API_URL}api/v1/export/pdf`, { method: 'POST' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `ekonomirapport-${new Date().toISOString().slice(0, 10)}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      triggerDownload(await res.blob(), `ekonomirapport-${new Date().toISOString().slice(0, 10)}.pdf`)
     } catch {
-      // best-effort — no user-visible error needed for a download
+      showExportError('Rapporten kunde inte genereras. Försök igen.')
     }
     setDownloadingPdf(false)
   }
@@ -470,6 +471,13 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             </button>
           </div>
         </div>
+
+        {/* Export error */}
+        {exportError && (
+          <div className="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3">
+            {exportError}
+          </div>
+        )}
 
         {/* Onboarding-banner */}
         {!loadingOverview && !hasData && (

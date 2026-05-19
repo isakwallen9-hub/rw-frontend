@@ -39,8 +39,7 @@ export default function Breakeven() {
     fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
       .then((r) => r.json())
       .then((json) => {
-        const s: Summary = json?.data?.summary ?? null
-        setSummary(s)
+        setSummary(json?.data?.summary ?? null)
       })
       .catch(() => setError('Kunde inte hämta break-even-data.'))
       .finally(() => setLoading(false))

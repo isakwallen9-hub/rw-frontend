@@ -395,17 +395,18 @@ export default function Analytics() {
   }
 
   // Seasonal derived values
-  const seasonalKey = seasonalMetric === 'inflow' ? 'avgInflow' : seasonalMetric === 'outflow' ? 'avgOutflow' : 'avgNet'
+  const getSeasonalValue = (m: SeasonalMonth) =>
+    seasonalMetric === 'inflow' ? m.avgInflow : seasonalMetric === 'outflow' ? m.avgOutflow : m.avgNet
   const seasonalAvg = seasonalData.length
-    ? seasonalData.reduce((s, m) => s + (m[seasonalKey as keyof SeasonalMonth] as number), 0) / seasonalData.length
+    ? seasonalData.reduce((s, m) => s + getSeasonalValue(m), 0) / seasonalData.length
     : 0
   const seasonalChartData = seasonalData.map(m => {
     const mb = seasonalDataB.find(d => d.month === m.month)
     return {
       label: m.label ?? MONTH_SHORT[(m.month - 1) % 12],
       fullLabel: m.label ?? MONTH_NAMES[(m.month - 1) % 12],
-      value: m[seasonalKey as keyof SeasonalMonth] as number,
-      valueB: mb ? (mb[seasonalKey as keyof SeasonalMonth] as number) : undefined,
+      value: getSeasonalValue(m),
+      valueB: mb ? getSeasonalValue(mb) : undefined,
       avgInflow: m.avgInflow,
       avgOutflow: m.avgOutflow,
       avgNet: m.avgNet,
