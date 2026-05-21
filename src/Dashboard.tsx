@@ -432,40 +432,42 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8">
 
         {/* Page header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h1 className="text-lg font-bold text-gray-800">Översikt</h1>
           <div className="flex items-center gap-2">
             <button
               onClick={exportExcel}
               disabled={exportingExcel}
-              className="flex items-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 shadow-sm"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 shadow-sm min-h-[44px]"
             >
               {exportingExcel ? (
                 <>
                   <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin shrink-0" />
-                  Exporterar...
+                  <span className="hidden sm:inline">Exporterar...</span>
                 </>
               ) : (
                 <>
-                  <Sheet className="w-4 h-4 text-green-600" />
-                  Exportera transaktioner
+                  <Sheet className="w-4 h-4 text-green-600 shrink-0" />
+                  <span className="hidden sm:inline">Exportera transaktioner</span>
+                  <span className="sm:hidden">Exportera</span>
                 </>
               )}
             </button>
             <button
               onClick={downloadReport}
               disabled={downloadingPdf}
-              className="flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 min-h-[44px]"
             >
-            {downloadingPdf ? (
+              {downloadingPdf ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
-                  Genererar rapport...
+                  <span className="hidden sm:inline">Genererar rapport...</span>
                 </>
               ) : (
                 <>
-                  <FileDown className="w-4 h-4" />
-                  Ladda ner rapport
+                  <FileDown className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline">Ladda ner rapport</span>
+                  <span className="sm:hidden">Rapport</span>
                 </>
               )}
             </button>
@@ -641,9 +643,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
         {/* Snabb-statistik */}
         {!loadingCashflow && cashflowDays.length > 0 && (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-2xl font-bold text-gray-900">{quickStats.totalTx}</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="bg-white border border-gray-100 rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{quickStats.totalTx}</p>
               <p className="text-xs text-gray-400 mt-1">Aktiva dagar</p>
             </div>
             <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm text-center">
@@ -737,26 +739,28 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <SkeletonList rows={5} />
             ) : recentCashflowRows.length > 0 ? (
               <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 text-xs text-gray-400">
-                      <th className="text-left px-5 py-3 font-medium">Datum</th>
-                      <th className="text-left px-5 py-3 font-medium">Typ</th>
-                      <th className="text-right px-5 py-3 font-medium">Belopp</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentCashflowRows.map((t, i) => (
-                      <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-gray-50/60' : ''}`}>
-                        <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
-                        <td className="px-5 py-3 text-gray-700">{t.type}</td>
-                        <td className={`px-5 py-3 text-right font-medium whitespace-nowrap ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
-                          {fmt(t.amount)}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[320px]">
+                    <thead>
+                      <tr className="border-b border-gray-100 text-xs text-gray-400">
+                        <th className="text-left px-5 py-3 font-medium">Datum</th>
+                        <th className="text-left px-5 py-3 font-medium">Typ</th>
+                        <th className="text-right px-5 py-3 font-medium">Belopp</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {recentCashflowRows.map((t, i) => (
+                        <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-gray-50/60' : ''}`}>
+                          <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
+                          <td className="px-5 py-3 text-gray-700">{t.type}</td>
+                          <td className={`px-5 py-3 text-right font-medium whitespace-nowrap ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                            {fmt(t.amount)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
               <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-gray-400 text-sm">
@@ -1187,25 +1191,29 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
   const maxInflow = Math.max(...items.map(p => p.totalInflow), 1)
   return (
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-      <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
-        <span>{rowLabel}</span>
-        <span className="text-right pr-6">Inflöde</span>
-        <span className="text-right pr-6">Antal</span>
-        <span className="text-right">Snitt</span>
-      </div>
-      {items.map((p, i) => {
-        const barPct = (p.totalInflow / maxInflow) * 100
-        const avg = p.transactionCount > 0 ? p.totalInflow / p.transactionCount : 0
-        return (
-          <div key={i} className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 ${i !== 0 ? 'border-t border-gray-50' : ''}`}>
-            <div className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-500`} style={{ width: `${barPct}%` }} />
-            <span className="relative text-sm font-semibold text-gray-800 truncate pr-4">{p.label}</span>
-            <span className="relative text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap">{fmt(p.totalInflow)}</span>
-            <span className="relative text-sm text-gray-400 text-right pr-6 whitespace-nowrap">{p.transactionCount} st</span>
-            <span className="relative text-sm text-gray-500 text-right whitespace-nowrap">{fmt(avg)}</span>
+      <div className="overflow-x-auto">
+        <div className="min-w-[360px]">
+          <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
+            <span>{rowLabel}</span>
+            <span className="text-right pr-6">Inflöde</span>
+            <span className="text-right pr-6">Antal</span>
+            <span className="text-right">Snitt</span>
           </div>
-        )
-      })}
+          {items.map((p, i) => {
+            const barPct = (p.totalInflow / maxInflow) * 100
+            const avg = p.transactionCount > 0 ? p.totalInflow / p.transactionCount : 0
+            return (
+              <div key={i} className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 ${i !== 0 ? 'border-t border-gray-50' : ''}`}>
+                <div className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-500`} style={{ width: `${barPct}%` }} />
+                <span className="relative text-sm font-semibold text-gray-800 truncate pr-4">{p.label}</span>
+                <span className="relative text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap">{fmt(p.totalInflow)}</span>
+                <span className="relative text-sm text-gray-400 text-right pr-6 whitespace-nowrap">{p.transactionCount} st</span>
+                <span className="relative text-sm text-gray-500 text-right whitespace-nowrap">{fmt(avg)}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

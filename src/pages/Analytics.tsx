@@ -488,16 +488,16 @@ export default function Analytics() {
 
         {/* Filters */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-4">
-          <div className="flex flex-wrap gap-5 items-end">
-            <div>
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-5 items-end">
+            <div className="col-span-2 sm:col-span-1">
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Gruppera efter</label>
               <select value={groupBy} onChange={e => setGroupBy(e.target.value as GroupBy)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
                 {GROUP_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
 
-            <div>
+            <div className="col-span-2 sm:col-span-1">
               <label className="block text-xs font-medium text-gray-500 mb-1.5">
                 {catMode ? 'Visa metric' : 'Visa'}
               </label>
@@ -505,7 +505,7 @@ export default function Analytics() {
                 {SHOW_OPTIONS.map(o => (
                   <button key={o.value}
                     onClick={() => catMode ? setSeries([o.value]) : toggleSeries(o.value)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    className={`flex-1 sm:flex-none px-3 py-2.5 rounded-lg text-sm font-medium border transition-colors min-h-[44px] ${
                       (catMode ? series[0] === o.value : series.includes(o.value))
                         ? 'text-white border-transparent'
                         : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
@@ -522,7 +522,7 @@ export default function Analytics() {
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Period</label>
               <select value={period} onChange={e => setPeriod(e.target.value as Period)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
                 {PERIOD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -532,7 +532,7 @@ export default function Analytics() {
               <div className="flex gap-1">
                 {(['bar', 'line'] as ChartType[]).map(t => (
                   <button key={t} onClick={() => setChartType(t)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    className={`flex-1 sm:flex-none px-3 py-2.5 rounded-lg text-sm font-medium border transition-colors min-h-[44px] ${
                       chartType === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
                     }`}>
                     {t === 'bar' ? 'Stapel' : 'Linje'}
@@ -542,18 +542,18 @@ export default function Analytics() {
             </div>
 
             {period === 'custom' && (
-              <div className="flex items-center gap-2">
-                <div>
+              <div className="col-span-2 sm:col-span-1 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <div className="w-full sm:w-auto">
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">Från</label>
                   <input type="date" value={customFrom} max={customTo}
                     onChange={e => setCustomFrom(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
                 </div>
-                <div>
+                <div className="w-full sm:w-auto">
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">Till</label>
                   <input type="date" value={customTo} min={customFrom} max={today}
                     onChange={e => setCustomTo(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
                 </div>
               </div>
             )}
@@ -561,29 +561,29 @@ export default function Analytics() {
 
           {/* Period comparison date pickers */}
           {compareMode && (
-            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-6">
+            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6">
               <div>
                 <p className="text-xs font-semibold text-blue-600 mb-1.5">Period A</p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                   <input type="date" value={periodAFrom} max={periodATo}
                     onChange={e => setPeriodAFrom(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" />
-                  <span className="text-xs text-gray-400">till</span>
+                    className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 min-h-[44px]" />
+                  <span className="text-xs text-gray-400 hidden sm:inline">till</span>
                   <input type="date" value={periodATo} min={periodAFrom} max={today}
                     onChange={e => setPeriodATo(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" />
+                    className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 min-h-[44px]" />
                 </div>
               </div>
               <div>
                 <p className="text-xs font-semibold text-purple-600 mb-1.5">Period B</p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                   <input type="date" value={periodBFrom} max={periodBTo}
                     onChange={e => setPeriodBFrom(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" />
-                  <span className="text-xs text-gray-400">till</span>
+                    className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 min-h-[44px]" />
+                  <span className="text-xs text-gray-400 hidden sm:inline">till</span>
                   <input type="date" value={periodBTo} min={periodBFrom} max={today}
                     onChange={e => setPeriodBTo(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" />
+                    className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 min-h-[44px]" />
                 </div>
               </div>
             </div>
@@ -769,7 +769,8 @@ export default function Analytics() {
         {/* Table */}
         {!loading && !error && rows.length > 0 && (
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-8">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[360px]">
               <thead>
                 <tr className="border-b border-gray-100 text-xs text-gray-400">
                   <th className="text-left px-5 py-3 font-medium">Period / Kategori</th>
@@ -797,6 +798,7 @@ export default function Analytics() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 

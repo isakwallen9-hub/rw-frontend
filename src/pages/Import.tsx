@@ -399,7 +399,7 @@ export default function Import() {
               onDrop={handleDrop}
               onDragOver={e => e.preventDefault()}
               onClick={() => !isRunning && fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-2xl flex flex-col items-center justify-center py-16 px-8 text-center transition-colors mb-6 ${
+              className={`border-2 border-dashed rounded-2xl flex flex-col items-center justify-center py-10 sm:py-16 px-6 sm:px-8 text-center transition-colors mb-6 ${
                 isRunning
                   ? 'border-gray-200 bg-gray-50 cursor-default'
                   : file

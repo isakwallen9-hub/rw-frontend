@@ -383,14 +383,14 @@ export default function Simulate() {
           {/* Quick templates */}
           <div className="mb-5">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Snabb-scenarion</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {([
                 { key: 'remove_worst',   icon: '✕', label: 'Ta bort sämsta produkten', color: 'border-red-200 hover:border-red-400 hover:bg-red-50' },
                 { key: 'increase_prices', icon: '↑', label: 'Öka alla priser 10%',      color: 'border-green-200 hover:border-green-400 hover:bg-green-50' },
                 { key: 'cut_costs',      icon: '↓', label: 'Minska kostnader 15%',     color: 'border-orange-200 hover:border-orange-400 hover:bg-orange-50' },
               ] as const).map(t => (
                 <button key={t.key} onClick={() => applyTemplate(t.key)}
-                  className={`flex flex-col items-center gap-1.5 px-3 py-3 bg-white border rounded-xl text-center transition-colors ${t.color}`}>
+                  className={`flex sm:flex-col items-center gap-2 sm:gap-1.5 px-4 sm:px-3 py-3 bg-white border rounded-xl sm:text-center transition-colors min-h-[44px] ${t.color}`}>
                   <span className="text-lg font-bold text-gray-600">{t.icon}</span>
                   <span className="text-xs font-medium text-gray-600 leading-tight">{t.label}</span>
                 </button>
@@ -401,11 +401,11 @@ export default function Simulate() {
           <div className="border-t border-gray-100 pt-5">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Anpassat scenario</h2>
 
-            <div className="flex flex-wrap gap-3 items-end">
-              <div>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-end">
+              <div className="w-full sm:w-auto">
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">Typ</label>
                 <select value={addType} onChange={e => setAddType(e.target.value as ScenarioType)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
                   {(Object.entries(SCENARIO_LABELS) as [ScenarioType, string][]).map(([v, l]) => (
                     <option key={v} value={v}>{l}</option>
                   ))}
@@ -413,10 +413,10 @@ export default function Simulate() {
               </div>
 
               {NEEDS_CATEGORY.includes(addType) && (
-                <div>
+                <div className="w-full sm:w-auto">
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori</label>
                   <select value={addCategory} onChange={e => setAddCategory(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
                     {categories.length === 0
                       ? <option value="">Laddar...</option>
                       : categories.map(cat => <option key={cat} value={cat}>{cat}</option>)
@@ -426,26 +426,26 @@ export default function Simulate() {
               )}
 
               {NEEDS_PERCENT.includes(addType) && (
-                <div>
+                <div className="w-full sm:w-auto">
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">Förändring (%)</label>
                   <input type="number" value={addPercent} onChange={e => setAddPercent(e.target.value)}
                     placeholder="t.ex. -20"
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 w-28" />
+                    className="w-full sm:w-28 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
                 </div>
               )}
 
               {NEEDS_AMOUNT_FREQ.includes(addType) && (
                 <>
-                  <div>
+                  <div className="w-full sm:w-auto">
                     <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
                     <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
                       placeholder="t.ex. 10000"
-                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 w-32" />
+                      className="w-full sm:w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
                   </div>
-                  <div>
+                  <div className="w-full sm:w-auto">
                     <label className="block text-xs font-medium text-gray-500 mb-1.5">Frekvens</label>
                     <select value={addFrequency} onChange={e => setAddFrequency(e.target.value as Frequency)}
-                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white">
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
                       <option value="daily">Dagligen</option>
                       <option value="weekly">Veckovis</option>
                       <option value="monthly">Månadsvis</option>
@@ -456,22 +456,22 @@ export default function Simulate() {
 
               {NEEDS_AMOUNT_DATE.includes(addType) && (
                 <>
-                  <div>
+                  <div className="w-full sm:w-auto">
                     <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
                     <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
                       placeholder="t.ex. 5000"
-                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 w-32" />
+                      className="w-full sm:w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
                   </div>
-                  <div>
+                  <div className="w-full sm:w-auto">
                     <label className="block text-xs font-medium text-gray-500 mb-1.5">Datum</label>
                     <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)}
-                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500" />
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
                   </div>
                 </>
               )}
 
               <button onClick={handleAdd}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]">
                 + Lägg till
               </button>
             </div>
