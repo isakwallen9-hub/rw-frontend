@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
@@ -14,21 +14,82 @@ interface UserProfile {
   organisationSlug: string
 }
 
+interface NotificationSettings {
+  email: string
+  enabled: boolean
+  runwayAlert: boolean
+  overdueInvoiceAlert: boolean
+  negativeCashflowAlert: boolean
+}
+
+const DEFAULT_NOTIF: NotificationSettings = {
+  email: '',
+  enabled: true,
+  runwayAlert: true,
+  overdueInvoiceAlert: true,
+  negativeCashflowAlert: true,
+}
+
 export default function Profile() {
   const navigate = useNavigate()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const [notif, setNotif] = useState<NotificationSettings>(DEFAULT_NOTIF)
+  const [notifLoading, setNotifLoading] = useState(true)
+  const [notifEmail, setNotifEmail] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [savedMsg, setSavedMsg] = useState('')
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/auth/me`)
       .then((r) => r.json())
-      .then((json) => {
-        setProfile(json.data ?? json)
-      })
+      .then((json) => setProfile(json.data ?? json))
       .catch(() => setError('Kunde inte hämta profilinformation.'))
       .finally(() => setLoading(false))
+
+    fetchWithAuth(`${API_URL}api/v1/notifications/settings`)
+      .then((r) => r.json())
+      .then((json) => {
+        const s: NotificationSettings = { ...DEFAULT_NOTIF, ...(json.data ?? json) }
+        setNotif(s)
+        setNotifEmail(s.email ?? '')
+      })
+      .catch(() => {})
+      .finally(() => setNotifLoading(false))
   }, [])
+
+  const showSaved = () => {
+    setSavedMsg('Inställningar sparade!')
+    if (savedTimer.current) clearTimeout(savedTimer.current)
+    savedTimer.current = setTimeout(() => setSavedMsg(''), 3000)
+  }
+
+  const saveSettings = async (patch: Partial<NotificationSettings>) => {
+    const updated = { ...notif, ...patch }
+    setNotif(updated)
+    setSaving(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/notifications/settings`, {
+        method: 'POST',
+        body: JSON.stringify(updated),
+      })
+      if (res.ok) showSaved()
+    } catch {
+      // best-effort
+    }
+    setSaving(false)
+  }
+
+  const handleEmailSave = () => {
+    saveSettings({ email: notifEmail })
+  }
+
+  const handleToggle = (key: keyof Omit<NotificationSettings, 'email'>) => {
+    saveSettings({ [key]: !notif[key] })
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken')
@@ -39,30 +100,120 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <Navbar />
-      <div className="max-w-xl mx-auto px-4 sm:px-8 py-10">
-        <h1 className="text-2xl font-bold text-primary mb-6">Profil</h1>
+      <div className="max-w-xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-8">
 
-        {loading ? (
-          <div className="bg-white border border-gray-100 rounded-xl p-6 flex flex-col gap-4">
-            {[...Array(5)].map((_, i) => (
-              <SkeletonCard key={i} className="h-8 w-full" />
-            ))}
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{error}</div>
-        ) : profile ? (
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-            <ProfileRow label="Förnamn" value={profile.firstName} />
-            <ProfileRow label="Efternamn" value={profile.lastName} />
-            <ProfileRow label="E-post" value={profile.email} />
-            <ProfileRow label="Organisation" value={profile.organisationName} />
-            <ProfileRow label="Workspace (slug)" value={profile.organisationSlug} last />
-          </div>
-        ) : null}
+        {/* Profile card */}
+        <div>
+          <h1 className="text-2xl font-bold text-primary mb-4">Profil</h1>
+          {loading ? (
+            <div className="bg-white border border-gray-100 rounded-xl p-6 flex flex-col gap-4">
+              {[...Array(5)].map((_, i) => (
+                <SkeletonCard key={i} className="h-8 w-full" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{error}</div>
+          ) : profile ? (
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <ProfileRow label="Förnamn" value={profile.firstName} />
+              <ProfileRow label="Efternamn" value={profile.lastName} />
+              <ProfileRow label="E-post" value={profile.email} />
+              <ProfileRow label="Organisation" value={profile.organisationName} />
+              <ProfileRow label="Workspace (slug)" value={profile.organisationSlug} last />
+            </div>
+          ) : null}
+        </div>
+
+        {/* Notification settings */}
+        <div>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Notifikationer</h2>
+
+          {notifLoading ? (
+            <div className="bg-white border border-gray-100 rounded-xl p-6 flex flex-col gap-4">
+              {[...Array(4)].map((_, i) => (
+                <SkeletonCard key={i} className="h-8 w-full" />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+
+              {/* Master enable/disable */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Aktivera notifikationer</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Slår på eller av alla notifikationer</p>
+                </div>
+                <Toggle
+                  checked={notif.enabled}
+                  onChange={() => handleToggle('enabled')}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Email input */}
+              <div className="px-5 py-4 border-b border-gray-50">
+                <label className="block text-sm font-semibold text-gray-800 mb-1">Notifikations-email</label>
+                <p className="text-xs text-gray-400 mb-3">Alerts skickas till denna adress</p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={notifEmail}
+                    onChange={e => setNotifEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleEmailSave()}
+                    placeholder="du@foretaget.se"
+                    disabled={!notif.enabled}
+                    className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors disabled:opacity-50 disabled:bg-gray-50"
+                  />
+                  <button
+                    onClick={handleEmailSave}
+                    disabled={saving || !notif.enabled}
+                    className="px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 min-h-[44px]"
+                  >
+                    Spara
+                  </button>
+                </div>
+              </div>
+
+              {/* Individual toggles */}
+              <NotifRow
+                label="Runway under 30 dagar"
+                description="Varna när kassaflödet räcker i under 30 dagar"
+                checked={notif.runwayAlert}
+                onChange={() => handleToggle('runwayAlert')}
+                disabled={saving || !notif.enabled}
+              />
+              <NotifRow
+                label="Förfallna fakturor"
+                description="Varna när fakturor är förfallna"
+                checked={notif.overdueInvoiceAlert}
+                onChange={() => handleToggle('overdueInvoiceAlert')}
+                disabled={saving || !notif.enabled}
+              />
+              <NotifRow
+                label="Negativt kassaflöde"
+                description="Varna när utgifterna överstiger intäkterna"
+                checked={notif.negativeCashflowAlert}
+                onChange={() => handleToggle('negativeCashflowAlert')}
+                disabled={saving || !notif.enabled}
+                last
+              />
+            </div>
+          )}
+
+          {/* Save confirmation */}
+          {savedMsg && (
+            <div className="mt-3 flex items-center gap-2 text-green-700 bg-green-50 border border-green-100 rounded-xl px-4 py-3 text-sm font-medium">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              {savedMsg}
+            </div>
+          )}
+        </div>
 
         <button
           onClick={handleLogout}
-          className="mt-6 w-full border border-red-200 text-red-600 font-semibold py-3 rounded-xl hover:bg-red-50 transition-colors text-sm"
+          className="w-full border border-red-200 text-red-600 font-semibold py-3 rounded-xl hover:bg-red-50 transition-colors text-sm min-h-[44px]"
         >
           Logga ut
         </button>
@@ -77,5 +228,46 @@ function ProfileRow({ label, value, last }: { label: string; value: string; last
       <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-32 shrink-0">{label}</span>
       <span className="text-sm text-gray-800 text-right">{value}</span>
     </div>
+  )
+}
+
+function NotifRow({
+  label, description, checked, onChange, disabled, last,
+}: {
+  label: string
+  description: string
+  checked: boolean
+  onChange: () => void
+  disabled?: boolean
+  last?: boolean
+}) {
+  return (
+    <div className={`flex items-center justify-between px-5 py-4 ${!last ? 'border-b border-gray-50' : ''} ${disabled ? 'opacity-50' : ''}`}>
+      <div className="flex-1 min-w-0 pr-4">
+        <p className="text-sm font-medium text-gray-800">{label}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+      </div>
+      <Toggle checked={checked} onChange={onChange} disabled={disabled} />
+    </div>
+  )
+}
+
+function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      disabled={disabled}
+      className={`relative inline-flex w-11 h-6 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed ${
+        checked ? 'bg-accent' : 'bg-gray-200'
+      }`}
+    >
+      <span
+        className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+          checked ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
   )
 }
