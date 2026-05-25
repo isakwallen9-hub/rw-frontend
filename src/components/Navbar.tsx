@@ -37,7 +37,7 @@ export default function Navbar() {
           <button onClick={() => navigate('/dashboard')} className="hover:text-primary transition-colors">Dashboard</button>
           <button onClick={() => navigate('/analytics')} className="hover:text-primary transition-colors">Analys</button>
           <button onClick={() => navigate('/simulate')} className="hover:text-primary transition-colors">Simulera</button>
-          <button onClick={() => navigate('/import')} className="hover:text-primary transition-colors">Importera</button>
+          <button data-tour="import-link" onClick={() => navigate('/import')} className="hover:text-primary transition-colors">Importera</button>
           <button onClick={() => navigate('/actions')} className="hover:text-primary transition-colors">Åtgärder</button>
           <button onClick={() => navigate('/diagnosis')} className="hover:text-primary transition-colors">Diagnos</button>
           <button onClick={() => navigate('/profile')} className="hover:text-primary transition-colors">Profil</button>

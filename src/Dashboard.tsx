@@ -4,7 +4,9 @@ import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, Copy, ChevronDown,
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
+import Tour from './components/Tour'
 import { fetchWithAuth } from './utils/fetchWithAuth'
+import { isTourCompleted, markTourCompleted } from './utils/tourStorage'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const LS_COACH_KEY = 'rw_coach_history'
@@ -171,6 +173,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [exportingExcel, setExportingExcel] = useState(false)
   const [exportError, setExportError] = useState('')
+  const [showTour, setShowTour] = useState(false)
 
   // AI Explain modal
   const [explainOpen, setExplainOpen] = useState(false)
@@ -200,6 +203,8 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       window.location.href = '/login'
       return
     }
+
+    if (!isTourCompleted()) setShowTour(true)
 
     fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
       .then((r) => r.json())
@@ -554,7 +559,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           const gmTrend: KpiTrend = gm === null ? 'neutral' : gm > 30 ? 'up' : gm >= 10 ? 'neutral' : 'down'
           const gmAccent: KpiAccent = gm === null ? 'blue' : gm > 30 ? 'green' : gm >= 10 ? 'yellow' : 'red'
           return (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div data-tour="kpi-cards" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <KpiCard
                 icon={<Banknote className="w-5 h-5" />}
                 label="Likvida medel"
@@ -669,7 +674,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             {cashflowError}
           </div>
         ) : cashflowDays.length > 0 ? (
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+          <div data-tour="cashflow-chart" className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-sm font-bold text-gray-700 mb-0.5">Kassaflöde</h2>
@@ -925,6 +930,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Floating button */}
         {!coachOpen && (
           <button
+            data-tour="coach-button"
             onClick={() => setCoachOpen(true)}
             className="fixed bottom-6 right-6 bg-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
             title="Öppna ekonomicoach"
@@ -933,6 +939,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           </button>
         )}
       </div>
+
+      {/* Onboarding tour */}
+      {showTour && (
+        <Tour
+          onComplete={() => {
+            markTourCompleted()
+            setShowTour(false)
+          }}
+        />
+      )}
     </div>
   )
 }
