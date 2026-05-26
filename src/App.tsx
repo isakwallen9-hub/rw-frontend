@@ -14,6 +14,7 @@ import Simulate from './pages/Simulate'
 import Import from './pages/Import'
 import Diagnosis from './pages/Diagnosis'
 import Actions from './pages/Actions'
+import Budget from './pages/Budget'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('accessToken')
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/import" element={<PrivateRoute><Import /></PrivateRoute>} />
         <Route path="/actions" element={<PrivateRoute><Actions /></PrivateRoute>} />
         <Route path="/diagnosis" element={<PrivateRoute><Diagnosis /></PrivateRoute>} />
+        <Route path="/budget" element={<PrivateRoute><Budget /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
