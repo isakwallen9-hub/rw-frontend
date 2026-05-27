@@ -178,7 +178,8 @@ export default function Budget() {
   const [saveError, setSaveError] = useState('')
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const fetchBudget = useCallback(async (p: string) => {
+  // prefill=true only on period change — never after a save-triggered refresh
+  const fetchBudget = useCallback(async (p: string, prefill = false) => {
     setLoading(true)
     setFetchError('')
     setData(null)
@@ -198,17 +199,23 @@ export default function Budget() {
         },
       }
       setData(budget)
-      // Pre-fill form with existing budget values
-      if (budget.revenue.budget > 0) setFormRevenue(String(budget.revenue.budget))
-      if (budget.costs.budget > 0) setFormCosts(String(budget.costs.budget))
+      // Only pre-fill when switching periods, not after a save
+      if (prefill) {
+        if (budget.revenue.budget > 0) setFormRevenue(String(budget.revenue.budget))
+        if (budget.costs.budget > 0) setFormCosts(String(budget.costs.budget))
+      }
     } catch {
       setFetchError('Kunde inte hämta budgetdata. Prova igen.')
     }
     setLoading(false)
-  }, [])
+  }, []) // stable — only uses module-level constants and state setters
 
   useEffect(() => {
-    fetchBudget(period)
+    // Reset form and re-fetch when period changes; pass prefill=true so
+    // existing saved values populate the inputs on the new month.
+    setFormRevenue('')
+    setFormCosts('')
+    fetchBudget(period, true)
   }, [period, fetchBudget])
 
   const handleSave = async () => {
@@ -222,28 +229,24 @@ export default function Budget() {
 
       for (const payload of goals) {
         console.log('[Budget] POST /api/v1/goals payload:', payload)
-        const token = localStorage.getItem('accessToken')
-        const res = await fetch(`${import.meta.env.VITE_API_URL}api/v1/goals`, {
+        const res = await fetchWithAuth(`${API_URL}api/v1/goals`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          credentials: 'include',
           body: JSON.stringify(payload),
         })
         console.log('[Budget] status:', res.status)
-        const json = await res.json()
-        console.log('[Budget] json:', JSON.stringify(json))
         if (!res.ok) {
-          throw new Error(json?.error?.message ?? json?.message ?? `HTTP ${res.status}`)
+          // Only parse body on error — success may return empty/non-JSON body
+          const errJson = await res.json().catch(() => ({}))
+          console.log('[Budget] error json:', JSON.stringify(errJson))
+          throw new Error(errJson?.error?.message ?? errJson?.message ?? `HTTP ${res.status}`)
         }
       }
 
       if (savedTimer.current) clearTimeout(savedTimer.current)
       setSavedMsg('Budget sparad!')
       savedTimer.current = setTimeout(() => setSavedMsg(''), 3500)
-      await fetchBudget(period)
+      // prefill=false — user just saved, don't overwrite their inputs
+      await fetchBudget(period, false)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Kunde inte spara budgeten.')
     }
