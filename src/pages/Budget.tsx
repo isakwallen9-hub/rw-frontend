@@ -216,19 +216,22 @@ export default function Budget() {
     setSaving(true)
     setSaveError('')
     try {
-      const res = await fetchWithAuth(`${API_URL}api/v1/goals`, {
-        method: 'POST',
-        body: JSON.stringify({
-          period,
-          monthly_budget: formRevenue ? Number(formRevenue) : undefined,
-          reduce_costs: formCosts ? Number(formCosts) : undefined,
-        }),
-      })
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}))
-        throw new Error(json?.error?.message ?? `HTTP ${res.status}`)
+      const goals: { type: string; targetAmount: number; period: string }[] = []
+      if (formRevenue) goals.push({ type: 'monthly_budget', targetAmount: Number(formRevenue), period })
+      if (formCosts)   goals.push({ type: 'reduce_costs',   targetAmount: Number(formCosts),   period })
+
+      for (const payload of goals) {
+        console.log('[Budget] POST /api/v1/goals', payload)
+        const res = await fetchWithAuth(`${API_URL}api/v1/goals`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}))
+          throw new Error(json?.error?.message ?? json?.message ?? `HTTP ${res.status}`)
+        }
       }
-      // Show confirmation and refresh
+
       if (savedTimer.current) clearTimeout(savedTimer.current)
       setSavedMsg('Budget sparad!')
       savedTimer.current = setTimeout(() => setSavedMsg(''), 3500)
