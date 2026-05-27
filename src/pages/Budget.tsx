@@ -221,13 +221,21 @@ export default function Budget() {
       if (formCosts)   goals.push({ type: 'reduce_costs',   targetAmount: Number(formCosts),   period })
 
       for (const payload of goals) {
-        console.log('[Budget] POST /api/v1/goals', payload)
-        const res = await fetchWithAuth(`${API_URL}api/v1/goals`, {
+        console.log('[Budget] POST /api/v1/goals payload:', payload)
+        const token = localStorage.getItem('accessToken')
+        const res = await fetch(`${import.meta.env.VITE_API_URL}api/v1/goals`, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          credentials: 'include',
           body: JSON.stringify(payload),
         })
+        console.log('[Budget] status:', res.status)
+        const json = await res.json()
+        console.log('[Budget] json:', JSON.stringify(json))
         if (!res.ok) {
-          const json = await res.json().catch(() => ({}))
           throw new Error(json?.error?.message ?? json?.message ?? `HTTP ${res.status}`)
         }
       }
