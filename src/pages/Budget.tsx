@@ -187,24 +187,36 @@ export default function Budget() {
       const res = await fetchWithAuth(`${API_URL}api/v1/goals/budget?period=${p}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
+
+      // Log the raw response so we can see the exact shape
+      console.log('[Budget] GET /api/v1/goals/budget raw json:', JSON.stringify(json))
+
       const d = json.data ?? json
+
+      const inflow  = d.budgetVsActual?.inflow
+      const outflow = d.budgetVsActual?.outflow
+
       const budget: BudgetData = {
         revenue: {
-          budget: Number(d.revenue?.budget ?? d.monthly_budget ?? 0),
-          actual: Number(d.revenue?.actual ?? 0),
+          budget: Number(inflow?.budget  ?? 0),
+          actual: Number(inflow?.actual  ?? 0),
         },
         costs: {
-          budget: Number(d.costs?.budget ?? d.reduce_costs ?? 0),
-          actual: Number(d.costs?.actual ?? 0),
+          budget: Number(outflow?.budget ?? 0),
+          actual: Number(outflow?.actual ?? 0),
         },
       }
+
+      console.log('[Budget] parsed BudgetData:', budget)
+
       setData(budget)
       // Only pre-fill when switching periods, not after a save
       if (prefill) {
         if (budget.revenue.budget > 0) setFormRevenue(String(budget.revenue.budget))
-        if (budget.costs.budget > 0) setFormCosts(String(budget.costs.budget))
+        if (budget.costs.budget > 0)   setFormCosts(String(budget.costs.budget))
       }
-    } catch {
+    } catch (err) {
+      console.error('[Budget] fetchBudget error:', err)
       setFetchError('Kunde inte hämta budgetdata. Prova igen.')
     }
     setLoading(false)

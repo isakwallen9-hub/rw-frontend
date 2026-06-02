@@ -6,12 +6,22 @@ import { SkeletonCard } from '../components/Skeleton'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
+const INDUSTRIES = [
+  { value: 'restaurant', label: 'Restaurang', icon: '🍽️' },
+  { value: 'salon', label: 'Frisör/Salong', icon: '✂️' },
+  { value: 'retail', label: 'Butik/Detaljhandel', icon: '🛍️' },
+  { value: 'cafe', label: 'Café', icon: '☕' },
+  { value: 'gym', label: 'Gym/Träning', icon: '💪' },
+  { value: 'other', label: 'Annat', icon: '🏢' },
+]
+
 interface UserProfile {
   firstName: string
   lastName: string
   email: string
   organisationName: string
   organisationSlug: string
+  industry?: string
 }
 
 interface NotificationSettings {
@@ -36,6 +46,9 @@ export default function Profile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const [industry, setIndustry] = useState('')
+  const [industrySaving, setIndustrySaving] = useState(false)
+
   const [notif, setNotif] = useState<NotificationSettings>(DEFAULT_NOTIF)
   const [notifLoading, setNotifLoading] = useState(true)
   const [notifEmail, setNotifEmail] = useState('')
@@ -46,7 +59,11 @@ export default function Profile() {
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/auth/me`)
       .then((r) => r.json())
-      .then((json) => setProfile(json.data ?? json))
+      .then((json) => {
+        const data = json.data ?? json
+        setProfile(data)
+        setIndustry(data.industry ?? '')
+      })
       .catch(() => setError('Kunde inte hämta profilinformation.'))
       .finally(() => setLoading(false))
 
@@ -83,6 +100,21 @@ export default function Profile() {
     setSaving(false)
   }
 
+  const saveIndustry = async (value: string) => {
+    setIndustry(value)
+    setIndustrySaving(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/organisation/industry`, {
+        method: 'PUT',
+        body: JSON.stringify({ industry: value }),
+      })
+      if (res.ok) showSaved()
+    } catch {
+      // best-effort
+    }
+    setIndustrySaving(false)
+  }
+
   const handleEmailSave = () => {
     saveSettings({ email: notifEmail })
   }
@@ -96,6 +128,8 @@ export default function Profile() {
     localStorage.removeItem('refreshToken')
     navigate('/login')
   }
+
+  const currentIndustry = INDUSTRIES.find((i) => i.value === industry)
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -119,9 +153,50 @@ export default function Profile() {
               <ProfileRow label="Efternamn" value={profile.lastName} />
               <ProfileRow label="E-post" value={profile.email} />
               <ProfileRow label="Organisation" value={profile.organisationName} />
-              <ProfileRow label="Workspace (slug)" value={profile.organisationSlug} last />
+              <ProfileRow label="Workspace (slug)" value={profile.organisationSlug} />
+              <div className="flex items-center justify-between px-5 py-4">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-32 shrink-0">Bransch</span>
+                {currentIndustry ? (
+                  <span className="flex items-center gap-1.5 text-sm text-gray-800">
+                    <span>{currentIndustry.icon}</span>
+                    {currentIndustry.label}
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-400">Ej vald</span>
+                )}
+              </div>
             </div>
           ) : null}
+        </div>
+
+        {/* Industry picker */}
+        <div>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Bransch</h2>
+          <div className="bg-white border border-gray-100 rounded-xl p-4">
+            {loading ? (
+              <SkeletonCard className="h-40 w-full" />
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {INDUSTRIES.map((ind) => (
+                  <button
+                    key={ind.value}
+                    onClick={() => saveIndustry(ind.value)}
+                    disabled={industrySaving}
+                    className={`flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-2 transition-all disabled:opacity-50 ${
+                      industry === ind.value
+                        ? 'border-accent bg-accent/5'
+                        : 'border-gray-100 hover:border-accent/50 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="text-2xl">{ind.icon}</span>
+                    <span className={`text-xs font-medium text-center leading-tight ${industry === ind.value ? 'text-accent' : 'text-gray-600'}`}>
+                      {ind.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Notification settings */}
