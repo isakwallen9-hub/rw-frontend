@@ -197,6 +197,18 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   })
   const chatEndRef = useRef<HTMLDivElement>(null)
 
+  // Quick-add transaction
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [quickAddSaving, setQuickAddSaving] = useState(false)
+  const [quickAddToast, setQuickAddToast] = useState('')
+  const [quickForm, setQuickForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    amount: '',
+    description: '',
+    category: '',
+    type: 'income' as 'income' | 'expense',
+  })
+
   useEffect(() => {
     const token = localStorage.getItem('accessToken')
     if (!token || token === 'undefined' || token === 'null') {
@@ -362,6 +374,39 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     setExplainLoading(false)
   }
 
+
+  const refreshOverview = () => {
+    fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
+      .then(r => r.json())
+      .then(json => setOverview(json))
+      .catch(() => {})
+  }
+
+  const handleQuickAdd = async () => {
+    if (!quickForm.description.trim() || !quickForm.amount) return
+    setQuickAddSaving(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/transactions/quick`, {
+        method: 'POST',
+        body: JSON.stringify({
+          date: quickForm.date,
+          amount: parseFloat(quickForm.amount),
+          description: quickForm.description.trim(),
+          ...(quickForm.category.trim() ? { category: quickForm.category.trim() } : {}),
+          type: quickForm.type,
+        }),
+      })
+      if (!res.ok) throw new Error('Misslyckades')
+      setQuickAddOpen(false)
+      setQuickForm({ date: new Date().toISOString().slice(0, 10), amount: '', description: '', category: '', type: 'income' })
+      setQuickAddToast('Transaktion sparad!')
+      setTimeout(() => setQuickAddToast(''), 3000)
+      refreshOverview()
+    } catch {
+      // keep modal open so user can retry
+    }
+    setQuickAddSaving(false)
+  }
 
   const clearCoach = () => {
     setCoachHistory([])
@@ -797,6 +842,106 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       </div>
 
 
+      {/* Quick-add toast */}
+      {quickAddToast && (
+        <div className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-green-700 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg">
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          {quickAddToast}
+        </div>
+      )}
+
+      {/* Quick-add modal */}
+      {quickAddOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setQuickAddOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-bold text-gray-900">Ny transaktion</h2>
+              <button onClick={() => setQuickAddOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+
+            {/* Type toggle */}
+            <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-4">
+              <button
+                onClick={() => setQuickForm(f => ({ ...f, type: 'income' }))}
+                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${quickForm.type === 'income' ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              >
+                Inkomst
+              </button>
+              <button
+                onClick={() => setQuickForm(f => ({ ...f, type: 'expense' }))}
+                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${quickForm.type === 'expense' ? 'bg-red-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              >
+                Utgift
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Datum</label>
+                <input
+                  type="date"
+                  value={quickForm.date}
+                  onChange={e => setQuickForm(f => ({ ...f, date: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Belopp (SEK)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0"
+                  value={quickForm.amount}
+                  onChange={e => setQuickForm(f => ({ ...f, amount: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Beskrivning</label>
+                <input
+                  type="text"
+                  placeholder="T.ex. Hyra, Kundbetalning..."
+                  value={quickForm.description}
+                  onChange={e => setQuickForm(f => ({ ...f, description: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Kategori <span className="text-gray-300">(valfri)</span></label>
+                <input
+                  type="text"
+                  placeholder="T.ex. Hyra, Lön..."
+                  value={quickForm.category}
+                  onChange={e => setQuickForm(f => ({ ...f, category: e.target.value }))}
+                  onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd() }}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => setQuickAddOpen(false)}
+                className="flex-1 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                Avbryt
+              </button>
+              <button
+                onClick={handleQuickAdd}
+                disabled={quickAddSaving || !quickForm.description.trim() || !quickForm.amount}
+                className="flex-1 py-2.5 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {quickAddSaving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {quickAddSaving ? 'Sparar...' : 'Spara'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* AI Explain Modal */}
       {explainOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setExplainOpen(false)}>
@@ -927,16 +1072,25 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           </div>
         )}
 
-        {/* Floating button */}
+        {/* Floating buttons */}
         {!coachOpen && (
-          <button
-            data-tour="coach-button"
-            onClick={() => setCoachOpen(true)}
-            className="fixed bottom-6 right-6 bg-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
-            title="Öppna ekonomicoach"
-          >
-            <SparkleIcon className="w-6 h-6" />
-          </button>
+          <>
+            <button
+              onClick={() => setQuickAddOpen(true)}
+              className="fixed bottom-6 right-24 bg-white border border-gray-200 text-gray-700 rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors"
+              title="Lägg till transaktion"
+            >
+              <span className="text-3xl font-light leading-none pb-0.5">+</span>
+            </button>
+            <button
+              data-tour="coach-button"
+              onClick={() => setCoachOpen(true)}
+              className="fixed bottom-6 right-6 bg-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+              title="Öppna ekonomicoach"
+            >
+              <SparkleIcon className="w-6 h-6" />
+            </button>
+          </>
         )}
       </div>
 
