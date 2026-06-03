@@ -39,6 +39,7 @@ export default function Navbar() {
           <button onClick={() => navigate('/simulate')} className="hover:text-primary transition-colors">Simulera</button>
           <button data-tour="import-link" onClick={() => navigate('/import')} className="hover:text-primary transition-colors">Importera</button>
           <button onClick={() => navigate('/budget')} className="hover:text-primary transition-colors">Budget</button>
+          <button onClick={() => navigate('/customers')} className="hover:text-primary transition-colors">Kunder</button>
           <button onClick={() => navigate('/actions')} className="hover:text-primary transition-colors">Åtgärder</button>
           <button onClick={() => navigate('/diagnosis')} className="hover:text-primary transition-colors">Diagnos</button>
           <button onClick={() => navigate('/profile')} className="hover:text-primary transition-colors">Profil</button>
@@ -95,6 +96,12 @@ export default function Navbar() {
             className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
           >
             Budget
+          </button>
+          <button
+            onClick={() => { navigate('/customers'); setMenuOpen(false) }}
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
+          >
+            Kunder
           </button>
           <button
             onClick={() => { navigate('/actions'); setMenuOpen(false) }}
