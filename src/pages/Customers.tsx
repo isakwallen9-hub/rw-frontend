@@ -17,6 +17,13 @@ interface Customer {
   paymentBehavior: PaymentBehavior
 }
 
+interface ReminderForm {
+  email: string
+  amount: string
+  dueDate: string
+  message: string
+}
+
 function fmt(n: number) {
   return n.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 })
 }
@@ -45,6 +52,11 @@ export default function Customers() {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortKey>('totalRevenue')
 
+  const [reminderCustomer, setReminderCustomer] = useState<Customer | null>(null)
+  const [reminderForm, setReminderForm] = useState<ReminderForm>({ email: '', amount: '', dueDate: '', message: '' })
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderToast, setReminderToast] = useState('')
+
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/customers`)
       .then((r) => r.json())
@@ -69,6 +81,42 @@ export default function Customers() {
     () => [...customers].sort((a, b) => b.totalRevenue - a.totalRevenue).slice(0, 3),
     [customers]
   )
+
+  const openReminder = (c: Customer) => {
+    setReminderCustomer(c)
+    setReminderForm({
+      email: '',
+      amount: String(Math.round(c.averageAmount)),
+      dueDate: '',
+      message: '',
+    })
+  }
+
+  const closeReminder = () => setReminderCustomer(null)
+
+  const sendReminder = async () => {
+    if (!reminderCustomer || !reminderForm.email || !reminderForm.amount || !reminderForm.dueDate) return
+    setReminderSending(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/reminders/send`, {
+        method: 'POST',
+        body: JSON.stringify({
+          customerName: reminderCustomer.name,
+          email: reminderForm.email,
+          amount: parseFloat(reminderForm.amount),
+          dueDate: reminderForm.dueDate,
+          ...(reminderForm.message.trim() ? { message: reminderForm.message.trim() } : {}),
+        }),
+      })
+      if (!res.ok) throw new Error('Misslyckades')
+      closeReminder()
+      setReminderToast('Påminnelse skickad!')
+      setTimeout(() => setReminderToast(''), 3000)
+    } catch {
+      // keep modal open so user can retry
+    }
+    setReminderSending(false)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -108,6 +156,14 @@ export default function Customers() {
                     <span>Snitt {fmt(c.averageAmount)}</span>
                   </div>
                   <div className="text-xs text-gray-400">Senaste: {fmtDate(c.lastPurchase)}</div>
+                  {c.paymentBehavior === 'inactive' && (
+                    <button
+                      onClick={() => openReminder(c)}
+                      className="mt-1 text-xs font-semibold text-red-600 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition-colors text-left"
+                    >
+                      Skicka påminnelse →
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -158,19 +214,20 @@ export default function Customers() {
         ) : (
           <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
             {/* Table header */}
-            <div className="hidden sm:grid grid-cols-[1fr_130px_100px_130px_130px_110px] gap-4 px-5 py-3 border-b border-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            <div className="hidden sm:grid grid-cols-[1fr_130px_100px_130px_130px_110px_150px] gap-4 px-5 py-3 border-b border-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               <span>Kund</span>
               <span className="text-right">Totalt inflöde</span>
               <span className="text-right">Köp</span>
               <span className="text-right">Snitt/köp</span>
               <span className="text-right">Senaste köp</span>
               <span className="text-right">Beteende</span>
+              <span></span>
             </div>
 
             {sorted.map((c, i) => (
               <div
                 key={c.name}
-                className={`flex flex-col sm:grid sm:grid-cols-[1fr_130px_100px_130px_130px_110px] gap-2 sm:gap-4 px-5 py-4 ${i < sorted.length - 1 ? 'border-b border-gray-50' : ''}`}
+                className={`flex flex-col sm:grid sm:grid-cols-[1fr_130px_100px_130px_130px_110px_150px] sm:items-center gap-2 sm:gap-4 px-5 py-4 ${i < sorted.length - 1 ? 'border-b border-gray-50' : ''}`}
               >
                 <span className="font-semibold text-gray-900 text-sm">{c.name}</span>
                 <span className="sm:text-right text-sm font-bold text-primary">
@@ -192,11 +249,106 @@ export default function Customers() {
                 <div className="sm:flex sm:justify-end">
                   <BehaviorBadge behavior={c.paymentBehavior} />
                 </div>
+                <div className="sm:flex sm:justify-end">
+                  {c.paymentBehavior === 'inactive' && (
+                    <button
+                      onClick={() => openReminder(c)}
+                      className="text-xs font-semibold text-red-600 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition-colors whitespace-nowrap"
+                    >
+                      Skicka påminnelse
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Reminder modal */}
+      {reminderCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={closeReminder}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-base font-bold text-gray-900">Skicka påminnelse</h2>
+              <button onClick={closeReminder} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <p className="text-sm text-gray-400 mb-5">{reminderCustomer.name}</p>
+
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Kund-email</label>
+                <input
+                  type="email"
+                  placeholder="kund@foretag.se"
+                  value={reminderForm.email}
+                  onChange={e => setReminderForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Belopp (SEK)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={reminderForm.amount}
+                  onChange={e => setReminderForm(f => ({ ...f, amount: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Förfallodatum</label>
+                <input
+                  type="date"
+                  value={reminderForm.dueDate}
+                  onChange={e => setReminderForm(f => ({ ...f, dueDate: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Personligt meddelande <span className="text-gray-300">(valfritt)</span>
+                </label>
+                <textarea
+                  placeholder="T.ex. Hej! Vi ser att vi inte hört från dig på ett tag..."
+                  value={reminderForm.message}
+                  onChange={e => setReminderForm(f => ({ ...f, message: e.target.value }))}
+                  rows={3}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={closeReminder}
+                className="flex-1 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                Avbryt
+              </button>
+              <button
+                onClick={sendReminder}
+                disabled={reminderSending || !reminderForm.email || !reminderForm.amount || !reminderForm.dueDate}
+                className="flex-1 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {reminderSending && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {reminderSending ? 'Skickar...' : 'Skicka'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success toast */}
+      {reminderToast && (
+        <div className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-green-700 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg">
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          {reminderToast}
+        </div>
+      )}
     </div>
   )
 }
