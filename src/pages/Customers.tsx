@@ -60,7 +60,10 @@ export default function Customers() {
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/customers`)
       .then((r) => r.json())
-      .then((json) => setCustomers(json.data ?? json ?? []))
+      .then((json) => {
+        const list = json.data?.customers
+        setCustomers(Array.isArray(list) ? list : [])
+      })
       .catch(() => setError('Kunde inte hämta kunddata.'))
       .finally(() => setLoading(false))
   }, [])
