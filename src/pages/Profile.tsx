@@ -3,8 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { SkeletonCard } from '../components/Skeleton'
+import { useCurrency } from '../contexts/CurrencyContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
+
+const CURRENCIES = [
+  { code: 'SEK', flag: '🇸🇪' },
+  { code: 'EUR', flag: '🇪🇺' },
+  { code: 'USD', flag: '🇺🇸' },
+  { code: 'GBP', flag: '🇬🇧' },
+]
 
 const INDUSTRIES = [
   { value: 'restaurant', label: 'Restaurang', icon: '🍽️' },
@@ -42,12 +50,16 @@ const DEFAULT_NOTIF: NotificationSettings = {
 
 export default function Profile() {
   const navigate = useNavigate()
+  const { setCurrency: setContextCurrency } = useCurrency()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const [industry, setIndustry] = useState('')
   const [industrySaving, setIndustrySaving] = useState(false)
+
+  const [currency, setCurrencyState] = useState('SEK')
+  const [currencySaving, setCurrencySaving] = useState(false)
 
   const [notif, setNotif] = useState<NotificationSettings>(DEFAULT_NOTIF)
   const [notifLoading, setNotifLoading] = useState(true)
@@ -63,6 +75,7 @@ export default function Profile() {
         const data = json.data ?? json
         setProfile(data)
         setIndustry(data.industry ?? '')
+        if (data.currency) setCurrencyState(data.currency)
       })
       .catch(() => setError('Kunde inte hämta profilinformation.'))
       .finally(() => setLoading(false))
@@ -113,6 +126,22 @@ export default function Profile() {
       // best-effort
     }
     setIndustrySaving(false)
+  }
+
+  const saveCurrency = async (code: string) => {
+    setCurrencyState(code)
+    setContextCurrency(code)
+    setCurrencySaving(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/organisation/currency`, {
+        method: 'PUT',
+        body: JSON.stringify({ currency: code }),
+      })
+      if (res.ok) showSaved()
+    } catch {
+      // best-effort
+    }
+    setCurrencySaving(false)
   }
 
   const handleEmailSave = () => {
@@ -191,6 +220,36 @@ export default function Profile() {
                     <span className="text-2xl">{ind.icon}</span>
                     <span className={`text-xs font-medium text-center leading-tight ${industry === ind.value ? 'text-accent' : 'text-gray-600'}`}>
                       {ind.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Currency picker */}
+        <div>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Valuta</h2>
+          <div className="bg-white border border-gray-100 rounded-xl p-4">
+            {loading ? (
+              <SkeletonCard className="h-16 w-full" />
+            ) : (
+              <div className="grid grid-cols-4 gap-2">
+                {CURRENCIES.map((c) => (
+                  <button
+                    key={c.code}
+                    onClick={() => saveCurrency(c.code)}
+                    disabled={currencySaving}
+                    className={`flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 transition-all disabled:opacity-50 ${
+                      currency === c.code
+                        ? 'border-accent bg-accent/5'
+                        : 'border-gray-100 hover:border-accent/50 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="text-2xl">{c.flag}</span>
+                    <span className={`text-xs font-bold ${currency === c.code ? 'text-accent' : 'text-gray-600'}`}>
+                      {c.code}
                     </span>
                   </button>
                 ))}

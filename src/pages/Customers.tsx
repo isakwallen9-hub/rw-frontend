@@ -24,8 +24,8 @@ interface ReminderForm {
   message: string
 }
 
-function fmt(n: number) {
-  return n.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 })
+function fmt(n: number | undefined | null) {
+  return (n ?? 0).toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 })
 }
 
 function fmtDate(iso: string) {
@@ -76,7 +76,7 @@ export default function Customers() {
       if (sortBy === 'lastPurchase') {
         return new Date(b.lastPurchase).getTime() - new Date(a.lastPurchase).getTime()
       }
-      return b[sortBy] - a[sortBy]
+      return (b[sortBy] ?? 0) - (a[sortBy] ?? 0)
     })
   }, [customers, search, sortBy])
 
@@ -89,7 +89,7 @@ export default function Customers() {
     setReminderCustomer(c)
     setReminderForm({
       email: '',
-      amount: String(Math.round(c.averageAmount)),
+      amount: String(Math.round(c.averageAmount ?? 0)),
       dueDate: '',
       message: '',
     })
@@ -154,7 +154,7 @@ export default function Customers() {
                   </div>
                   <div className="text-2xl font-bold text-primary">{fmt(c.totalRevenue)}</div>
                   <div className="flex gap-4 text-xs text-gray-400">
-                    <span>{c.transactionCount} köp</span>
+                    <span>{c.transactionCount ?? 0} köp</span>
                     <span>·</span>
                     <span>Snitt {fmt(c.averageAmount)}</span>
                   </div>
@@ -239,7 +239,7 @@ export default function Customers() {
                 </span>
                 <span className="sm:text-right text-sm text-gray-600">
                   <span className="sm:hidden text-xs text-gray-400 mr-1">Köp:</span>
-                  {c.transactionCount}
+                  {c.transactionCount ?? 0}
                 </span>
                 <span className="sm:text-right text-sm text-gray-600">
                   <span className="sm:hidden text-xs text-gray-400 mr-1">Snitt:</span>

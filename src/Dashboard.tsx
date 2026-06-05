@@ -7,6 +7,7 @@ import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skel
 import Tour from './components/Tour'
 import { fetchWithAuth } from './utils/fetchWithAuth'
 import { isTourCompleted, markTourCompleted } from './utils/tourStorage'
+import { useCurrency } from './contexts/CurrencyContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const LS_COACH_KEY = 'rw_coach_history'
@@ -116,9 +117,6 @@ interface ChatMessage {
   text: string
 }
 
-function fmt(amount: number) {
-  return amount.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0, maximumFractionDigits: 0 })
-}
 
 function translateAlert(msg: string): string {
   // "3 invoices are overdue based on your 30-day payment terms"
@@ -161,6 +159,7 @@ const PRIORITY_CONFIG = {
 
 export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => void }) {
   const navigate = useNavigate()
+  const { formatAmount: fmt } = useCurrency()
   const [overview, setOverview] = useState<OverviewData | null>(null)
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loadingOverview, setLoadingOverview] = useState(true)
@@ -209,21 +208,14 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     type: 'income' as 'income' | 'expense',
   })
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (!token || token === 'undefined' || token === 'null') {
-      window.location.href = '/login'
-      return
-    }
-
-    if (!isTourCompleted()) setShowTour(true)
-
+  const fetchOverview = () =>
     fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
       .then((r) => r.json())
-      .then((json) => { setOverview(json) })
-      .catch(() => { setOverview(MOCK_OVERVIEW) })
+      .then((json) => setOverview(json))
+      .catch(() => setOverview(MOCK_OVERVIEW))
       .finally(() => setLoadingOverview(false))
 
+  const fetchCashflow = () =>
     fetchWithAuth(`${API_URL}api/v1/cashflow/current`)
       .then((r) => r.json())
       .then((json) => {
@@ -238,6 +230,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       .catch(() => setCashflowError('Kunde inte hämta kassaflödesdata.'))
       .finally(() => setLoadingCashflow(false))
 
+  const fetchRunway = () =>
     fetchWithAuth(`${API_URL}api/v1/cashflow/runway`)
       .then(r => r.json())
       .then(json => {
@@ -246,6 +239,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       })
       .catch(() => {})
 
+  const fetchRecommendations = () =>
     fetchWithAuth(`${API_URL}api/v1/recommendations/top3`)
       .then((r) => r.json())
       .then((json) => {
@@ -260,8 +254,22 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           targets: a.targets,
         })))
       })
-      .catch(() => { setRecommendations(MOCK_RECOMMENDATIONS) })
+      .catch(() => setRecommendations(MOCK_RECOMMENDATIONS))
       .finally(() => setLoadingRec(false))
+
+  const refreshAllData = () => Promise.all([fetchOverview(), fetchCashflow(), fetchRunway(), fetchRecommendations()])
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken')
+    if (!token || token === 'undefined' || token === 'null') {
+      window.location.href = '/login'
+      return
+    }
+    if (!isTourCompleted()) setShowTour(true)
+    fetchOverview()
+    fetchCashflow()
+    fetchRunway()
+    fetchRecommendations()
   }, [])
 
   useEffect(() => {
@@ -375,33 +383,29 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   }
 
 
-  const refreshOverview = () => {
-    fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
-      .then(r => r.json())
-      .then(json => setOverview(json))
-      .catch(() => {})
-  }
 
   const handleQuickAdd = async () => {
     if (!quickForm.description.trim() || !quickForm.amount) return
     setQuickAddSaving(true)
     try {
+      const payload = {
+        date: quickForm.date,
+        amount: parseFloat(quickForm.amount),
+        description: quickForm.description.trim(),
+        ...(quickForm.category.trim() ? { category: quickForm.category.trim() } : {}),
+        type: quickForm.type === 'income' ? 'INCOME' : 'EXPENSE',
+      }
+      console.log('quick transaction payload:', JSON.stringify(payload))
       const res = await fetchWithAuth(`${API_URL}api/v1/transactions/quick`, {
         method: 'POST',
-        body: JSON.stringify({
-          date: quickForm.date,
-          amount: parseFloat(quickForm.amount),
-          description: quickForm.description.trim(),
-          ...(quickForm.category.trim() ? { category: quickForm.category.trim() } : {}),
-          type: quickForm.type,
-        }),
+        body: JSON.stringify(payload),
       })
       if (!res.ok) throw new Error('Misslyckades')
       setQuickAddOpen(false)
       setQuickForm({ date: new Date().toISOString().slice(0, 10), amount: '', description: '', category: '', type: 'income' })
       setQuickAddToast('Transaktion sparad!')
       setTimeout(() => setQuickAddToast(''), 3000)
-      refreshOverview()
+      refreshAllData()
     } catch {
       // keep modal open so user can retry
     }
@@ -1112,6 +1116,7 @@ function CashflowTooltip({ active, payload, label }: {
   payload?: { name: string; value: number; color: string }[]
   label?: string
 }) {
+  const { formatAmount: fmt } = useCurrency()
   if (!active || !payload?.length) return null
   return (
     <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-4 py-3 text-sm">
@@ -1129,6 +1134,7 @@ function CashflowTooltip({ active, payload, label }: {
 
 function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: () => void }) {
   const [expanded, setExpanded] = useState(false)
+  const { formatAmount: fmt } = useCurrency()
   const p = PRIORITY_CONFIG[r.priority ?? 'medium']
 
   return (
@@ -1351,6 +1357,7 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
   rowLabel: string
   barColor: string
 }) {
+  const { formatAmount: fmt } = useCurrency()
   if (items.length === 0) {
     return (
       <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center text-gray-400 text-sm">
