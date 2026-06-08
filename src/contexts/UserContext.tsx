@@ -25,11 +25,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     fetchWithAuth(`${API_URL}api/v1/auth/me`)
       .then(r => r.json())
       .then(json => {
-        const data = json.data ?? json
-        setIsAdmin(data.isAdmin === true)
+        console.log('UserContext /auth/me raw response:', json)
+        const data = json.data?.user ?? json.data ?? json
+        console.log('UserContext resolved data:', data)
+        console.log('UserContext isAdmin value:', data.isAdmin, '| role:', data.role)
+        const admin =
+          data.isAdmin === true ||
+          data.is_admin === true ||
+          data.role === 'admin' ||
+          data.role === 'ADMIN'
+        setIsAdmin(admin)
         setEmail(data.email ?? null)
       })
-      .catch(() => {})
+      .catch((err) => { console.error('UserContext /auth/me error:', err) })
       .finally(() => setLoading(false))
   }, [])
 
