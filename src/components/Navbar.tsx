@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearUserImportHistory } from '../utils/jwtUser'
+import { useUser } from '../contexts/UserContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
 export default function Navbar() {
   const navigate = useNavigate()
+  const { isAdmin } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const handleLogout = async () => {
@@ -43,6 +45,9 @@ export default function Navbar() {
           <button onClick={() => navigate('/actions')} className="hover:text-primary transition-colors">Åtgärder</button>
           <button onClick={() => navigate('/diagnosis')} className="hover:text-primary transition-colors">Diagnos</button>
           <button onClick={() => navigate('/profile')} className="hover:text-primary transition-colors">Profil</button>
+          {isAdmin && (
+            <button onClick={() => navigate('/admin')} className="text-purple-600 hover:text-purple-700 font-semibold transition-colors">Admin</button>
+          )}
           <button onClick={handleLogout} className="text-red-500 hover:text-red-600 transition-colors">Logga ut</button>
         </div>
 
@@ -121,6 +126,14 @@ export default function Navbar() {
           >
             Profil
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => { navigate('/admin'); setMenuOpen(false) }}
+              className="text-left px-4 py-3 text-sm text-purple-600 font-semibold hover:bg-purple-50 rounded-lg"
+            >
+              Admin
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 rounded-lg"

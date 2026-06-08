@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { CurrencyProvider } from './contexts/CurrencyContext'
+import { UserProvider } from './contexts/UserContext'
+import Admin from './pages/Admin'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -28,6 +30,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <UserProvider>
     <CurrencyProvider>
     <BrowserRouter>
       <Routes>
@@ -48,9 +51,11 @@ export default function App() {
         <Route path="/budget" element={<PrivateRoute><Budget /></PrivateRoute>} />
         <Route path="/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
     </CurrencyProvider>
+    </UserProvider>
   )
 }
