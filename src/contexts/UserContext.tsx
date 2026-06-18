@@ -5,14 +5,16 @@ const API_URL = import.meta.env.VITE_API_URL as string
 
 interface UserContextValue {
   isAdmin: boolean
+  isSuperAdmin: boolean
   email: string | null
   loading: boolean
 }
 
-const UserContext = createContext<UserContextValue>({ isAdmin: false, email: null, loading: true })
+const UserContext = createContext<UserContextValue>({ isAdmin: false, isSuperAdmin: false, email: null, loading: true })
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [email, setEmail] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -26,23 +28,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       .then(r => r.json())
       .then(json => {
         console.log('UserContext /auth/me raw response:', json)
-        const data = json.data?.user ?? json.data ?? json
-        console.log('UserContext resolved data:', data)
-        console.log('UserContext isAdmin value:', data.isAdmin, '| role:', data.role)
-        const admin =
-          data.isAdmin === true ||
-          data.is_admin === true ||
-          data.role === 'admin' ||
-          data.role === 'ADMIN'
-        setIsAdmin(admin)
-        setEmail(data.email ?? null)
+        // API returns { success: true, data: { user: { isAdmin, isSuperAdmin, ... } } }
+        const user = json.data?.user ?? json.data ?? json
+        console.log('UserContext resolved user:', user)
+        console.log('UserContext isAdmin:', user.isAdmin, '| isSuperAdmin:', user.isSuperAdmin)
+        setIsAdmin(user.isAdmin === true)
+        setIsSuperAdmin(user.isSuperAdmin === true)
+        setEmail(user.email ?? null)
       })
       .catch((err) => { console.error('UserContext /auth/me error:', err) })
       .finally(() => setLoading(false))
   }, [])
 
   return (
-    <UserContext.Provider value={{ isAdmin, email, loading }}>
+    <UserContext.Provider value={{ isAdmin, isSuperAdmin, email, loading }}>
       {children}
     </UserContext.Provider>
   )
