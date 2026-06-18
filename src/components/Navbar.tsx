@@ -8,7 +8,6 @@ const API_URL = import.meta.env.VITE_API_URL as string
 export default function Navbar() {
   const navigate = useNavigate()
   const { isAdmin } = useUser()
-  console.log('navbar isAdmin:', isAdmin)
   const [menuOpen, setMenuOpen] = useState(false)
 
   const handleLogout = async () => {
