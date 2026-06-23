@@ -605,8 +605,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           const runwayTrend: KpiTrend = rd === 0 ? 'neutral' : rd > 90 ? 'up' : rd > 30 ? 'neutral' : 'down'
           const runwayAccent: KpiAccent = rd === 0 ? 'blue' : rd > 90 ? 'green' : rd > 30 ? 'yellow' : 'red'
           const gm = kpi.grossMargin
-          const gmTrend: KpiTrend = gm === null ? 'neutral' : gm > 30 ? 'up' : gm >= 10 ? 'neutral' : 'down'
-          const gmAccent: KpiAccent = gm === null ? 'blue' : gm > 30 ? 'green' : gm >= 10 ? 'yellow' : 'red'
+          const gmOutOfRange = gm !== null && (gm < -200 || gm > 200)
+          const gmTrend: KpiTrend = (gm === null || gmOutOfRange) ? 'neutral' : gm > 30 ? 'up' : gm >= 10 ? 'neutral' : 'down'
+          const gmAccent: KpiAccent = (gm === null || gmOutOfRange) ? 'blue' : gm < 0 ? 'red' : gm > 30 ? 'green' : gm >= 10 ? 'yellow' : 'red'
+          const gmValue = gm === null ? 'Ingen data' : gmOutOfRange ? 'Kontrollera data' : `${gm.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+          const gmSubtitle = (gm === null || gmOutOfRange) ? '' : gm < 0 ? 'Kostnader överstiger intäkter' : 'Av totalt inflöde'
+          const gmTrendLabel = gm === null ? 'Ingen data' : gmOutOfRange ? 'Kontrollera data' : gm < 0 ? 'Kostnader överstiger intäkter' : gm > 30 ? 'Bra marginal' : gm >= 10 ? 'Acceptabel marginal' : 'Låg marginal'
           return (
             <div data-tour="kpi-cards" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <KpiCard
@@ -656,10 +660,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <KpiCard
                 icon={<TrendingUp className="w-5 h-5" />}
                 label="Bruttomarginal"
-                value={gm === null ? 'Importera data' : `${gm.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`}
-                subtitle={gm === null ? '' : 'Av totalt inflöde'}
+                value={gmValue}
+                subtitle={gmSubtitle}
                 trend={gmTrend}
-                trendLabel={gm === null ? 'Importera data' : gm > 30 ? 'Bra marginal' : gm >= 10 ? 'Acceptabel marginal' : 'Låg marginal'}
+                trendLabel={gmTrendLabel}
                 accent={gmAccent}
                 onExplain={() => explainThis('diagnosis', { type: 'grossMargin', value: gm })}
               />
