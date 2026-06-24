@@ -167,6 +167,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [cashflowDays, setCashflowDays] = useState<CashflowDay[]>([])
   const [loadingCashflow, setLoadingCashflow] = useState(true)
   const [cashflowError, setCashflowError] = useState('')
+  const [cashflowView, setCashflowView] = useState<'day' | 'week' | 'month'>('week')
   const [runwayDays, setRunwayDays] = useState<number | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [downloadingPdf, setDownloadingPdf] = useState(false)
@@ -345,6 +346,38 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     const toLabel = (d: Date) => d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
     return `${toLabel(new Date(cashflowDays[0].date))} till ${toLabel(new Date(cashflowDays[cashflowDays.length - 1].date))}`
   }, [cashflowDays])
+
+  const aggregatedCashflow = useMemo(() => {
+    if (cashflowView === 'day') {
+      return cashflowDays.map(d => ({ label: formatLabel(d.date), inflow: d.inflow, outflow: d.outflow }))
+    }
+    const buckets = new Map<string, { label: string; inflow: number; outflow: number }>()
+    for (const d of cashflowDays) {
+      const date = new Date(d.date)
+      if (isNaN(date.getTime())) continue
+      let key: string
+      let label: string
+      if (cashflowView === 'week') {
+        const day = date.getDay()
+        const diff = day === 0 ? -6 : 1 - day
+        const monday = new Date(date)
+        monday.setDate(date.getDate() + diff)
+        key = monday.toISOString().split('T')[0]
+        const sunday = new Date(monday)
+        sunday.setDate(monday.getDate() + 6)
+        const f = (dt: Date) => dt.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
+        label = `${f(monday)}–${f(sunday)}`
+      } else {
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        label = date.toLocaleDateString('sv-SE', { month: 'short', year: '2-digit' })
+      }
+      if (!buckets.has(key)) buckets.set(key, { label, inflow: 0, outflow: 0 })
+      const b = buckets.get(key)!
+      b.inflow += d.inflow
+      b.outflow += d.outflow
+    }
+    return Array.from(buckets.values())
+  }, [cashflowDays, cashflowView])
 
   const alerts = useMemo(() => {
     const raw = overview?.data?.alerts ?? []
@@ -728,20 +761,33 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           </div>
         ) : cashflowDays.length > 0 ? (
           <div data-tour="cashflow-chart" className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-bold text-gray-700 mb-0.5">Kassaflöde</h2>
                 {periodLabel && <p className="text-xs text-gray-400">{periodLabel}</p>}
               </div>
-              <button
-                onClick={() => explainThis('cashflow', { cashflow: cashflowDays })}
-                className="flex items-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-              >
-                <SparkleIcon /> Förklara detta
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-gray-100 rounded-lg p-0.5 text-xs font-semibold">
+                  {(['day', 'week', 'month'] as const).map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setCashflowView(v)}
+                      className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap ${cashflowView === v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      {v === 'day' ? 'Dag' : v === 'week' ? 'Vecka' : 'Månad'}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => explainThis('cashflow', { cashflow: cashflowDays })}
+                  className="flex items-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  <SparkleIcon /> Förklara detta
+                </button>
+              </div>
             </div>
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={cashflowDays.map(p => ({ ...p, label: formatLabel(p.date) }))} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+              <AreaChart data={aggregatedCashflow} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="inflowGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#2563eb" stopOpacity={0.18} />
