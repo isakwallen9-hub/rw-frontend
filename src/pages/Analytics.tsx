@@ -147,7 +147,7 @@ export default function Analytics() {
 
   const [groupBy, setGroupBy] = useState<GroupBy>('month')
   const [series, setSeries] = useState<ShowType[]>(['inflow'])
-  const [period, setPeriod] = useState<Period>('30d')
+  const [period, setPeriod] = useState<Period>('1y')
   const [chartType, setChartType] = useState<ChartType>('bar')
   const [customFrom, setCustomFrom] = useState(toDateInput(new Date(Date.now() - 30 * 86400000)))
   const [customTo, setCustomTo] = useState(today)
