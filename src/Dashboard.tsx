@@ -55,8 +55,10 @@ interface CashflowDay {
 
 interface Transaction {
   date: string
-  description: string
+  description?: string
   amount: number
+  type?: string
+  category?: string
 }
 
 interface Recommendation {
@@ -341,6 +343,23 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       })
   }, [cashflowDays])
 
+  const recentTransactionRows = useMemo(() => {
+    const fmtDate = (d: string) => {
+      const date = new Date(d)
+      return isNaN(date.getTime()) ? d : date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
+    }
+    return transactions.slice(0, 10).map(t => {
+      const desc = t.description ?? null
+      return {
+        label:       fmtDate(t.date),
+        typeLabel:   t.type === 'INCOME' ? 'Inflöde' : t.type === 'EXPENSE' ? 'Utflöde' : t.amount >= 0 ? 'Inflöde' : 'Utflöde',
+        amount:      t.amount,
+        description: desc && desc.length > 30 ? desc.slice(0, 30) + '…' : desc,
+        category:    t.category ?? null,
+      }
+    })
+  }, [transactions])
+
   const periodLabel = useMemo(() => {
     if (cashflowDays.length < 2) return ''
     const toLabel = (d: Date) => d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
@@ -380,8 +399,28 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   }, [cashflowDays, cashflowView])
 
   const alerts = useMemo(() => {
-    const raw = overview?.data?.alerts ?? []
-    return raw.filter(a => !dismissedAlerts.has(a.id ?? a.message))
+    const raw: Alert[] = overview?.data?.alerts ?? []
+    const active = raw.filter(a => !dismissedAlerts.has(a.id ?? a.message))
+
+    const isInvoiceAlert = (a: Alert) => /overdue|förfallna\s+fakturor/i.test(a.message)
+    const invoiceAlerts = active.filter(isInvoiceAlert)
+    const rest = active.filter(a => !isInvoiceAlert(a))
+
+    if (invoiceAlerts.length === 0) return rest
+
+    if (dismissedAlerts.has('overdue-invoices-merged')) return rest
+
+    const count = overview?.data?.lateInvoiceCount ?? 0
+    const merged: Alert = {
+      id: 'overdue-invoices-merged',
+      severity: 'high',
+      message: count > 0
+        ? `${count} fakturor är förfallna och kräver uppföljning.`
+        : 'Du har förfallna fakturor som kräver uppföljning.',
+      link: '/actions',
+      linkLabel: 'Åtgärda →',
+    }
+    return [merged, ...rest]
   }, [overview, dismissedAlerts])
 
   const quickStats = useMemo(() => {
@@ -839,8 +878,50 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           {/* Senaste transaktioner */}
           <div>
             <h2 className="text-base font-bold text-gray-800 mb-4">Senaste transaktioner</h2>
-            {loadingCashflow ? (
+            {loadingOverview ? (
               <SkeletonList rows={5} />
+            ) : recentTransactionRows.length > 0 ? (
+              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  {(() => {
+                    const hasCategory = recentTransactionRows.some(t => t.category !== null)
+                    return (
+                      <table className="w-full text-sm min-w-[420px]">
+                        <thead>
+                          <tr className="border-b border-gray-100 text-xs text-gray-400">
+                            <th className="text-left px-5 py-3 font-medium">Datum</th>
+                            <th className="text-left px-5 py-3 font-medium">Beskrivning</th>
+                            {hasCategory && <th className="text-left px-5 py-3 font-medium">Kategori</th>}
+                            <th className="text-left px-5 py-3 font-medium">Typ</th>
+                            <th className="text-right px-5 py-3 font-medium">Belopp</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {recentTransactionRows.map((t, i) => (
+                            <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-gray-50/60' : ''}`}>
+                              <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
+                              <td className="px-5 py-3 text-gray-700">
+                                {t.description ?? <span className="text-gray-300">—</span>}
+                              </td>
+                              {hasCategory && (
+                                <td className="px-5 py-3">
+                                  {t.category
+                                    ? <span className="text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 px-2 py-0.5 rounded-full whitespace-nowrap">{t.category}</span>
+                                    : <span className="text-gray-300">—</span>}
+                                </td>
+                              )}
+                              <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{t.typeLabel}</td>
+                              <td className={`px-5 py-3 text-right font-medium whitespace-nowrap ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                                {fmt(t.amount)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )
+                  })()}
+                </div>
+              </div>
             ) : recentCashflowRows.length > 0 ? (
               <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">

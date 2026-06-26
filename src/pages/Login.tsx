@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import RWLogo from '../assets/RWLogo'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -46,11 +47,9 @@ export default function Login() {
       {/* Vänster — mörkblå, döljs på mobil */}
       <div className="hidden lg:flex flex-col justify-center px-16 bg-primary text-white w-1/2">
         <div className="mb-6">
-          <span className="font-bold text-2xl tracking-tight">RW Systems</span>
+          <RWLogo className="w-28 h-auto" />
         </div>
-        <h2 className="text-3xl font-bold leading-snug mb-8">
-          Kassaflödeskontroll för moderna B2B-företag
-        </h2>
+        <p className="text-blue-300 text-sm font-medium tracking-wide mb-8 uppercase">The system for you</p>
         <ul className="flex flex-col gap-4">
           {[
             'Få omedelbar överblick över din ekonomi',
@@ -68,8 +67,12 @@ export default function Login() {
       {/* Höger — login-form */}
       <div className="flex flex-col justify-center items-center w-full lg:w-1/2 px-6 sm:px-8 bg-white">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden mb-8">
-            <span className="font-bold text-xl text-primary tracking-tight">RW Systems</span>
+          <div className="lg:hidden mb-8 flex items-center gap-3">
+            <RWLogo className="w-12 h-auto" />
+            <div>
+              <p className="font-bold text-lg text-primary tracking-tight leading-tight">RW Systems</p>
+              <p className="text-xs text-gray-400">The system for you</p>
+            </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Logga in</h1>
           <p className="text-gray-500 text-sm mb-8">Välkommen tillbaka till RW Systems</p>
