@@ -261,6 +261,15 @@ export default function Analytics() {
 
     const { fromISO, toISO } = computeDates(period, customFrom, customTo)
 
+    const parseData = (json: unknown): { label: string; value?: number; [k: string]: unknown }[] => {
+      const j = json as Record<string, unknown>
+      const d = Array.isArray(j?.data?.data) ? j.data.data
+              : Array.isArray(j?.data)        ? j.data
+              : Array.isArray(j)              ? j
+              : []
+      return d as { label: string; value?: number }[]
+    }
+
     if (selectedCats.length > 0) {
       // Multi-category mode: one fetch per selected category, same metric
       const metric = series[0]
@@ -270,7 +279,9 @@ export default function Analytics() {
           return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
             .then(r => r.json())
             .then(json => {
-              const data = Array.isArray(json?.data?.data) ? json.data.data : []
+              console.log('analytics raw response:', JSON.stringify(json))
+              console.log('analytics data array:', JSON.stringify((json as Record<string, unknown>)?.data?.data))
+              const data = parseData(json)
               return { key: `cat_${idx}`, data }
             })
         })
@@ -288,14 +299,16 @@ export default function Analytics() {
         .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
         .finally(() => setLoading(false))
     } else {
-      // Normal mode: one fetch per selected metric
+      // Normal mode: one fetch per selected metric — no category filter = all categories combined
       Promise.all(
         series.map(metric => {
           const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
           return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
             .then(r => r.json())
             .then(json => {
-              const data = Array.isArray(json?.data?.data) ? json.data.data : []
+              console.log('analytics raw response:', JSON.stringify(json))
+              console.log('analytics data array:', JSON.stringify((json as Record<string, unknown>)?.data?.data))
+              const data = parseData(json)
               return { metric, data }
             })
         })
