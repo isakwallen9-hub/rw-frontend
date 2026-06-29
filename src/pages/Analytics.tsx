@@ -142,6 +142,17 @@ function deleteSaved(id: string) {
   localStorage.setItem(LS_KEY, JSON.stringify(loadSaved().filter(c => c.id !== id)))
 }
 
+function computePrevDates(period: Period, customFrom: string, customTo: string) {
+  const { fromISO, toISO } = computeDates(period, customFrom, customTo)
+  const duration = new Date(toISO).getTime() - new Date(fromISO).getTime()
+  const prevFrom = new Date(new Date(fromISO).getTime() - duration)
+  const prevTo   = new Date(new Date(toISO).getTime()  - duration)
+  return {
+    fromISO: prevFrom.toISOString().split('T')[0] + 'T00:00:00Z',
+    toISO:   prevTo.toISOString().split('T')[0]   + 'T00:00:00Z',
+  }
+}
+
 function computeDates(period: Period, customFrom: string, customTo: string) {
   const now = new Date()
   let fromDate: Date
@@ -206,6 +217,7 @@ export default function Analytics() {
   const [compareLoading, setCompareLoading] = useState(false)
   const [compareError, setCompareError] = useState('')
   const [summaryTotals, setSummaryTotals] = useState<{ inflow: number; outflow: number } | null>(null)
+  const [trends, setTrends] = useState<{ label: string; pct: number }[]>([])
 
   // Fetch available categories on mount — abort on unmount
   useEffect(() => {
@@ -375,6 +387,35 @@ export default function Analytics() {
         if (!signal.aborted) setSummaryTotals({ inflow, outflow })
       } catch {
         // summary errors are non-fatal
+      }
+
+      // ── Trend analysis — current vs previous period, per category ────────────
+      if (signal.aborted) return
+      try {
+        const prevDates = computePrevDates(period, customFrom, customTo)
+        const trendMetric = series[0]
+        const fetchCatTotals = async (from: string, to: string) => {
+          const params = new URLSearchParams({ groupBy: 'category', metric: trendMetric, from, to })
+          const r = await fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`, { signal })
+          const data = parseAnalyticsData(await r.json())
+          return new Map(data.map(d => [d.label, d.value ?? 0]))
+        }
+        const [currMap, prevMap] = await Promise.all([
+          fetchCatTotals(fromISO, toISO),
+          fetchCatTotals(prevDates.fromISO, prevDates.toISO),
+        ])
+        if (signal.aborted) return
+        const items: { label: string; pct: number }[] = []
+        for (const [label, curr] of currMap) {
+          const prev = prevMap.get(label)
+          if (prev != null && prev !== 0) {
+            items.push({ label, pct: ((curr - prev) / Math.abs(prev)) * 100 })
+          }
+        }
+        items.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
+        setTrends(items.slice(0, 3))
+      } catch {
+        // trend errors are non-fatal
       }
     }, 500)
 
@@ -741,6 +782,27 @@ export default function Analytics() {
             </div>
           )
         })()}
+
+        {/* Trend analysis */}
+        {trends.length > 0 && (
+          <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm mb-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Trender — jämfört med föregående period</p>
+            <div className="flex flex-col gap-2">
+              {trends.map(t => (
+                <div key={t.label} className="flex items-center gap-2 text-sm">
+                  <span className={`text-lg leading-none ${t.pct >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {t.pct >= 0 ? '↑' : '↓'}
+                  </span>
+                  <span className="font-semibold text-gray-800">{t.label}</span>
+                  <span className={`font-bold ${t.pct >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {t.pct >= 0 ? '+' : ''}{t.pct.toFixed(1)}%
+                  </span>
+                  <span className="text-gray-400 text-xs">jämfört med förra perioden</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Chart */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-4">
