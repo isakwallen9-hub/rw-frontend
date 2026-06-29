@@ -16,6 +16,14 @@ const API_URL = import.meta.env.VITE_API_URL as string
 const LS_KEY = 'rw_saved_charts'
 const MAX_CATS = 5
 const CAT_COLORS = ['#2563eb', '#7c3aed', '#f59e0b', '#10b981', '#ef4444']
+const CHIP_PALETTE = [
+  { light: 'bg-blue-50 text-blue-700 border-blue-200',    full: '#2563eb' },
+  { light: 'bg-purple-50 text-purple-700 border-purple-200', full: '#7c3aed' },
+  { light: 'bg-amber-50 text-amber-800 border-amber-200',  full: '#f59e0b' },
+  { light: 'bg-emerald-50 text-emerald-700 border-emerald-200', full: '#10b981' },
+  { light: 'bg-red-50 text-red-700 border-red-200',       full: '#ef4444' },
+]
+const CATS_COLLAPSED = 8
 const MONTH_NAMES = ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December']
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec']
 
@@ -186,6 +194,7 @@ export default function Analytics() {
   const [savedCharts, setSavedCharts] = useState<SavedChart[]>(loadSaved)
   const [saveName, setSaveName] = useState('')
   const [saveOpen, setSaveOpen] = useState(false)
+  const [showAllCats, setShowAllCats] = useState(false)
 
   // Period comparison state
   const [compareMode, setCompareMode] = useState(false)
@@ -198,55 +207,67 @@ export default function Analytics() {
   const [compareError, setCompareError] = useState('')
   const [summaryTotals, setSummaryTotals] = useState<{ inflow: number; outflow: number } | null>(null)
 
-  // Fetch seasonal data — re-runs when category A changes
+  // Fetch available categories on mount — abort on unmount
   useEffect(() => {
-    setSeasonalLoading(true)
-    setSeasonalError('')
-    const params = seasonalCategory ? new URLSearchParams({ category: seasonalCategory }) : null
-    const url = params ? `${API_URL}api/v1/analytics/seasonal?${params}` : `${API_URL}api/v1/analytics/seasonal`
-    fetchWithAuth(url)
+    const controller = new AbortController()
+    fetchWithAuth(`${API_URL}api/v1/analytics/categories`, { signal: controller.signal })
       .then(r => r.json())
       .then(json => {
-        const months: SeasonalMonth[] = Array.isArray(json?.data)
-          ? json.data
-          : Array.isArray(json?.data?.months)
-          ? json.data.months
-          : []
-        setSeasonalData(months)
-      })
-      .catch(() => setSeasonalError('Kunde inte hämta säsongsdata.'))
-      .finally(() => setSeasonalLoading(false))
-  }, [seasonalCategory])
-
-  // Fetch seasonal data for category B comparison
-  useEffect(() => {
-    if (!seasonalCategoryB) { setSeasonalDataB([]); return }
-    setSeasonalLoadingB(true)
-    const url = `${API_URL}api/v1/analytics/seasonal?${new URLSearchParams({ category: seasonalCategoryB })}`
-    fetchWithAuth(url)
-      .then(r => r.json())
-      .then(json => {
-        const months: SeasonalMonth[] = Array.isArray(json?.data)
-          ? json.data
-          : Array.isArray(json?.data?.months)
-          ? json.data.months
-          : []
-        setSeasonalDataB(months)
-      })
-      .catch(() => {})
-      .finally(() => setSeasonalLoadingB(false))
-  }, [seasonalCategoryB])
-
-  // Fetch available categories on mount
-  useEffect(() => {
-    fetchWithAuth(`${API_URL}api/v1/analytics/categories`)
-      .then(r => r.json())
-      .then(json => {
-        const cats = Array.isArray(json?.data?.categories) ? json.data.categories : []
+        if (controller.signal.aborted) return
+        const cats = Array.isArray(json?.data?.categories) ? json.data.categories
+                   : Array.isArray(json?.data)             ? json.data
+                   : []
         setCategories(cats)
       })
       .catch(() => {})
+    return () => controller.abort()
   }, [])
+
+  // Seasonal A — debounced 300ms, abortable
+  useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
+    const timer = setTimeout(async () => {
+      setSeasonalLoading(true)
+      setSeasonalError('')
+      try {
+        const params = seasonalCategory ? new URLSearchParams({ category: seasonalCategory }) : null
+        const url = params ? `${API_URL}api/v1/analytics/seasonal?${params}` : `${API_URL}api/v1/analytics/seasonal`
+        const r = await fetchWithAuth(url, { signal })
+        const json = await r.json()
+        if (signal.aborted) return
+        const months: SeasonalMonth[] = Array.isArray(json?.data) ? json.data
+          : Array.isArray(json?.data?.months) ? json.data.months : []
+        setSeasonalData(months)
+      } catch {
+        if (!signal.aborted) setSeasonalError('Kunde inte hämta säsongsdata.')
+      } finally {
+        if (!signal.aborted) setSeasonalLoading(false)
+      }
+    }, 300)
+    return () => { clearTimeout(timer); controller.abort() }
+  }, [seasonalCategory])
+
+  // Seasonal B comparison — debounced 300ms, abortable
+  useEffect(() => {
+    if (!seasonalCategoryB) { setSeasonalDataB([]); return }
+    const controller = new AbortController()
+    const { signal } = controller
+    const timer = setTimeout(async () => {
+      setSeasonalLoadingB(true)
+      try {
+        const url = `${API_URL}api/v1/analytics/seasonal?${new URLSearchParams({ category: seasonalCategoryB })}`
+        const r = await fetchWithAuth(url, { signal })
+        const json = await r.json()
+        if (signal.aborted) return
+        const months: SeasonalMonth[] = Array.isArray(json?.data) ? json.data
+          : Array.isArray(json?.data?.months) ? json.data.months : []
+        setSeasonalDataB(months)
+      } catch {}
+      finally { if (!signal.aborted) setSeasonalLoadingB(false) }
+    }, 300)
+    return () => { clearTimeout(timer); controller.abort() }
+  }, [seasonalCategoryB])
 
   const toggleCat = (cat: string) => {
     setSelectedCats(prev =>
@@ -271,29 +292,31 @@ export default function Analytics() {
     color: CAT_COLORS[idx],
   }))
 
-  const fetchData = useCallback(() => {
-    setLoading(true)
-    setError('')
+  // Single debounced effect for chart data + summary — sequential, abortable
+  useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
 
-    const { fromISO, toISO } = computeDates(period, customFrom, customTo)
+    const timer = setTimeout(async () => {
+      const { fromISO, toISO } = computeDates(period, customFrom, customTo)
 
-    if (selectedCats.length > 0) {
-      // Multi-category mode: one fetch per selected category, same metric
-      const metric = series[0]
-      Promise.all(
-        selectedCats.map((cat, idx) => {
-          const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO, category: cat })
-          return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
-            .then(r => r.json())
-            .then(json => {
+      // ── Chart data ──────────────────────────────────────────────────────────
+      setLoading(true)
+      setError('')
+      try {
+        if (selectedCats.length > 0) {
+          const metric = series[0]
+          const results = await Promise.all(
+            selectedCats.map(async (cat, idx) => {
+              const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO, category: cat })
+              const r = await fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`, { signal })
+              const json = await r.json()
               console.log('analytics raw response:', JSON.stringify(json))
               console.log('analytics data array:', JSON.stringify((json as Record<string, unknown>)?.data?.data))
-              const data = parseAnalyticsData(json)
-              return { key: `cat_${idx}`, data }
+              return { key: `cat_${idx}`, data: parseAnalyticsData(json) }
             })
-        })
-      )
-        .then(results => {
+          )
+          if (signal.aborted) return
           const merged: Record<string, AnalyticsRow> = {}
           for (const { key, data } of results) {
             for (const row of data) {
@@ -302,25 +325,18 @@ export default function Analytics() {
             }
           }
           setRows(Object.values(merged))
-        })
-        .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
-        .finally(() => setLoading(false))
-    } else {
-      // Normal mode: one fetch per selected metric — no category filter = all categories combined
-      Promise.all(
-        series.map(metric => {
-          const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
-          return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
-            .then(r => r.json())
-            .then(json => {
+        } else {
+          const results = await Promise.all(
+            series.map(async metric => {
+              const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
+              const r = await fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`, { signal })
+              const json = await r.json()
               console.log('analytics raw response:', JSON.stringify(json))
               console.log('analytics data array:', JSON.stringify((json as Record<string, unknown>)?.data?.data))
-              const data = parseAnalyticsData(json)
-              return { metric, data }
+              return { metric, data: parseAnalyticsData(json) }
             })
-        })
-      )
-        .then(results => {
+          )
+          if (signal.aborted) return
           const merged: Record<string, AnalyticsRow> = {}
           for (const { metric, data } of results) {
             for (const row of data) {
@@ -329,41 +345,44 @@ export default function Analytics() {
             }
           }
           setRows(Object.values(merged))
-        })
-        .catch(() => setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.'))
-        .finally(() => setLoading(false))
+        }
+      } catch {
+        if (!signal.aborted) setError('Kunde inte hämta analysdata. Kontrollera din anslutning och försök igen.')
+      } finally {
+        if (!signal.aborted) setLoading(false)
+      }
+
+      // ── Summary totals (sequential — runs after chart data) ─────────────────
+      if (signal.aborted) return
+      const sumValues = (data: { value?: number }[]) => data.reduce((s, r) => s + (r.value ?? 0), 0)
+      const fetchMetric = async (metric: 'inflow' | 'outflow'): Promise<number> => {
+        if (selectedCats.length > 0) {
+          const sums = await Promise.all(
+            selectedCats.map(async cat => {
+              const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO, category: cat })
+              const r = await fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`, { signal })
+              return sumValues(parseAnalyticsData(await r.json()))
+            })
+          )
+          return sums.reduce((a, b) => a + b, 0)
+        }
+        const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
+        const r = await fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`, { signal })
+        return sumValues(parseAnalyticsData(await r.json()))
+      }
+      try {
+        const [inflow, outflow] = await Promise.all([fetchMetric('inflow'), fetchMetric('outflow')])
+        if (!signal.aborted) setSummaryTotals({ inflow, outflow })
+      } catch {
+        // summary errors are non-fatal
+      }
+    }, 500)
+
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
     }
   }, [groupBy, series, period, customFrom, customTo, selectedCats])
-
-  useEffect(() => { fetchData() }, [fetchData])
-
-  const fetchSummary = useCallback(() => {
-    const { fromISO, toISO } = computeDates(period, customFrom, customTo)
-    const sumValues = (data: { value?: number }[]) => data.reduce((s, r) => s + (r.value ?? 0), 0)
-
-    const fetchMetric = (metric: 'inflow' | 'outflow'): Promise<number> => {
-      if (selectedCats.length > 0) {
-        return Promise.all(
-          selectedCats.map(cat => {
-            const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO, category: cat })
-            return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
-              .then(r => r.json())
-              .then(json => sumValues(parseAnalyticsData(json)))
-          })
-        ).then(sums => sums.reduce((a, b) => a + b, 0))
-      }
-      const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
-      return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
-        .then(r => r.json())
-        .then(json => sumValues(parseAnalyticsData(json)))
-    }
-
-    Promise.all([fetchMetric('inflow'), fetchMetric('outflow')])
-      .then(([inflow, outflow]) => setSummaryTotals({ inflow, outflow }))
-      .catch(() => {})
-  }, [groupBy, period, customFrom, customTo, selectedCats])
-
-  useEffect(() => { fetchSummary() }, [fetchSummary])
 
   const fetchCompare = useCallback(() => {
     if (!compareMode) return
@@ -640,39 +659,60 @@ export default function Analytics() {
           {/* Category multi-select chips */}
           {categories.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium text-gray-500">Kategorier</span>
-                {selectedCats.length > 0 && (
-                  <button onClick={() => setSelectedCats([])}
-                    className="text-xs text-gray-400 hover:text-gray-600 underline">
-                    Rensa
-                  </button>
-                )}
-                {selectedCats.length >= MAX_CATS && (
-                  <span className="text-xs text-amber-500">Max {MAX_CATS} kategorier valda</span>
-                )}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-700">Välj kategorier</span>
+                  {selectedCats.length > 0 && (
+                    <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">
+                      {selectedCats.length} valda
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {selectedCats.length >= MAX_CATS && (
+                    <span className="text-xs text-amber-600 font-medium">Max {MAX_CATS} valda</span>
+                  )}
+                  {selectedCats.length > 0 && (
+                    <button onClick={() => setSelectedCats([])}
+                      className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors">
+                      Rensa val
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {categories.map(cat => {
-                  const idx = selectedCats.indexOf(cat)
-                  const isSelected = idx !== -1
+                {(showAllCats ? categories : categories.slice(0, CATS_COLLAPSED)).map((cat, catIdx) => {
+                  const selIdx = selectedCats.indexOf(cat)
+                  const isSelected = selIdx !== -1
                   const isDisabled = !isSelected && selectedCats.length >= MAX_CATS
+                  const palette = CHIP_PALETTE[catIdx % CHIP_PALETTE.length]
                   return (
                     <button
                       key={cat}
                       onClick={() => !isDisabled && toggleCat(cat)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      disabled={isDisabled}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                         isSelected
-                          ? 'text-white border-transparent'
+                          ? 'text-white border-transparent shadow-sm'
                           : isDisabled
-                          ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                          ? 'opacity-30 cursor-not-allowed ' + palette.light
+                          : palette.light + ' hover:opacity-80'
                       }`}
-                      style={isSelected ? { backgroundColor: CAT_COLORS[idx], borderColor: CAT_COLORS[idx] } : {}}>
+                      style={isSelected ? { backgroundColor: palette.full, borderColor: palette.full } : {}}
+                    >
+                      {isSelected && <span className="mr-1 opacity-80">✓</span>}
                       {cat}
                     </button>
                   )
                 })}
+                {categories.length > CATS_COLLAPSED && (
+                  <button
+                    onClick={() => setShowAllCats(v => !v)}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold border border-dashed border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors"
+                  >
+                    {showAllCats ? 'Visa färre' : `+${categories.length - CATS_COLLAPSED} fler`}
+                  </button>
+                )}
               </div>
             </div>
           )}
