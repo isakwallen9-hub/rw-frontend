@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import { useCurrency } from '../contexts/CurrencyContext'
 import {
   ResponsiveContainer,
   BarChart, Bar,
@@ -107,6 +108,19 @@ const SHOW_LABEL: Record<ShowType, string> = {
   net: 'Netto',
 }
 
+function parseAnalyticsData(json: unknown): { label: string; value?: number }[] {
+  if (!json || typeof json !== 'object') return []
+  const j = json as Record<string, unknown>
+  const inner = j.data
+  if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+    const nested = (inner as Record<string, unknown>).data
+    if (Array.isArray(nested)) return nested as { label: string; value?: number }[]
+  }
+  if (Array.isArray(inner)) return inner as { label: string; value?: number }[]
+  if (Array.isArray(j)) return j as { label: string; value?: number }[]
+  return []
+}
+
 function loadSaved(): SavedChart[] {
   try { return JSON.parse(localStorage.getItem(LS_KEY) ?? '[]') } catch { return [] }
 }
@@ -143,6 +157,7 @@ function computeDates(period: Period, customFrom: string, customTo: string) {
 
 export default function Analytics() {
   const navigate = useNavigate()
+  const { formatAmount } = useCurrency()
   const today = toDateInput(new Date())
 
   const [groupBy, setGroupBy] = useState<GroupBy>('month')
@@ -181,6 +196,7 @@ export default function Analytics() {
   const [compareRows, setCompareRows] = useState<{ label: string; a: number; b: number }[]>([])
   const [compareLoading, setCompareLoading] = useState(false)
   const [compareError, setCompareError] = useState('')
+  const [summaryTotals, setSummaryTotals] = useState<{ inflow: number; outflow: number } | null>(null)
 
   // Fetch seasonal data — re-runs when category A changes
   useEffect(() => {
@@ -261,15 +277,6 @@ export default function Analytics() {
 
     const { fromISO, toISO } = computeDates(period, customFrom, customTo)
 
-    const parseData = (json: unknown): { label: string; value?: number; [k: string]: unknown }[] => {
-      const j = json as Record<string, unknown>
-      const d = Array.isArray(j?.data?.data) ? j.data.data
-              : Array.isArray(j?.data)        ? j.data
-              : Array.isArray(j)              ? j
-              : []
-      return d as { label: string; value?: number }[]
-    }
-
     if (selectedCats.length > 0) {
       // Multi-category mode: one fetch per selected category, same metric
       const metric = series[0]
@@ -281,7 +288,7 @@ export default function Analytics() {
             .then(json => {
               console.log('analytics raw response:', JSON.stringify(json))
               console.log('analytics data array:', JSON.stringify((json as Record<string, unknown>)?.data?.data))
-              const data = parseData(json)
+              const data = parseAnalyticsData(json)
               return { key: `cat_${idx}`, data }
             })
         })
@@ -308,7 +315,7 @@ export default function Analytics() {
             .then(json => {
               console.log('analytics raw response:', JSON.stringify(json))
               console.log('analytics data array:', JSON.stringify((json as Record<string, unknown>)?.data?.data))
-              const data = parseData(json)
+              const data = parseAnalyticsData(json)
               return { metric, data }
             })
         })
@@ -329,6 +336,34 @@ export default function Analytics() {
   }, [groupBy, series, period, customFrom, customTo, selectedCats])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  const fetchSummary = useCallback(() => {
+    const { fromISO, toISO } = computeDates(period, customFrom, customTo)
+    const sumValues = (data: { value?: number }[]) => data.reduce((s, r) => s + (r.value ?? 0), 0)
+
+    const fetchMetric = (metric: 'inflow' | 'outflow'): Promise<number> => {
+      if (selectedCats.length > 0) {
+        return Promise.all(
+          selectedCats.map(cat => {
+            const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO, category: cat })
+            return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
+              .then(r => r.json())
+              .then(json => sumValues(parseAnalyticsData(json)))
+          })
+        ).then(sums => sums.reduce((a, b) => a + b, 0))
+      }
+      const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
+      return fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`)
+        .then(r => r.json())
+        .then(json => sumValues(parseAnalyticsData(json)))
+    }
+
+    Promise.all([fetchMetric('inflow'), fetchMetric('outflow')])
+      .then(([inflow, outflow]) => setSummaryTotals({ inflow, outflow }))
+      .catch(() => {})
+  }, [groupBy, period, customFrom, customTo, selectedCats])
+
+  useEffect(() => { fetchSummary() }, [fetchSummary])
 
   const fetchCompare = useCallback(() => {
     if (!compareMode) return
@@ -642,6 +677,30 @@ export default function Analytics() {
             </div>
           )}
         </div>
+
+        {/* Summary cards */}
+        {summaryTotals !== null && (() => {
+          const { inflow, outflow } = summaryTotals
+          const net = inflow - outflow
+          return (
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-sm">
+                <p className="text-xs text-gray-400 mb-1">Totalt inflöde</p>
+                <p className="text-lg font-bold text-green-600">{formatAmount(inflow)}</p>
+              </div>
+              <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-sm">
+                <p className="text-xs text-gray-400 mb-1">Totalt utflöde</p>
+                <p className="text-lg font-bold text-red-500">{formatAmount(outflow)}</p>
+              </div>
+              <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-sm">
+                <p className="text-xs text-gray-400 mb-1">Netto</p>
+                <p className={`text-lg font-bold ${net >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {net >= 0 ? '+' : ''}{formatAmount(net)}
+                </p>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Chart */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-4">
