@@ -218,6 +218,7 @@ export default function Analytics() {
   const [compareError, setCompareError] = useState('')
   const [summaryTotals, setSummaryTotals] = useState<{ inflow: number; outflow: number } | null>(null)
   const [trends, setTrends] = useState<{ label: string; pct: number }[]>([])
+  const [rankData, setRankData] = useState<{ label: string; value: number }[]>([])
 
   // Fetch available categories on mount — abort on unmount
   useEffect(() => {
@@ -414,6 +415,13 @@ export default function Analytics() {
         }
         items.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
         setTrends(items.slice(0, 3))
+        setRankData(
+          [...currMap.entries()]
+            .map(([label, value]) => ({ label, value }))
+            .filter(d => d.value > 0)
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5)
+        )
       } catch {
         // trend errors are non-fatal
       }
@@ -804,8 +812,9 @@ export default function Analytics() {
           </div>
         )}
 
-        {/* Chart */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-4">
+        {/* Chart + Category ranking */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4 mb-4">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-gray-700">
               {catMode
@@ -904,6 +913,44 @@ export default function Analytics() {
             </div>
           ) : renderChart()}
         </div>
+
+        {/* Category ranking */}
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 flex flex-col">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+            Topp kategorier — {SHOW_LABEL[series[0]]}
+          </p>
+          {rankData.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-gray-300 text-sm">Ingen data</div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {rankData.map((item, i) => {
+                const max = rankData[0].value
+                const pct = max > 0 ? (item.value / max) * 100 : 0
+                const medals = ['🥇', '🥈', '🥉']
+                return (
+                  <div key={item.label}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm shrink-0">
+                          {i < 3 ? medals[i] : <span className="text-xs font-bold text-gray-400 w-5 inline-block text-center">#{i + 1}</span>}
+                        </span>
+                        <span className="text-sm text-gray-700 font-medium truncate">{item.label}</span>
+                      </div>
+                      <span className="text-xs font-semibold text-gray-600 ml-2 shrink-0 whitespace-nowrap">{formatAmount(item.value)}</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, backgroundColor: CAT_COLORS[i % CAT_COLORS.length] }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+        </div>{/* end grid */}
 
         {/* Period comparison summary */}
         {compareMode && !compareLoading && !compareError && compareRows.length > 0 && (
