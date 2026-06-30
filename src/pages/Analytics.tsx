@@ -990,35 +990,63 @@ export default function Analytics() {
         {/* Table */}
         {!loading && !error && rows.length > 0 && (
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-8">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <p className="text-sm font-semibold text-gray-700">Datatabell</p>
+              <button
+                onClick={() => exportCsv(rows, exportColumns)}
+                className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors"
+              >
+                Exportera CSV
+              </button>
+            </div>
             <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[360px]">
-              <thead>
-                <tr className="border-b border-gray-100 text-xs text-gray-400">
-                  <th className="text-left px-5 py-3 font-medium">Period / Kategori</th>
-                  {exportColumns.map(col => (
-                    <th key={col.key} className="text-right px-5 py-3 font-medium">{col.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, i) => (
-                  <tr key={i} className={i !== 0 ? 'border-t border-gray-50' : ''}>
-                    <td className="px-5 py-3 text-gray-700">{row.label}</td>
+              <table className="w-full text-sm min-w-[360px]">
+                <thead>
+                  <tr className="border-b border-gray-100 text-xs text-gray-400">
+                    <th className="text-left px-5 py-3 font-medium">Period / Kategori</th>
                     {exportColumns.map(col => (
-                      <td key={col.key} className={`px-5 py-3 text-right font-medium ${
-                        catMode
-                          ? 'text-gray-800'
-                          : col.key === 'net'
-                          ? Number(row[col.key] ?? 0) >= 0 ? 'text-green-600' : 'text-red-500'
-                          : col.key === 'outflow' ? 'text-red-500' : 'text-blue-600'
-                      }`}>
-                        {fmt(Number(row[col.key] ?? 0))}
-                      </td>
+                      <th key={col.key} className="text-right px-5 py-3 font-medium">{col.label}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((row, i) => (
+                    <tr key={i} className={i !== 0 ? 'border-t border-gray-50' : ''}>
+                      <td className="px-5 py-3 text-gray-700">{row.label}</td>
+                      {exportColumns.map(col => (
+                        <td key={col.key} className={`px-5 py-3 text-right font-medium ${
+                          catMode
+                            ? 'text-gray-800'
+                            : col.key === 'net'
+                            ? Number(row[col.key] ?? 0) >= 0 ? 'text-green-600' : 'text-red-500'
+                            : col.key === 'outflow' ? 'text-red-500' : 'text-blue-600'
+                        }`}>
+                          {fmt(Number(row[col.key] ?? 0))}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-gray-200 bg-gray-50/80">
+                    <td className="px-5 py-3 text-sm font-bold text-gray-900">Totalt</td>
+                    {exportColumns.map(col => {
+                      const total = rows.reduce((s, r) => s + Number(r[col.key] ?? 0), 0)
+                      return (
+                        <td key={col.key} className={`px-5 py-3 text-right text-sm font-bold ${
+                          catMode
+                            ? 'text-gray-900'
+                            : col.key === 'net'
+                            ? total >= 0 ? 'text-green-700' : 'text-red-600'
+                            : col.key === 'outflow' ? 'text-red-600' : 'text-blue-700'
+                        }`}>
+                          {fmt(total)}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </div>
         )}
