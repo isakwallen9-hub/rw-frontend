@@ -555,16 +555,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     <div className="min-h-screen bg-gray-50 font-sans">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6">
 
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h1 className="text-lg font-bold text-gray-800">Översikt</h1>
+          <h1 className="text-lg font-bold text-gray-800 tracking-tight">Översikt</h1>
           <div className="flex items-center gap-2">
             <button
               onClick={exportExcel}
               disabled={exportingExcel}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 shadow-sm min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
             >
               {exportingExcel ? (
                 <>
@@ -582,7 +582,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <button
               onClick={downloadReport}
               disabled={downloadingPdf}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-white bg-primary px-4 py-2.5 rounded-lg hover:opacity-90 transition-all duration-200 disabled:opacity-60 min-h-[44px]"
             >
               {downloadingPdf ? (
                 <>
@@ -630,7 +630,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               const cfg = ALERT_CONFIG[alert.severity ?? 'low']
               const key = alert.id ?? alert.message ?? String(i)
               return (
-                <div key={key} className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${cfg.bg} ${cfg.border}`}>
+                <div key={key} className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 ${cfg.bg} ${cfg.border}`}>
                   <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${cfg.iconBg} ${cfg.text}`}>
                     {cfg.icon}
                   </span>
@@ -774,16 +774,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Snabb-statistik */}
         {!loadingCashflow && cashflowDays.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="bg-white border border-gray-100 rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{quickStats.totalTx}</p>
+            <div className="bg-white border border-gray-100 rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{quickStats.totalTx}</p>
               <p className="text-xs text-gray-400 mt-1">Aktiva dagar</p>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-xl font-bold text-gray-900">{fmt(Math.round(quickStats.avgInflow))}</p>
+            <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+              <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(Math.round(quickStats.avgInflow))}</p>
               <p className="text-xs text-gray-400 mt-1">Genomsnittligt dagligt inflöde</p>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-xl font-bold text-gray-900">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
+            <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+              <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
               <p className="text-xs text-gray-400 mt-1">
                 Bästa dag{quickStats.bestDay?.date ? ` — ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
               </p>
@@ -802,7 +802,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           <div data-tour="cashflow-chart" className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-sm font-bold text-gray-700 mb-0.5">Kassaflöde</h2>
+                <h2 className="text-sm font-bold text-gray-700 mb-0.5 tracking-tight">Kassaflöde</h2>
                 {periodLabel && <p className="text-xs text-gray-400">{periodLabel}</p>}
               </div>
               <div className="flex items-center gap-2">
@@ -859,7 +859,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
           {/* Rekommendationer */}
           <div>
-            <h2 className="text-base font-bold text-gray-800 mb-4">Rekommenderade åtgärder</h2>
+            <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Rekommenderade åtgärder</h2>
             {loadingRec ? (
               <SkeletonList rows={3} />
             ) : recommendations.length > 0 ? (
@@ -877,7 +877,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
           {/* Senaste transaktioner */}
           <div>
-            <h2 className="text-base font-bold text-gray-800 mb-4">Senaste transaktioner</h2>
+            <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Senaste transaktioner</h2>
             {loadingOverview ? (
               <SkeletonList rows={5} />
             ) : recentTransactionRows.length > 0 ? (
@@ -888,12 +888,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                     return (
                       <table className="w-full text-sm min-w-[420px]">
                         <thead>
-                          <tr className="border-b border-gray-100 text-xs text-gray-400">
-                            <th className="text-left px-5 py-3 font-medium">Datum</th>
-                            <th className="text-left px-5 py-3 font-medium">Beskrivning</th>
-                            {hasCategory && <th className="text-left px-5 py-3 font-medium">Kategori</th>}
-                            <th className="text-left px-5 py-3 font-medium">Typ</th>
-                            <th className="text-right px-5 py-3 font-medium">Belopp</th>
+                          <tr className="border-b border-gray-100 bg-gray-50/50">
+                            <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Datum</th>
+                            <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Beskrivning</th>
+                            {hasCategory && <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Kategori</th>}
+                            <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Typ</th>
+                            <th className="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Belopp</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -927,10 +927,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[320px]">
                     <thead>
-                      <tr className="border-b border-gray-100 text-xs text-gray-400">
-                        <th className="text-left px-5 py-3 font-medium">Datum</th>
-                        <th className="text-left px-5 py-3 font-medium">Typ</th>
-                        <th className="text-right px-5 py-3 font-medium">Belopp</th>
+                      <tr className="border-b border-gray-100 bg-gray-50/50">
+                        <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Datum</th>
+                        <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Typ</th>
+                        <th className="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Belopp</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -961,13 +961,13 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
             {/* Toppprodukter */}
             <div>
-              <h2 className="text-base font-bold text-gray-800 mb-4">Toppprodukter</h2>
+              <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Toppprodukter</h2>
               <RankList items={topProducts} emptyText="Importera data för att se dina toppprodukter." rowLabel="Kategori" barColor="bg-blue-50" />
             </div>
 
             {/* Toppkunder */}
             <div>
-              <h2 className="text-base font-bold text-gray-800 mb-4">Toppkunder</h2>
+              <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Toppkunder</h2>
               <RankList items={topCustomers} emptyText="Importera data för att se dina toppkunder." rowLabel="Kund" barColor="bg-purple-50" />
             </div>
 
@@ -1343,11 +1343,11 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
         <div className="flex gap-2">
           <button
             onClick={onExplain}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent border border-accent/30 px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
           >
             <SparkleIcon className="w-3 h-3" /> Förklara
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-accent px-3 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all duration-150">
+          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-white bg-accent px-3 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all duration-200">
             Åtgärda <span className="text-sm leading-none">→</span>
           </button>
         </div>
@@ -1391,7 +1391,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
   return (
     <div
       onClick={onClick}
-      className={`bg-white border border-gray-100 border-l-4 ${c.border} rounded-2xl px-5 py-6 group relative shadow-sm hover:shadow-lg transition-all duration-200 ${onClick ? 'cursor-pointer' : ''}`}
+      className={`bg-white border border-gray-100 border-l-4 ${c.border} rounded-2xl px-5 py-6 group relative shadow-sm hover:shadow-md transition-all duration-200 ${onClick ? 'cursor-pointer' : ''}`}
     >
       <div className="flex items-start justify-between mb-4">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.iconBg} ${c.iconText}`}>
@@ -1408,8 +1408,8 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
         )}
       </div>
 
-      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 tracking-tight mb-3">{value}</p>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</p>
+      <p className="text-3xl font-bold text-gray-900 tracking-tight mb-3">{value}</p>
 
       <div className="flex items-center justify-between gap-2">
         {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
