@@ -324,8 +324,6 @@ export default function Analytics() {
               const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO, category: cat })
               const r = await fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`, { signal })
               const json = await r.json()
-              console.log('analytics raw response:', JSON.stringify(json))
-              console.log('analytics data array:', JSON.stringify((json as Record<string, unknown>)?.data?.data))
               return { key: `cat_${idx}`, data: parseAnalyticsData(json) }
             })
           )
@@ -344,8 +342,6 @@ export default function Analytics() {
               const params = new URLSearchParams({ groupBy, metric, from: fromISO, to: toISO })
               const r = await fetchWithAuth(`${API_URL}api/v1/analytics/compare?${params}`, { signal })
               const json = await r.json()
-              console.log('analytics raw response:', JSON.stringify(json))
-              console.log('analytics data array:', JSON.stringify((json as Record<string, unknown>)?.data?.data))
               return { metric, data: parseAnalyticsData(json) }
             })
           )
@@ -574,7 +570,7 @@ export default function Analytics() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10">
 
@@ -603,7 +599,7 @@ export default function Analytics() {
         )}
 
         {/* Filters */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-4">
+        <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-5 mb-4">
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-5 items-end">
             <div className="col-span-2 sm:col-span-1">
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Gruppera efter</label>
@@ -773,15 +769,15 @@ export default function Analytics() {
           const net = inflow - outflow
           return (
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-sm">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-4 py-4 shadow-sm">
                 <p className="text-xs text-gray-400 mb-1">Totalt inflöde</p>
                 <p className="text-lg font-bold text-green-600">{formatAmount(inflow)}</p>
               </div>
-              <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-sm">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-4 py-4 shadow-sm">
                 <p className="text-xs text-gray-400 mb-1">Totalt utflöde</p>
                 <p className="text-lg font-bold text-red-500">{formatAmount(outflow)}</p>
               </div>
-              <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-sm">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-4 py-4 shadow-sm">
                 <p className="text-xs text-gray-400 mb-1">Netto</p>
                 <p className={`text-lg font-bold ${net >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                   {net >= 0 ? '+' : ''}{formatAmount(net)}
@@ -793,7 +789,7 @@ export default function Analytics() {
 
         {/* Trend analysis */}
         {trends.length > 0 && (
-          <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm mb-4">
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-4 shadow-sm mb-4">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Trender — jämfört med föregående period</p>
             <div className="flex flex-col gap-2">
               {trends.map(t => (
@@ -814,7 +810,7 @@ export default function Analytics() {
 
         {/* Chart + Category ranking */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4 mb-4">
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+        <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-gray-700">
               {catMode
@@ -915,7 +911,7 @@ export default function Analytics() {
         </div>
 
         {/* Category ranking */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 flex flex-col">
+        <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-5 flex flex-col">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
             Topp kategorier — {SHOW_LABEL[series[0]]}
           </p>
@@ -954,7 +950,7 @@ export default function Analytics() {
 
         {/* Period comparison summary */}
         {compareMode && !compareLoading && !compareError && compareRows.length > 0 && (
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-4">
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-5 mb-4">
             <h3 className="text-sm font-bold text-gray-700 mb-4">
               Sammanfattning — {SHOW_LABEL[series[0]]}
             </h3>
@@ -989,7 +985,7 @@ export default function Analytics() {
 
         {/* Table */}
         {!loading && !error && rows.length > 0 && (
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-8">
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm overflow-hidden mb-8">
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
               <p className="text-sm font-semibold text-gray-700">Datatabell</p>
               <button
@@ -1002,7 +998,7 @@ export default function Analytics() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[360px]">
                 <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-400">
+                  <tr className="border-b border-white/40 text-xs text-gray-400 bg-white/30">
                     <th className="text-left px-5 py-3 font-medium">Period / Kategori</th>
                     {exportColumns.map(col => (
                       <th key={col.key} className="text-right px-5 py-3 font-medium">{col.label}</th>
@@ -1011,7 +1007,7 @@ export default function Analytics() {
                 </thead>
                 <tbody>
                   {rows.map((row, i) => (
-                    <tr key={i} className={i !== 0 ? 'border-t border-gray-50' : ''}>
+                    <tr key={i} className={i !== 0 ? 'border-t border-white/40' : ''}>
                       <td className="px-5 py-3 text-gray-700">{row.label}</td>
                       {exportColumns.map(col => (
                         <td key={col.key} className={`px-5 py-3 text-right font-medium ${
@@ -1105,7 +1101,7 @@ export default function Analytics() {
           ) : seasonalError ? (
             <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{seasonalError}</div>
           ) : seasonalData.length === 0 ? (
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm h-[260px] flex items-center justify-center text-gray-400 text-sm">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm h-[260px] flex items-center justify-center text-gray-400 text-sm">
               Ingen säsongsdata tillgänglig.
             </div>
           ) : (
@@ -1134,7 +1130,7 @@ export default function Analytics() {
               )}
 
               {/* Bar chart */}
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-4">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-6 mb-4">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm font-semibold text-gray-700">
                     {hasSeasonalCompare

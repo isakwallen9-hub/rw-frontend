@@ -55,7 +55,7 @@ export default function Breakeven() {
   const isPositive = summary ? summary.netCashflow >= 0 : false
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
         <button

@@ -10,6 +10,7 @@ function getToken(): string | null {
 async function clearSession() {
   clearUserImportHistory()
   localStorage.removeItem('accessToken')
+  localStorage.removeItem('rw_coach_history')
   try {
     await fetch(`${API_URL}api/v1/auth/logout`, {
       method: 'POST',

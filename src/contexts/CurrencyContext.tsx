@@ -45,9 +45,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     fetchWithAuth(`${API_URL}api/v1/currency/rates`)
       .then(r => r.json())
       .then(json => {
-        console.log('CurrencyContext rates raw response:', json)
         const rates = json.data?.rates ?? json.data ?? json.rates ?? json ?? {}
-        console.log('CurrencyContext resolved rates:', rates)
         setRates(rates)
       })
       .catch(err => console.error('CurrencyContext rates error:', err))
@@ -57,7 +55,6 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const amount = sekAmount ?? 0
     const rate = currency === 'SEK' ? 1 : (rates[currency] ?? 1)
     const converted = amount * rate
-    console.log(`formatAmount: ${amount} SEK × ${rate} (${currency}) = ${converted} | rates:`, rates)
     const locale = LOCALES[currency] ?? 'sv-SE'
     return converted.toLocaleString(locale, {
       style: 'currency',

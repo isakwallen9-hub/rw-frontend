@@ -27,11 +27,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     fetchWithAuth(`${API_URL}api/v1/auth/me`)
       .then(r => r.json())
       .then(json => {
-        console.log('UserContext /auth/me raw response:', json)
         // API returns { success: true, data: { user: { isAdmin, isSuperAdmin, ... } } }
         const user = json.data?.user ?? json.data ?? json
-        console.log('UserContext resolved user:', user)
-        console.log('UserContext isAdmin:', user.isAdmin, '| isSuperAdmin:', user.isSuperAdmin)
         setIsAdmin(user.isAdmin === true)
         setIsSuperAdmin(user.isSuperAdmin === true)
         setEmail(user.email ?? null)

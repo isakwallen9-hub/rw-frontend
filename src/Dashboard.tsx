@@ -467,7 +467,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         ...(quickForm.category.trim() ? { category: quickForm.category.trim() } : {}),
         type: quickForm.type === 'income' ? 'INCOME' : 'EXPENSE',
       }
-      console.log('quick transaction payload:', JSON.stringify(payload))
       const res = await fetchWithAuth(`${API_URL}api/v1/transactions/quick`, {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -552,7 +551,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6">
@@ -564,7 +563,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <button
               onClick={exportExcel}
               disabled={exportingExcel}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-white/60 backdrop-blur border border-white/50 px-4 py-2.5 rounded-lg hover:bg-white/80 hover:shadow-md active:scale-[0.98] transition-all duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
             >
               {exportingExcel ? (
                 <>
@@ -582,7 +581,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <button
               onClick={downloadReport}
               disabled={downloadingPdf}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-white bg-primary px-4 py-2.5 rounded-lg hover:opacity-90 transition-all duration-200 disabled:opacity-60 min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-white bg-primary shadow-md shadow-blue-500/20 px-4 py-2.5 rounded-lg hover:opacity-90 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 min-h-[44px]"
             >
               {downloadingPdf ? (
                 <>
@@ -754,7 +753,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             stable: { label: '→ Stabil',    cls: 'text-gray-500 bg-gray-100' },
           }[ct.direction]
           return (
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               <span className="text-gray-400 font-medium">Kostnadsutveckling</span>
               <span className="text-gray-300">·</span>
               <span className="text-gray-700">
@@ -774,15 +773,15 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Snabb-statistik */}
         {!loadingCashflow && cashflowDays.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="bg-white border border-gray-100 rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{quickStats.totalTx}</p>
               <p className="text-xs text-gray-400 mt-1">Aktiva dagar</p>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(Math.round(quickStats.avgInflow))}</p>
               <p className="text-xs text-gray-400 mt-1">Genomsnittligt dagligt inflöde</p>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
               <p className="text-xs text-gray-400 mt-1">
                 Bästa dag{quickStats.bestDay?.date ? ` — ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
@@ -795,11 +794,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {loadingCashflow ? (
           <SkeletonChart />
         ) : cashflowError ? (
-          <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-red-400 text-sm">
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 text-center text-red-400 text-sm">
             {cashflowError}
           </div>
         ) : cashflowDays.length > 0 ? (
-          <div data-tour="cashflow-chart" className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+          <div data-tour="cashflow-chart" className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-bold text-gray-700 mb-0.5 tracking-tight">Kassaflöde</h2>
@@ -849,7 +848,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-gray-400 text-sm">
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 text-center text-gray-400 text-sm">
             Ingen kassaflödesdata tillgänglig — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
           </div>
         )}
@@ -869,7 +868,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 ))}
               </div>
             ) : (
-              <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-gray-400 text-sm">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 text-center text-gray-400 text-sm">
                 Inga rekommendationer just nu.
               </div>
             )}
@@ -881,7 +880,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             {loadingOverview ? (
               <SkeletonList rows={5} />
             ) : recentTransactionRows.length > 0 ? (
-              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   {(() => {
                     const hasCategory = recentTransactionRows.some(t => t.category !== null)
@@ -898,7 +897,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                         </thead>
                         <tbody>
                           {recentTransactionRows.map((t, i) => (
-                            <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-gray-50/60' : ''}`}>
+                            <tr key={i} className={`${i !== 0 ? 'border-t border-white/40' : ''} ${i % 2 === 1 ? 'bg-white/30' : ''} hover:bg-white/50 transition-colors`}>
                               <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
                               <td className="px-5 py-3 text-gray-700">
                                 {t.description ?? <span className="text-gray-300">—</span>}
@@ -911,7 +910,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                                 </td>
                               )}
                               <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{t.typeLabel}</td>
-                              <td className={`px-5 py-3 text-right font-medium whitespace-nowrap ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                              <td className={`px-5 py-3 text-right font-medium whitespace-nowrap tabular-nums ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
                                 {fmt(t.amount)}
                               </td>
                             </tr>
@@ -923,7 +922,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : recentCashflowRows.length > 0 ? (
-              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[320px]">
                     <thead>
@@ -935,10 +934,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                     </thead>
                     <tbody>
                       {recentCashflowRows.map((t, i) => (
-                        <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-gray-50/60' : ''}`}>
+                        <tr key={i} className={`${i !== 0 ? 'border-t border-white/40' : ''} ${i % 2 === 1 ? 'bg-white/30' : ''} hover:bg-white/50 transition-colors`}>
                           <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
                           <td className="px-5 py-3 text-gray-700">{t.type}</td>
-                          <td className={`px-5 py-3 text-right font-medium whitespace-nowrap ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                          <td className={`px-5 py-3 text-right font-medium whitespace-nowrap tabular-nums ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
                             {fmt(t.amount)}
                           </td>
                         </tr>
@@ -948,7 +947,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : (
-              <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-gray-400 text-sm">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 text-center text-gray-400 text-sm">
                 Inga transaktioner — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
               </div>
             )}
@@ -979,7 +978,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
       {/* Quick-add toast */}
       {quickAddToast && (
-        <div className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-green-700 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg">
+        <div role="status" aria-live="polite" className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-green-700 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg">
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
@@ -989,8 +988,8 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
       {/* Quick-add modal */}
       {quickAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setQuickAddOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={() => setQuickAddOpen(false)}>
+          <div className="bg-white/80 backdrop-blur-2xl rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-gray-900">Ny transaktion</h2>
               <button onClick={() => setQuickAddOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
@@ -1079,8 +1078,8 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
       {/* AI Explain Modal */}
       {explainOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setExplainOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={() => setExplainOpen(false)}>
+          <div className="bg-white/80 backdrop-blur-2xl rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-primary font-semibold">
                 <SparkleIcon className="w-4 h-4 text-accent" /> AI-förklaring
@@ -1212,18 +1211,20 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           <>
             <button
               onClick={() => setQuickAddOpen(true)}
-              className="fixed bottom-6 right-24 bg-white border border-gray-200 text-gray-700 rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors"
+              className="fixed bottom-6 right-24 bg-white border border-gray-200 text-gray-700 rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-gray-50 active:scale-95 transition-all duration-200"
               title="Lägg till transaktion"
+              aria-label="Lägg till transaktion"
             >
-              <span className="text-3xl font-light leading-none pb-0.5">+</span>
+              <span className="text-3xl font-light leading-none pb-0.5" aria-hidden="true">+</span>
             </button>
             <button
               data-tour="coach-button"
               onClick={() => setCoachOpen(true)}
-              className="fixed bottom-6 right-6 bg-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+              className="fixed bottom-6 right-6 bg-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary/90 active:scale-95 transition-all duration-200"
               title="Öppna ekonomicoach"
+              aria-label="Öppna ekonomicoach"
             >
-              <SparkleIcon className="w-6 h-6" />
+              <SparkleIcon className="w-6 h-6" aria-hidden="true" />
             </button>
           </>
         )}
@@ -1250,7 +1251,7 @@ function CashflowTooltip({ active, payload, label }: {
   const { formatAmount: fmt } = useCurrency()
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-4 py-3 text-sm">
+    <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl shadow-lg px-4 py-3 text-sm">
       <p className="font-semibold text-gray-700 mb-2">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
@@ -1269,7 +1270,7 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
   const p = PRIORITY_CONFIG[r.priority ?? 'medium']
 
   return (
-    <div className="group bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="group bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden hover:shadow-md hover:bg-white/80 transition-all duration-200 cursor-default shadow-sm">
       {/* Urgency strip */}
       <div className="h-1 w-full bg-gray-100">
         <div className={`h-full ${p.bar} transition-all`} style={{ width: `${p.urgencyPct}%` }} />
@@ -1359,13 +1360,13 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
 type KpiAccent = 'blue' | 'green' | 'red' | 'orange' | 'purple' | 'yellow'
 type KpiTrend = 'up' | 'down' | 'neutral'
 
-const ACCENT_STYLES: Record<KpiAccent, { border: string; iconBg: string; iconText: string }> = {
-  blue:   { border: 'border-l-blue-500',   iconBg: 'bg-blue-50',   iconText: 'text-blue-600' },
-  green:  { border: 'border-l-green-500',  iconBg: 'bg-green-50',  iconText: 'text-green-600' },
-  red:    { border: 'border-l-red-500',    iconBg: 'bg-red-50',    iconText: 'text-red-500' },
-  orange: { border: 'border-l-orange-500', iconBg: 'bg-orange-50', iconText: 'text-orange-600' },
-  purple: { border: 'border-l-purple-500', iconBg: 'bg-purple-50', iconText: 'text-purple-600' },
-  yellow: { border: 'border-l-yellow-400', iconBg: 'bg-yellow-50', iconText: 'text-yellow-600' },
+const ACCENT_STYLES: Record<KpiAccent, { glow: string; iconBg: string; iconText: string }> = {
+  blue:   { glow: 'shadow-[0_4px_28px_rgba(37,99,235,0.12)]',   iconBg: 'bg-blue-50/80',   iconText: 'text-blue-600' },
+  green:  { glow: 'shadow-[0_4px_28px_rgba(22,163,74,0.12)]',   iconBg: 'bg-green-50/80',  iconText: 'text-green-600' },
+  red:    { glow: 'shadow-[0_4px_28px_rgba(239,68,68,0.12)]',   iconBg: 'bg-red-50/80',    iconText: 'text-red-500' },
+  orange: { glow: 'shadow-[0_4px_28px_rgba(249,115,22,0.12)]',  iconBg: 'bg-orange-50/80', iconText: 'text-orange-600' },
+  purple: { glow: 'shadow-[0_4px_28px_rgba(147,51,234,0.12)]',  iconBg: 'bg-purple-50/80', iconText: 'text-purple-600' },
+  yellow: { glow: 'shadow-[0_4px_28px_rgba(234,179,8,0.12)]',   iconBg: 'bg-yellow-50/80', iconText: 'text-yellow-600' },
 }
 
 const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }> = {
@@ -1391,7 +1392,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
   return (
     <div
       onClick={onClick}
-      className={`bg-white border border-gray-100 border-l-4 ${c.border} rounded-2xl px-5 py-6 group relative shadow-sm hover:shadow-md transition-all duration-200 ${onClick ? 'cursor-pointer' : ''}`}
+      className={`bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl px-5 py-6 group relative transition-all duration-200 ${c.glow} hover:shadow-lg hover:bg-white/80 ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
     >
       <div className="flex items-start justify-between mb-4">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.iconBg} ${c.iconText}`}>
@@ -1409,7 +1410,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
       </div>
 
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</p>
-      <p className="text-3xl font-bold text-gray-900 tracking-tight mb-3">{value}</p>
+      <p className="text-3xl font-bold text-gray-900 tracking-tight tabular-nums mb-3">{value}</p>
 
       <div className="flex items-center justify-between gap-2">
         {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
@@ -1491,14 +1492,14 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
   const { formatAmount: fmt } = useCurrency()
   if (items.length === 0) {
     return (
-      <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center text-gray-400 text-sm">
+      <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-6 text-center text-gray-400 text-sm">
         {emptyText}
       </div>
     )
   }
   const maxInflow = Math.max(...items.map(p => p.totalInflow), 1)
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <div className="min-w-[360px]">
           <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
@@ -1514,9 +1515,9 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
               <div key={i} className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 ${i !== 0 ? 'border-t border-gray-50' : ''}`}>
                 <div className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-500`} style={{ width: `${barPct}%` }} />
                 <span className="relative text-sm font-semibold text-gray-800 truncate pr-4">{p.label}</span>
-                <span className="relative text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap">{fmt(p.totalInflow)}</span>
-                <span className="relative text-sm text-gray-400 text-right pr-6 whitespace-nowrap">{p.transactionCount} st</span>
-                <span className="relative text-sm text-gray-500 text-right whitespace-nowrap">{fmt(avg)}</span>
+                <span className="relative text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap tabular-nums">{fmt(p.totalInflow)}</span>
+                <span className="relative text-sm text-gray-400 text-right pr-6 whitespace-nowrap tabular-nums">{p.transactionCount} st</span>
+                <span className="relative text-sm text-gray-500 text-right whitespace-nowrap tabular-nums">{fmt(avg)}</span>
               </div>
             )
           })}

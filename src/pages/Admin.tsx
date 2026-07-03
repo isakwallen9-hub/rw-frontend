@@ -158,7 +158,7 @@ export default function Admin() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 font-sans">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
         <Navbar />
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-4">
           {[...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-10 w-full" />)}
@@ -169,7 +169,7 @@ export default function Admin() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50 font-sans">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
         <Navbar />
         <div className="max-w-md mx-auto px-4 py-24 flex flex-col items-center text-center gap-4">
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-2xl">🔒</div>
@@ -191,7 +191,7 @@ export default function Admin() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-10">
 
@@ -205,7 +205,7 @@ export default function Admin() {
           {loadingStats
             ? [...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-24" />)
             : STAT_CARDS.map(card => (
-              <div key={card.label} className="bg-white border border-gray-100 rounded-xl px-5 py-5 shadow-sm">
+              <div key={card.label} className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-5 shadow-sm">
                 <div className="text-2xl mb-2">{card.icon}</div>
                 <div className="text-2xl font-bold text-gray-900">
                   {typeof card.value === 'number' ? card.value.toLocaleString('sv-SE') : card.value}
@@ -227,9 +227,9 @@ export default function Admin() {
           {loadingOrgs ? (
             <div className="flex flex-col gap-2">{[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-12" />)}</div>
           ) : orgs.length === 0 ? (
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga organisationer.</div>
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga organisationer.</div>
           ) : (
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[700px]">
                   <thead>
@@ -336,9 +336,9 @@ export default function Admin() {
           {loadingUsers ? (
             <div className="flex flex-col gap-2">{[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-12" />)}</div>
           ) : users.length === 0 ? (
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga användare.</div>
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga användare.</div>
           ) : (
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[560px]">
                   <thead>
@@ -382,8 +382,8 @@ export default function Admin() {
 
       {/* Delete confirmation */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white/80 backdrop-blur-2xl rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-xl shrink-0">🗑️</div>
               <div>

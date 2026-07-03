@@ -177,7 +177,7 @@ export default function Diagnosis() {
   [history])
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-8">
 
@@ -215,7 +215,7 @@ export default function Diagnosis() {
         ) : (
           <>
             {/* Score + Component breakdown */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 md:p-8">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-6 md:p-8">
               <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
 
                 {/* Circular score */}
@@ -277,7 +277,7 @@ export default function Diagnosis() {
                   ))}
                 </div>
               ) : rootCauses.length === 0 ? (
-                <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center text-gray-400 text-sm">
+                <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-8 text-center text-gray-400 text-sm">
                   Inga rotorsaker identifierade — din ekonomi ser bra ut!
                 </div>
               ) : (
@@ -291,7 +291,7 @@ export default function Diagnosis() {
 
             {/* History chart */}
             {historyChartData.length >= 2 && (
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-6">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-bold text-gray-800">Hälsoscorehistorik</h2>
                   <span className="text-xs text-gray-400">{historyChartData.length} mätpunkter</span>
@@ -309,7 +309,7 @@ export default function Diagnosis() {
                     <Tooltip
                       content={({ active, payload, label }) =>
                         active && payload?.length ? (
-                          <div className="bg-white border border-gray-100 rounded-xl shadow px-3 py-2 text-xs">
+                          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl shadow px-3 py-2 text-xs">
                             <p className="text-gray-500 mb-0.5">{label}</p>
                             <p className="font-bold text-gray-900">Score: {payload[0].value}</p>
                           </div>
@@ -330,7 +330,7 @@ export default function Diagnosis() {
             )}
 
             {historyChartData.length === 1 && (
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-6 py-5">
+              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm px-6 py-5">
                 <h2 className="text-base font-bold text-gray-800 mb-1">Hälsoscorehistorik</h2>
                 <p className="text-xs text-gray-400">
                   Historiken byggs upp automatiskt varje dag du besöker sidan. Kom tillbaka imorgon för att se din trend.

@@ -347,7 +347,7 @@ export default function Onboarding() {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
 
       {/* Top bar */}
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
@@ -430,7 +430,7 @@ export default function Onboarding() {
                   </p>
 
                   {/* Dynamic preview table */}
-                  <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
@@ -456,7 +456,7 @@ export default function Onboarding() {
                   </div>
 
                   {/* Column detection */}
-                  <div className="bg-white border border-gray-100 rounded-xl p-4">
+                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
                     <div className="space-y-3">
                       <ColumnRow
@@ -507,7 +507,7 @@ export default function Onboarding() {
                   </p>
 
                   {/* Dynamic preview table */}
-                  <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
@@ -533,7 +533,7 @@ export default function Onboarding() {
                   </div>
 
                   {/* Column detection */}
-                  <div className="bg-white border border-gray-100 rounded-xl p-4">
+                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
                     <div className="space-y-3">
                       <ColumnRow

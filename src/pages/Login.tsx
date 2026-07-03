@@ -99,7 +99,7 @@ export default function Login() {
             {error && <p className="text-red-500 text-sm">{error}</p>}
 
             <button onClick={handleLogin} disabled={loading}
-              className="w-full bg-accent text-white font-semibold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 text-sm mt-1 flex items-center justify-center gap-2">
+              className="w-full bg-accent text-white font-semibold py-3 rounded-lg shadow-md shadow-blue-500/20 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm mt-1 flex items-center justify-center gap-2">
               {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {loading ? 'Loggar in...' : 'Logga in'}
             </button>

@@ -161,7 +161,7 @@ export default function Profile() {
   const currentIndustry = INDUSTRIES.find((i) => i.value === industry)
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
       <Navbar />
       <div className="max-w-xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-8">
 
@@ -169,7 +169,7 @@ export default function Profile() {
         <div>
           <h1 className="text-2xl font-bold text-primary mb-4">Profil</h1>
           {loading ? (
-            <div className="bg-white border border-gray-100 rounded-xl p-6 flex flex-col gap-4">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 flex flex-col gap-4">
               {[...Array(5)].map((_, i) => (
                 <SkeletonCard key={i} className="h-8 w-full" />
               ))}
@@ -177,7 +177,7 @@ export default function Profile() {
           ) : error ? (
             <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{error}</div>
           ) : profile ? (
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl overflow-hidden">
               <ProfileRow label="Förnamn" value={profile.firstName} />
               <ProfileRow label="Efternamn" value={profile.lastName} />
               <ProfileRow label="E-post" value={profile.email} />
@@ -201,7 +201,7 @@ export default function Profile() {
         {/* Industry picker */}
         <div>
           <h2 className="text-lg font-bold text-gray-800 mb-4">Bransch</h2>
-          <div className="bg-white border border-gray-100 rounded-xl p-4">
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-4">
             {loading ? (
               <SkeletonCard className="h-40 w-full" />
             ) : (
@@ -231,7 +231,7 @@ export default function Profile() {
         {/* Currency picker */}
         <div>
           <h2 className="text-lg font-bold text-gray-800 mb-4">Valuta</h2>
-          <div className="bg-white border border-gray-100 rounded-xl p-4">
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-4">
             {loading ? (
               <SkeletonCard className="h-16 w-full" />
             ) : (
@@ -263,13 +263,13 @@ export default function Profile() {
           <h2 className="text-lg font-bold text-gray-800 mb-4">Notifikationer</h2>
 
           {notifLoading ? (
-            <div className="bg-white border border-gray-100 rounded-xl p-6 flex flex-col gap-4">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 flex flex-col gap-4">
               {[...Array(4)].map((_, i) => (
                 <SkeletonCard key={i} className="h-8 w-full" />
               ))}
             </div>
           ) : (
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl overflow-hidden">
 
               {/* Master enable/disable */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
@@ -301,7 +301,7 @@ export default function Profile() {
                   <button
                     onClick={handleEmailSave}
                     disabled={saving || !notif.enabled}
-                    className="px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 min-h-[44px]"
+                    className="px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg shadow-md shadow-blue-500/20 hover:opacity-90 transition-opacity disabled:opacity-50 min-h-[44px]"
                   >
                     Spara
                   </button>
