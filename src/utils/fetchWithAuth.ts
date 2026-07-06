@@ -35,10 +35,16 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   })
 
   if (response.status === 401) {
-    const refreshResponse = await fetch(`${API_URL}api/v1/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-    })
+    let refreshResponse: Response
+    try {
+      refreshResponse = await fetch(`${API_URL}api/v1/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {
+      await clearSession()
+      throw new Error('Nätverksfel vid sessionsförnyelse')
+    }
 
     if (refreshResponse.ok) {
       const json = await refreshResponse.json()

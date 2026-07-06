@@ -117,7 +117,22 @@ export default function Register() {
 
                 {error && <p className="text-red-500 text-sm">{error}</p>}
 
-                <button onClick={() => setStep(2)}
+                <button onClick={() => {
+                    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.password || !form.organisationName.trim() || !form.organisationSlug.trim()) {
+                      setError('Alla fält måste fyllas i.')
+                      return
+                    }
+                    if (!form.email.includes('@')) {
+                      setError('Ange en giltig e-postadress.')
+                      return
+                    }
+                    if (form.password.length < 6) {
+                      setError('Lösenordet måste vara minst 6 tecken.')
+                      return
+                    }
+                    setError('')
+                    setStep(2)
+                  }}
                   className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:opacity-90 transition-opacity text-sm mt-1">
                   Nästa steg →
                 </button>

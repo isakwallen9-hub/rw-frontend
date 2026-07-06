@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { CurrencyProvider } from './contexts/CurrencyContext'
 import { UserProvider } from './contexts/UserContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import Admin from './pages/Admin'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -31,6 +32,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <UserProvider>
     <CurrencyProvider>
     <BrowserRouter>
@@ -59,5 +61,6 @@ export default function App() {
     </BrowserRouter>
     </CurrencyProvider>
     </UserProvider>
+    </ErrorBoundary>
   )
 }

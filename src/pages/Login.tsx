@@ -15,9 +15,13 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
+    if (!slug.trim() || !email.trim() || !password) {
+      setError('Fyll i workspace, e-post och lösenord.')
+      return
+    }
     setLoading(true)
     setError('')
-    const payload = { email, password, organisationSlug: slug }
+    const payload = { email: email.trim(), password, organisationSlug: slug.trim() }
     try {
       const res = await fetch(`${API_URL}api/v1/auth/login`, {
         method: 'POST',

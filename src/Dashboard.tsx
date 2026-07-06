@@ -269,10 +269,54 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       return
     }
     if (!isTourCompleted()) setShowTour(true)
-    fetchOverview()
-    fetchCashflow()
-    fetchRunway()
-    fetchRecommendations()
+    let cancelled = false
+    const guard = <T,>(fn: (v: T) => void) => (v: T) => { if (!cancelled) fn(v) }
+
+    fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
+      .then(r => r.json())
+      .then(guard(json => setOverview(json)))
+      .catch(guard(() => setOverview(MOCK_OVERVIEW)))
+      .finally(guard(() => setLoadingOverview(false)))
+
+    fetchWithAuth(`${API_URL}api/v1/cashflow/current`)
+      .then(r => r.json())
+      .then(guard((json) => {
+        const raw: Record<string, unknown>[] = Array.isArray(json.data?.series) ? json.data.series : []
+        setCashflowDays(raw.map(r => ({
+          date:    String(r.date    ?? r.Date    ?? r.day  ?? ''),
+          inflow:  Number(r.inflow  ?? r.in      ?? r.income  ?? 0),
+          outflow: Number(r.outflow ?? r.out     ?? r.expense ?? 0),
+        })))
+      }))
+      .catch(guard(() => setCashflowError('Kunde inte hämta kassaflödesdata.')))
+      .finally(guard(() => setLoadingCashflow(false)))
+
+    fetchWithAuth(`${API_URL}api/v1/cashflow/runway`)
+      .then(r => r.json())
+      .then(guard(json => {
+        const rd = json?.data?.runwayDays ?? null
+        if (rd !== null) setRunwayDays(Number(rd))
+      }))
+      .catch(() => {})
+
+    fetchWithAuth(`${API_URL}api/v1/recommendations/top3`)
+      .then(r => r.json())
+      .then(guard(json => {
+        const actions = json.data?.actions ?? json.data ?? json ?? []
+        setRecommendations(actions.map((a: Record<string, unknown>) => ({
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          how: a.how,
+          estimatedValue: Array.isArray(a.targets) ? (a.targets as { value: number }[]).reduce((sum, t) => sum + (t.value ?? 0), 0) : 0,
+          priority: (a.impact as 'high' | 'medium' | 'low') ?? 'medium',
+          targets: a.targets,
+        })))
+      }))
+      .catch(guard(() => setRecommendations(MOCK_RECOMMENDATIONS)))
+      .finally(guard(() => setLoadingRec(false)))
+
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
