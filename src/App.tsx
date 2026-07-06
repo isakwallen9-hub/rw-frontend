@@ -19,6 +19,7 @@ import Diagnosis from './pages/Diagnosis'
 import Actions from './pages/Actions'
 import Budget from './pages/Budget'
 import Customers from './pages/Customers'
+import Insights from './pages/Insights'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('accessToken')
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/diagnosis" element={<PrivateRoute><Diagnosis /></PrivateRoute>} />
         <Route path="/budget" element={<PrivateRoute><Budget /></PrivateRoute>} />
         <Route path="/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
+        <Route path="/insights" element={<PrivateRoute><Insights /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />

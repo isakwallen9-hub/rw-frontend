@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearUserImportHistory } from '../utils/jwtUser'
 import { useUser } from '../contexts/UserContext'
+import { Sparkles } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -38,6 +39,10 @@ export default function Navbar() {
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-6 text-sm text-gray-500">
           <button onClick={() => navigate('/dashboard')} className="hover:text-primary transition-colors">Dashboard</button>
+          <button onClick={() => navigate('/insights')} className="hover:text-primary transition-colors flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+            Insikter
+          </button>
           <button onClick={() => navigate('/analytics')} className="hover:text-primary transition-colors">Analys</button>
           <button onClick={() => navigate('/simulate')} className="hover:text-primary transition-colors">Simulera</button>
           <button data-tour="import-link" onClick={() => navigate('/import')} className="hover:text-primary transition-colors">Importera</button>
@@ -78,6 +83,13 @@ export default function Navbar() {
             className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
           >
             Dashboard
+          </button>
+          <button
+            onClick={() => { navigate('/insights'); setMenuOpen(false) }}
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+            Insikter
           </button>
           <button
             onClick={() => { navigate('/analytics'); setMenuOpen(false) }}
