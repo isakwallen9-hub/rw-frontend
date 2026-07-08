@@ -204,7 +204,7 @@ export default function Cashflow() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
+    <div className="min-h-screen font-sans">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-6">
 
@@ -276,7 +276,7 @@ export default function Cashflow() {
                 {/* 3 main KPI cards */}
                 <div className="grid sm:grid-cols-3 gap-4">
                   {/* Current balance */}
-                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-6 shadow-[0_4px_28px_rgba(37,99,235,0.12)]">
+                  <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-[0_4px_28px_rgba(37,99,235,0.12)]">
                     <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
                       <Banknote className="w-5 h-5 text-blue-600" />
                     </div>
@@ -286,7 +286,7 @@ export default function Cashflow() {
                   </div>
 
                   {/* Monthly inflow */}
-                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-6 shadow-[0_4px_28px_rgba(22,163,74,0.12)]">
+                  <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-[0_4px_28px_rgba(22,163,74,0.12)]">
                     <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center mb-4">
                       <ArrowUpRight className="w-5 h-5 text-green-600" />
                     </div>
@@ -296,7 +296,7 @@ export default function Cashflow() {
                   </div>
 
                   {/* Monthly outflow */}
-                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-6 shadow-[0_4px_28px_rgba(239,68,68,0.12)]">
+                  <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-[0_4px_28px_rgba(239,68,68,0.12)]">
                     <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-4">
                       <ArrowDownRight className="w-5 h-5 text-red-500" />
                     </div>
@@ -308,7 +308,7 @@ export default function Cashflow() {
 
                 {/* Net + ratio cards */}
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm px-6 py-5 flex items-center gap-4">
+                  <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm px-6 py-5 flex items-center gap-4">
                     {monthlyNet >= 0
                       ? <TrendingUp className="w-8 h-8 text-green-500 shrink-0" />
                       : <TrendingDown className="w-8 h-8 text-red-500 shrink-0" />}
@@ -320,7 +320,7 @@ export default function Cashflow() {
                     </div>
                   </div>
 
-                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm px-6 py-5">
+                  <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm px-6 py-5">
                     <p className="text-xs text-gray-400 mb-2">Kostnadskvot (utgifter / intäkter)</p>
                     <div className="flex items-end gap-3">
                       <p className={`text-xl font-bold ${burnRatio > 90 ? 'text-red-600' : burnRatio > 70 ? 'text-yellow-600' : 'text-green-600'}`}>
@@ -377,12 +377,12 @@ export default function Cashflow() {
             {/* Summary pills */}
             {!loadingSeries && (
               <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-4 py-2.5 shadow-sm">
+                <div className="flex items-center gap-2 bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-4 py-2.5 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-blue-500" />
                   <span className="text-xs text-gray-500">Inflöde</span>
                   <span className="text-sm font-bold text-blue-600">{fmt(periodSummary.totalInflow)}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-4 py-2.5 shadow-sm">
+                <div className="flex items-center gap-2 bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-4 py-2.5 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-red-500" />
                   <span className="text-xs text-gray-500">Utflöde</span>
                   <span className="text-sm font-bold text-red-500">{fmt(periodSummary.totalOutflow)}</span>
@@ -400,7 +400,7 @@ export default function Cashflow() {
             )}
 
             {/* Area chart */}
-            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-6">
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
               {loadingSeries ? (
                 <div className="h-72 bg-gray-100 rounded-xl animate-pulse" />
               ) : historyChartData.length === 0 ? (
@@ -445,14 +445,14 @@ export default function Cashflow() {
               </div>
             ) : runwayData && (
               <div className="grid sm:grid-cols-3 gap-4">
-                <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm px-5 py-4">
+                <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm px-5 py-4">
                   <p className="text-xs text-gray-400 mb-1">Runway</p>
                   <p className={`text-xl font-bold ${runwayData.runwayDays < 30 ? 'text-red-600' : runwayData.runwayDays < 60 ? 'text-yellow-600' : 'text-green-600'}`}>
                     {runwayData.runwayDays} dagar
                   </p>
                   <p className="text-xs text-gray-400 mt-1">{runwayData.runwayDays < 30 ? 'Kritiskt lågt' : runwayData.runwayDays < 60 ? 'Bevaka noggrant' : 'Bra likviditet'}</p>
                 </div>
-                <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm px-5 py-4">
+                <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm px-5 py-4">
                   <p className="text-xs text-gray-400 mb-1">Burn rate</p>
                   <p className="text-xl font-bold text-red-500">{fmt(runwayData.monthlyBurnRate)}<span className="text-sm font-normal text-gray-400">/mån</span></p>
                   <p className="text-xs text-gray-400 mt-1">Aktuell kostnadstakt</p>
@@ -489,7 +489,7 @@ export default function Cashflow() {
             )}
 
             {/* Forecast line chart */}
-            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-6">
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
               <h3 className="text-sm font-bold text-gray-700 mb-5">90-dagars saldoprognos</h3>
               {loadingRunway ? (
                 <div className="h-72 bg-gray-100 rounded-xl animate-pulse" />
@@ -515,7 +515,7 @@ export default function Cashflow() {
                     <Tooltip
                       content={({ active, payload, label }) =>
                         active && payload?.length ? (
-                          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl shadow px-3 py-2 text-xs">
+                          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow px-3 py-2 text-xs">
                             <p className="text-gray-500 mb-0.5">{label}</p>
                             <p className="font-bold text-gray-900">{fmt(Number(payload[0].value ?? 0))}</p>
                           </div>
@@ -542,7 +542,7 @@ function CashflowTooltip({ active, payload, label }: {
 }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl shadow-lg px-4 py-3 text-sm">
+    <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow-lg px-4 py-3 text-sm">
       <p className="font-semibold text-gray-700 mb-2">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">

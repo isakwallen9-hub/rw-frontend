@@ -42,6 +42,15 @@ interface FeaturedChart {
   reason: string
 }
 
+interface ChartDataV2 {
+  labels: string[]
+  datasets: Array<{
+    label: string
+    data: Array<number | DataPoint>
+    isZeroReference?: boolean
+  }>
+}
+
 interface Insight {
   id: string
   title: string
@@ -49,7 +58,7 @@ interface Insight {
   severity: Severity
   impact?: number
   suggestedAction?: string
-  chartData?: DataPoint[]
+  chartData?: DataPoint[] | ChartDataV2
 }
 
 interface InsightsData {
@@ -110,24 +119,48 @@ const SEVERITY_STYLES: Record<Severity, {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function pivotDatasets(datasets: Dataset[]): Record<string, unknown>[] {
+function toErrorString(raw: unknown, fallback: string): string {
+  if (!raw) return fallback
+  if (typeof raw === 'string') return raw || fallback
+  if (typeof raw === 'object' && 'message' in raw) return String((raw as { message: unknown }).message) || fallback
+  return fallback
+}
+
+function pivotDatasets(datasets: Dataset[] | null | undefined): Record<string, unknown>[] {
+  if (!datasets?.length) return []
   const nonZero = datasets.filter(d => !d.isZeroReference)
   if (!nonZero.length) return []
-  const labels = nonZero[0].data.map(p => p.label)
+  const firstData = nonZero[0]?.data
+  if (!firstData?.length) return []
+  const labels = firstData.map(p => p.label)
   return labels.map((lbl, i) => {
     const row: Record<string, unknown> = { label: lbl }
-    nonZero.forEach(ds => { row[ds.label] = ds.data[i]?.value ?? 0 })
+    nonZero.forEach(ds => { row[ds.label] = ds.data?.[i]?.value ?? 0 })
     return row
   })
 }
 
-function simpleChartAsFeatured(data: DataPoint[], title = ''): FeaturedChart {
-  return {
-    title,
-    chartType: 'bar',
-    datasets: [{ label: 'Värde', data }],
-    reason: '',
+function normalizeToDatasets(chartData: DataPoint[] | ChartDataV2 | null | undefined): Dataset[] {
+  if (!chartData) return []
+
+  // Old format: [{label, value}, ...]
+  if (Array.isArray(chartData)) {
+    return chartData.length ? [{ label: 'Värde', data: chartData }] : []
   }
+
+  // New { labels, datasets } format
+  const { labels = [], datasets = [] } = chartData
+  if (!labels.length || !datasets?.length) return []
+
+  return datasets.map(ds => ({
+    label: ds.label ?? '',
+    isZeroReference: ds.isZeroReference,
+    data: labels.map((lbl, i) => {
+      const raw = ds.data?.[i]
+      const value = typeof raw === 'number' ? raw : ((raw as DataPoint)?.value ?? 0)
+      return { label: lbl, value }
+    }),
+  }))
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -144,9 +177,18 @@ function Skeleton() {
 }
 
 function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: number }) {
-  const pivoted = pivotDatasets(chart.datasets)
-  const nonZero = chart.datasets.filter(d => !d.isZeroReference)
-  const hasZeroRef = chart.datasets.some(d => d.isZeroReference)
+  const datasets = chart.datasets ?? []
+  const pivoted = pivotDatasets(datasets)
+  const nonZero = datasets.filter(d => !d.isZeroReference)
+  const hasZeroRef = datasets.some(d => d.isZeroReference)
+
+  if (!pivoted.length) {
+    return (
+      <div className="flex items-center justify-center text-sm text-gray-400" style={{ height }}>
+        Ingen grafdata
+      </div>
+    )
+  }
 
   const sharedProps = {
     data: pivoted,
@@ -229,7 +271,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
 
 function FeaturedChartCard({ chart }: { chart: FeaturedChart }) {
   return (
-    <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
+    <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
       <h3 className="font-bold text-gray-900 tracking-tight mb-1">{chart.title}</h3>
       <div className="mt-4">
         <ChartBlock chart={chart} height={240} />
@@ -246,12 +288,13 @@ function FeaturedChartCard({ chart }: { chart: FeaturedChart }) {
 
 function InsightCard({ insight, formatAmount }: { insight: Insight; formatAmount: (n: number) => string }) {
   const s = SEVERITY_STYLES[insight.severity] ?? SEVERITY_STYLES.info
-  const inlineChart = insight.chartData?.length
-    ? simpleChartAsFeatured(insight.chartData)
+  const normalizedDatasets = normalizeToDatasets(insight.chartData)
+  const inlineChart: FeaturedChart | null = normalizedDatasets.length
+    ? { title: '', chartType: 'bar', datasets: normalizedDatasets, reason: '' }
     : null
 
   return (
-    <div className={`bg-white/70 backdrop-blur-xl border border-white/50 border-l-4 ${s.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
+    <div className={`bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent border-l-4 ${s.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <s.Icon className={`w-4 h-4 shrink-0 ${s.iconColor}`} aria-hidden="true" />
@@ -332,9 +375,12 @@ export default function Insights() {
       })
       const json = await res.json()
       if (res.status === 422) {
-        setGenerateError({ error: json.error ?? 'Kunde inte tolka frågan.', suggestions: json.suggestions })
+        setGenerateError({
+          error: toErrorString(json.error, 'Kunde inte tolka frågan.'),
+          suggestions: Array.isArray(json.suggestions) ? json.suggestions : undefined,
+        })
       } else if (!res.ok) {
-        setGenerateError({ error: json.error ?? 'Något gick fel.' })
+        setGenerateError({ error: toErrorString(json.error, 'Något gick fel.') })
       } else {
         const chart = json.data ?? json
         setGeneratedChart({ ...chart, query: q })
@@ -354,7 +400,7 @@ export default function Insights() {
     : []
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
+    <div className="min-h-screen font-sans">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8">
 
@@ -370,7 +416,7 @@ export default function Insights() {
         </div>
 
         {/* ── AI Chart Generator ── */}
-        <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Fråga AI om en graf</p>
           <div className="flex gap-2">
             <input
@@ -409,7 +455,7 @@ export default function Insights() {
 
           {generateError && (
             <div className="mt-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              <p className="text-sm font-semibold text-red-700 mb-1">{generateError.error}</p>
+              <p className="text-sm font-semibold text-red-700 mb-1">{String(generateError.error)}</p>
               {generateError.suggestions?.length ? (
                 <ul className="text-xs text-red-600 list-disc list-inside space-y-0.5">
                   {generateError.suggestions.map((s, i) => (
@@ -423,7 +469,7 @@ export default function Insights() {
 
         {/* ── Generated chart result ── */}
         {generatedChart && (
-          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
@@ -451,7 +497,7 @@ export default function Insights() {
         )}
 
         {/* ── AI Summary ── */}
-        <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md shadow-blue-500/20">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
@@ -491,7 +537,7 @@ export default function Insights() {
           <section>
             <div className="h-5 bg-gray-200/80 rounded-lg w-40 animate-pulse mb-4" />
             {[0, 1].map(i => (
-              <div key={i} className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-5 mb-5 shadow-sm">
+              <div key={i} className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 mb-5 shadow-sm">
                 <div className="h-4 bg-gray-200/80 rounded-lg w-48 animate-pulse mb-4" />
                 <div className="h-56 bg-gray-100/80 rounded-xl animate-pulse" />
               </div>
@@ -521,7 +567,7 @@ export default function Insights() {
           <section>
             <div className="h-5 bg-gray-200/80 rounded-lg w-28 animate-pulse mb-4" />
             {[0, 1, 2].map(i => (
-              <div key={i} className="bg-white/70 backdrop-blur-xl border border-white/50 border-l-4 border-l-gray-200 rounded-2xl p-5 mb-4 shadow-sm animate-pulse">
+              <div key={i} className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent border-l-4 border-l-gray-200 rounded-2xl p-5 mb-4 shadow-sm animate-pulse">
                 <div className="flex justify-between mb-3">
                   <div className="h-4 bg-gray-200/80 rounded-lg w-48" />
                   <div className="h-5 bg-gray-200/80 rounded-full w-16" />
@@ -537,7 +583,7 @@ export default function Insights() {
 
         {/* Empty state */}
         {!loading && !fetchError && !sortedInsights.length && !data?.featuredCharts?.length && (
-          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-10 text-center shadow-sm">
+          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-10 text-center shadow-sm">
             <Sparkles className="w-8 h-8 text-gray-300 mx-auto mb-3" aria-hidden="true" />
             <p className="text-sm text-gray-400">Inga insikter ännu — importera mer data för att aktivera AI-analysen.</p>
           </div>

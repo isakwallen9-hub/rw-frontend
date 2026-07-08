@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { CurrencyProvider } from './contexts/CurrencyContext'
 import { UserProvider } from './contexts/UserContext'
 import ErrorBoundary from './components/ErrorBoundary'
+import AiAssistant from './components/AiAssistant'
 import Admin from './pages/Admin'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -22,6 +23,16 @@ import Budget from './pages/Budget'
 import Customers from './pages/Customers'
 import Insights from './pages/Insights'
 
+const SKIP_AI = ['/', '/login', '/register', '/onboarding']
+
+function AiAssistantGate() {
+  const location = useLocation()
+  const token = localStorage.getItem('accessToken')
+  if (!token || token === 'undefined' || token === 'null') return null
+  if (SKIP_AI.includes(location.pathname)) return null
+  return <AiAssistant />
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('accessToken')
   if (!token || token === 'undefined' || token === 'null') {
@@ -32,6 +43,13 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <>
+    {/* ── Global animated background — makes glassmorphism visible on all pages ── */}
+    <div className="fixed inset-0 -z-10 bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100" aria-hidden="true">
+      <div className="absolute top-[-15%] left-[10%] w-[600px] h-[600px] bg-blue-300/30 rounded-full blur-[130px] animate-pulse" style={{animationDuration:'8s'}} />
+      <div className="absolute bottom-[5%] right-[5%] w-[500px] h-[500px] bg-indigo-300/25 rounded-full blur-[120px] animate-pulse" style={{animationDuration:'10s'}} />
+      <div className="absolute top-[35%] left-[55%] w-[400px] h-[400px] bg-cyan-200/30 rounded-full blur-[100px] animate-pulse" style={{animationDuration:'12s'}} />
+    </div>
     <ErrorBoundary>
     <UserProvider>
     <CurrencyProvider>
@@ -58,9 +76,11 @@ export default function App() {
         <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <AiAssistantGate />
     </BrowserRouter>
     </CurrencyProvider>
     </UserProvider>
     </ErrorBoundary>
+    </>
   )
 }

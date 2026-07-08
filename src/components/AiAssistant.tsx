@@ -1,0 +1,505 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { ArrowRight, Send, Sparkles, Trash2, X } from 'lucide-react'
+import {
+  Bar, BarChart, CartesianGrid, Line, LineChart,
+  ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts'
+import { fetchWithAuth } from '../utils/fetchWithAuth'
+
+const API_URL = import.meta.env.VITE_API_URL as string
+const CHART_COLORS = ['#2563eb', '#7c3aed', '#f59e0b', '#10b981', '#ef4444', '#06b6d4']
+const SS_KEY = 'rw_ai_history'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type AiContext = 'dashboard' | 'analytics' | 'cashflow' | 'customers' | 'budget' | 'simulate' | 'general'
+type Intent    = 'answer'   | 'chart'     | 'forecast'  | 'action'
+
+interface DataPoint { label: string; value: number }
+interface Dataset   { label: string; data: DataPoint[]; isZeroReference?: boolean }
+
+interface InlineChart {
+  title?:     string
+  chartType?: 'line' | 'bar'
+  datasets:   Dataset[]
+}
+interface ActionItem {
+  title:        string
+  description?: string
+  priority?:    'high' | 'medium' | 'low'
+}
+interface AiMessage {
+  role:      'user' | 'ai' | 'error'
+  text:      string
+  intent?:   Intent
+  chart?:    InlineChart
+  forecast?: DataPoint[]
+  actions?:  ActionItem[]
+}
+type HistoryMap = Partial<Record<AiContext, AiMessage[]>>
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+const ROUTE_CTX: Record<string, AiContext> = {
+  '/':          'dashboard',
+  '/dashboard': 'dashboard',
+  '/analys':    'analytics',
+  '/analytics': 'analytics',
+  '/cashflow':  'cashflow',
+  '/kunder':    'customers',
+  '/customers': 'customers',
+  '/budget':    'budget',
+  '/simulera':  'simulate',
+  '/simulate':  'simulate',
+}
+
+const CTX_LABEL: Record<AiContext, string> = {
+  dashboard: 'Dashboard',
+  analytics: 'Analys',
+  cashflow:  'Kassaflöde',
+  customers: 'Kunder',
+  budget:    'Budget',
+  simulate:  'Simulering',
+  general:   'Allmänt',
+}
+
+const QUICK_QS: Record<AiContext, string[]> = {
+  dashboard: ['Hur mår mitt företag?', 'Visa intäktstrenden', 'Vad bör jag göra nu?'],
+  analytics: ['Vilka kategorier kostar mest?', 'Visa min kostnadsutveckling', 'Jämför intäkter och kostnader'],
+  cashflow:  ['Hur länge räcker likviditeten?', 'Finns det risker i kassaflödet?', 'Visa prognos nästa kvartal'],
+  customers: ['Vilka kunder riskerar jag att tappa?', 'Vem är min bästa kund?', 'Vilka kunder är inaktiva?'],
+  budget:    ['Håller jag budgeten?', 'Var överskrider jag mest?', 'Hur ser utfallet ut mot plan?'],
+  simulate:  ['Vad händer om jag minskar kostnader 10%?', 'Simulera pessimistiskt scenario', 'Visa break-even'],
+  general:   ['Hur mår mitt företag?', 'Vad bör jag prioritera?', 'Visa ekonomisk status'],
+}
+
+const PRIO_BADGE: Record<string, string> = {
+  high:   'bg-red-100 text-red-700',
+  medium: 'bg-yellow-100 text-yellow-700',
+  low:    'bg-green-100 text-green-700',
+}
+const PRIO_LABEL: Record<string, string> = { high: 'Hög', medium: 'Medium', low: 'Låg' }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function toErrStr(raw: unknown, fallback: string): string {
+  if (!raw) return fallback
+  if (typeof raw === 'string') return raw || fallback
+  if (typeof raw === 'object' && 'message' in raw)
+    return String((raw as { message: unknown }).message) || fallback
+  return fallback
+}
+
+function normalizeDatasets(raw: unknown): Dataset[] {
+  if (!raw) return []
+  if (Array.isArray(raw)) {
+    if (!raw.length) return []
+    if (typeof (raw[0] as Record<string, unknown>)?.label === 'string')
+      return [{ label: 'Värde', data: raw as DataPoint[] }]
+    return []
+  }
+  const obj = raw as {
+    labels?: string[]
+    datasets?: Array<{ label?: string; data?: Array<number | DataPoint>; isZeroReference?: boolean }>
+  }
+  const { labels = [], datasets = [] } = obj
+  if (!labels.length || !datasets?.length) return []
+  return datasets.map(ds => ({
+    label: ds.label ?? '',
+    isZeroReference: ds.isZeroReference,
+    data: labels.map((lbl, i) => {
+      const v = ds.data?.[i]
+      return { label: lbl, value: typeof v === 'number' ? v : ((v as DataPoint)?.value ?? 0) }
+    }),
+  }))
+}
+
+function pivotDs(datasets: Dataset[] | null | undefined): Record<string, unknown>[] {
+  if (!datasets?.length) return []
+  const nonZero = datasets.filter(d => !d.isZeroReference)
+  if (!nonZero.length) return []
+  const firstData = nonZero[0]?.data
+  if (!firstData?.length) return []
+  return firstData.map((p, i) => {
+    const row: Record<string, unknown> = { label: p.label }
+    nonZero.forEach(ds => { row[ds.label] = ds.data?.[i]?.value ?? 0 })
+    return row
+  })
+}
+
+function loadMap(): HistoryMap {
+  try { return JSON.parse(sessionStorage.getItem(SS_KEY) ?? '{}') as HistoryMap } catch { return {} }
+}
+function saveMap(map: HistoryMap) {
+  try { sessionStorage.setItem(SS_KEY, JSON.stringify(map)) } catch {}
+}
+
+// ─── ChartBlock ───────────────────────────────────────────────────────────────
+
+function ChartBlock({ chart, height = 190 }: { chart: InlineChart; height?: number }) {
+  const datasets = chart.datasets ?? []
+  const pivoted  = pivotDs(datasets)
+  const nonZero  = datasets.filter(d => !d.isZeroReference)
+  const hasZRef  = datasets.some(d => d.isZeroReference)
+
+  if (!pivoted.length) {
+    return (
+      <div className="flex items-center justify-center text-xs text-gray-400" style={{ height }}>
+        Ingen grafdata
+      </div>
+    )
+  }
+
+  const shared = { data: pivoted, margin: { top: 4, right: 4, left: 0, bottom: 0 } }
+
+  const axes = (
+    <>
+      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+      <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+      <YAxis
+        tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40}
+        tickFormatter={v => Math.abs(Number(v)) >= 1000 ? `${(Number(v) / 1000).toFixed(0)}k` : String(v)}
+      />
+      <Tooltip
+        contentStyle={{ background: 'rgba(255,255,255,0.97)', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 11 }}
+        formatter={(v: number) => [v.toLocaleString('sv-SE'), undefined]}
+      />
+      {hasZRef && <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 2" strokeWidth={1.5} />}
+    </>
+  )
+
+  if ((chart.chartType ?? 'bar') === 'bar') {
+    return (
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart {...shared}>
+          {axes}
+          {nonZero.map((ds, i) => (
+            <Bar key={ds.label} dataKey={ds.label} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[3, 3, 0, 0]} />
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    )
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <LineChart {...shared}>
+        {axes}
+        {nonZero.map((ds, i) => (
+          <Line
+            key={ds.label} type="monotone" dataKey={ds.label}
+            stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2} dot={false} activeDot={{ r: 4 }}
+          />
+        ))}
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
+// ─── Message bubble ───────────────────────────────────────────────────────────
+
+function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) => void }) {
+  if (msg.role === 'user') {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-sm text-sm leading-relaxed bg-gradient-to-br from-blue-700 to-indigo-700 text-white">
+          {msg.text}
+        </div>
+      </div>
+    )
+  }
+
+  if (msg.role === 'error') {
+    return (
+      <div className="flex justify-start">
+        <div className="max-w-[88%] px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-red-50 border border-red-100 text-red-700">
+          {String(msg.text)}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex justify-start">
+      <div className="max-w-[92%] flex flex-col gap-2">
+        {msg.text && (
+          <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-white/70 border border-white/60 text-gray-800 shadow-sm whitespace-pre-line">
+            {msg.text}
+          </div>
+        )}
+        {msg.chart && (
+          <div className="rounded-2xl bg-white/70 border border-white/60 shadow-sm p-3">
+            {msg.chart.title && (
+              <p className="text-xs font-semibold text-gray-700 mb-2">{msg.chart.title}</p>
+            )}
+            <ChartBlock chart={msg.chart} height={170} />
+          </div>
+        )}
+        {msg.forecast && msg.forecast.length > 0 && (
+          <div className="rounded-2xl bg-white/70 border border-white/60 shadow-sm p-3">
+            <p className="text-xs font-semibold text-gray-600 mb-2">Prognos</p>
+            <ChartBlock
+              chart={{ chartType: 'line', datasets: [{ label: 'Prognos', data: msg.forecast }] }}
+              height={130}
+            />
+          </div>
+        )}
+        {msg.actions && msg.actions.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            {msg.actions.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => onNavigate('/actions')}
+                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/70 border border-white/60 shadow-sm hover:bg-blue-50/70 hover:border-blue-200 transition-colors text-left group w-full"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                    <p className="text-xs font-semibold text-gray-800 group-hover:text-blue-700 transition-colors leading-snug">
+                      {a.title}
+                    </p>
+                    {a.priority && (
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${PRIO_BADGE[a.priority] ?? PRIO_BADGE.medium}`}>
+                        {PRIO_LABEL[a.priority] ?? a.priority}
+                      </span>
+                    )}
+                  </div>
+                  {a.description && (
+                    <p className="text-xs text-gray-500 leading-snug">{a.description}</p>
+                  )}
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 shrink-0 transition-colors" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export default function AiAssistant() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const ctx: AiContext = ROUTE_CTX[location.pathname] ?? 'general'
+
+  const [open,       setOpen]       = useState(false)
+  const [input,      setInput]      = useState('')
+  const [loading,    setLoading]    = useState(false)
+  const [historyMap, setHistoryMap] = useState<HistoryMap>(loadMap)
+
+  const history    = historyMap[ctx] ?? []
+  const chatEndRef = useRef<HTMLDivElement>(null)
+  const inputRef   = useRef<HTMLInputElement>(null)
+
+  // Persist all history to sessionStorage whenever it changes
+  useEffect(() => { saveMap(historyMap) }, [historyMap])
+
+  // Scroll to bottom when new messages or panel opens
+  useEffect(() => {
+    if (open) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [history, loading, open])
+
+  // Focus input when panel opens
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 80)
+  }, [open])
+
+  const clearHistory = () => {
+    setHistoryMap(prev => ({ ...prev, [ctx]: [] }))
+  }
+
+  const send = useCallback(async (forcedQ?: string) => {
+    const question = (forcedQ ?? input).trim()
+    if (!question || loading) return
+    if (!forcedQ) setInput('')
+
+    setHistoryMap(prev => ({
+      ...prev,
+      [ctx]: [...(prev[ctx] ?? []), { role: 'user' as const, text: question }],
+    }))
+    setLoading(true)
+
+    try {
+      const res  = await fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
+        method: 'POST',
+        body:   JSON.stringify({ question, context: ctx }),
+      })
+      const json = await res.json()
+
+      if (!res.ok) {
+        setHistoryMap(prev => ({
+          ...prev,
+          [ctx]: [...(prev[ctx] ?? []), {
+            role: 'error' as const,
+            text: toErrStr(json?.error, `Fel ${res.status} — försök igen.`),
+          }],
+        }))
+      } else {
+        const d      = json.data ?? json
+        const intent: Intent = d.intent ?? 'answer'
+        const text   = String(d.message ?? d.answer ?? '')
+        const aiMsg: AiMessage = { role: 'ai', text, intent }
+
+        // chart intent
+        if (intent === 'chart' && d.chartData) {
+          const datasets = normalizeDatasets(d.chartData)
+          if (datasets.length) {
+            aiMsg.chart = {
+              title:     typeof d.chartData?.title === 'string' ? d.chartData.title : undefined,
+              chartType: d.chartData?.chartType === 'line' ? 'line' : 'bar',
+              datasets,
+            }
+          }
+        }
+
+        // forecast intent
+        if (intent === 'forecast' && d.forecastData) {
+          const sets    = normalizeDatasets(d.forecastData)
+          aiMsg.forecast = sets[0]?.data ?? []
+        }
+
+        // action intent
+        if (intent === 'action' && Array.isArray(d.actions)) {
+          aiMsg.actions = d.actions as ActionItem[]
+        }
+
+        setHistoryMap(prev => ({
+          ...prev,
+          [ctx]: [...(prev[ctx] ?? []), aiMsg],
+        }))
+      }
+    } catch (err) {
+      setHistoryMap(prev => ({
+        ...prev,
+        [ctx]: [...(prev[ctx] ?? []), {
+          role: 'error' as const,
+          text: toErrStr(err, 'Nätverksfel — försök igen.'),
+        }],
+      }))
+    }
+
+    setLoading(false)
+  // ctx is stable within the async call — captured correctly by the closure
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input, loading, ctx])
+
+  return (
+    <>
+      {/* ── Floating button ─────────────────────────────────────────────────── */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label="Öppna AI-assistent"
+        aria-expanded={open}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-blue-900/30 transition-all duration-200 hover:scale-105 active:scale-95 bg-gradient-to-br from-blue-600 to-indigo-700"
+      >
+        {/* Pulse ring */}
+        <span
+          className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping pointer-events-none"
+          style={{ animationDuration: '2.8s' }}
+          aria-hidden="true"
+        />
+        <Sparkles className="w-6 h-6 text-white relative z-10" aria-hidden="true" />
+      </button>
+
+      {/* ── Panel ───────────────────────────────────────────────────────────── */}
+      {open && (
+        <div
+          role="dialog"
+          aria-label="AI-assistent"
+          className="fixed bottom-[88px] right-6 z-50 w-[calc(100vw-48px)] sm:w-[400px] max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl shadow-blue-900/20 border border-white/50 bg-white/60 backdrop-blur-3xl"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-blue-700 to-indigo-700 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-white/80" aria-hidden="true" />
+              <span className="text-white font-semibold text-sm tracking-tight">AI-assistent</span>
+              <span className="text-xs font-medium text-blue-200 bg-blue-950/30 px-2 py-0.5 rounded-full">
+                {CTX_LABEL[ctx]}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={clearHistory}
+                aria-label="Rensa konversation"
+                title="Rensa"
+                className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Stäng AI-assistent"
+                className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0">
+            {history.length === 0 && !loading && (
+              <div className="flex flex-col gap-1.5 mt-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 px-1 mb-1">
+                  Snabbfrågor
+                </p>
+                {QUICK_QS[ctx].map(q => (
+                  <button
+                    key={q}
+                    onClick={() => send(q)}
+                    className="text-xs text-left border border-white/60 bg-white/50 rounded-xl px-3 py-2.5 hover:bg-white/80 hover:border-blue-200 hover:text-blue-700 transition-all text-gray-700 font-medium min-h-[44px]"
+                  >
+                    {q} →
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {history.map((msg, i) => (
+              <Bubble key={i} msg={msg} onNavigate={navigate} />
+            ))}
+
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-white/70 border border-white/60 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-2 shadow-sm">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '120ms' }} />
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
+                  <span className="text-xs text-gray-400 ml-1">AI:n tänker...</span>
+                </div>
+              </div>
+            )}
+
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="border-t border-white/40 bg-white/30 px-4 py-3 flex gap-2 shrink-0">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }}
+              placeholder="Fråga vad som helst om din ekonomi..."
+              disabled={loading}
+              className="flex-1 text-sm bg-white/60 border border-white/60 rounded-xl px-3.5 py-2.5 outline-none focus:border-blue-400 focus:bg-white/80 transition-all disabled:opacity-50 placeholder-gray-400 min-h-[44px]"
+            />
+            <button
+              onClick={() => void send()}
+              disabled={loading || !input.trim()}
+              aria-label="Skicka"
+              className="px-4 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl hover:opacity-90 disabled:opacity-40 active:scale-95 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}

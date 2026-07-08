@@ -27,7 +27,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-white/60 backdrop-blur-xl border-b border-white/40 px-6 py-5 sticky top-0 z-30 shadow-sm">
+    <nav className="bg-white/40 backdrop-blur-2xl border-b border-white/30 px-6 py-5 sticky top-0 z-30 shadow-sm">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <span
           onClick={() => navigate('/dashboard')}
@@ -59,7 +59,7 @@ export default function Navbar() {
 
         {/* Hamburger */}
         <button
-          className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-white/60 transition-colors"
+          className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-white/30 transition-colors"
           onClick={() => setMenuOpen((o) => !o)}
           aria-label="Meny"
         >
@@ -80,62 +80,62 @@ export default function Navbar() {
         <div className="md:hidden border-t border-white/40 mt-3 pt-3 flex flex-col gap-1 px-2">
           <button
             onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Dashboard
           </button>
           <button
             onClick={() => { navigate('/insights'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors flex items-center gap-2"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
             Insikter
           </button>
           <button
             onClick={() => { navigate('/analytics'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Analys
           </button>
           <button
             onClick={() => { navigate('/simulate'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Simulera
           </button>
           <button
             onClick={() => { navigate('/import'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Importera
           </button>
           <button
             onClick={() => { navigate('/budget'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Budget
           </button>
           <button
             onClick={() => { navigate('/customers'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Kunder
           </button>
           <button
             onClick={() => { navigate('/actions'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Åtgärder
           </button>
           <button
             onClick={() => { navigate('/diagnosis'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Diagnos
           </button>
           <button
             onClick={() => { navigate('/profile'); setMenuOpen(false) }}
-            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+            className="text-left px-4 py-3 text-sm text-gray-600 hover:bg-white/30 rounded-lg transition-colors"
           >
             Profil
           </button>

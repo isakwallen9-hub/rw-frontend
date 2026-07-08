@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, Copy, ChevronDown, Trash2, FileDown, Sheet } from 'lucide-react'
+import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, FileDown, Sheet } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
@@ -10,7 +10,6 @@ import { isTourCompleted, markTourCompleted } from './utils/tourStorage'
 import { useCurrency } from './contexts/CurrencyContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
-const LS_COACH_KEY = 'rw_coach_history'
 
 const MOCK_OVERVIEW: OverviewData = {
   data: {
@@ -114,12 +113,6 @@ interface OverviewData {
   }
 }
 
-interface ChatMessage {
-  role: 'user' | 'ai'
-  text: string
-}
-
-
 function translateAlert(msg: string): string {
   // "3 invoices are overdue based on your 30-day payment terms"
   const m1 = msg.match(/(\d+)\s+invoices?\s+(?:is|are)\s+overdue\s+based\s+on\s+your\s+(\d+)-day\s+payment\s+terms?/i)
@@ -182,22 +175,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [explainLoading, setExplainLoading] = useState(false)
   const [explainMessage, setExplainMessage] = useState('')
   const [explainError, setExplainError] = useState('')
-
-  // AI Coach panel
-  const [coachOpen, setCoachOpen]           = useState(false)
-  const [coachMinimized, setCoachMinimized] = useState(false)
-  const [coachHistory, setCoachHistory]     = useState<ChatMessage[]>(() => {
-    try {
-      const saved = localStorage.getItem(LS_COACH_KEY)
-      return saved ? (JSON.parse(saved) as ChatMessage[]) : []
-    } catch { return [] }
-  })
-  const [coachInput, setCoachInput]         = useState('')
-  const [coachLoading, setCoachLoading]     = useState(false)
-  const [coachInitialized, setCoachInitialized] = useState(() => {
-    try { return (localStorage.getItem(LS_COACH_KEY) ?? '[]') !== '[]' } catch { return false }
-  })
-  const chatEndRef = useRef<HTMLDivElement>(null)
 
   // Quick-add transaction
   const [quickAddOpen, setQuickAddOpen] = useState(false)
@@ -294,6 +271,8 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     fetchWithAuth(`${API_URL}api/v1/cashflow/runway`)
       .then(r => r.json())
       .then(guard(json => {
+        console.log('[runway frontend] raw:', JSON.stringify(json))
+        console.log('[runway frontend] runwayDays parsed:', json?.data?.runwayDays)
         const rd = json?.data?.runwayDays ?? null
         if (rd !== null) setRunwayDays(Number(rd))
       }))
@@ -319,14 +298,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     return () => { cancelled = true }
   }, [])
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [coachHistory, coachLoading])
-
-  useEffect(() => {
-    localStorage.setItem(LS_COACH_KEY, JSON.stringify(coachHistory))
-  }, [coachHistory])
-
   const cashflowData: CashflowMonth[] = overview?.data?.cashflow ?? []
 
   const kpi = useMemo(() => ({
@@ -349,26 +320,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     const raw = overview?.data?.topCustomers ?? []
     return raw.slice(0, 5).map(c => ({ ...c, label: c.name ?? c.customerName ?? 'Okänd' }))
   }, [overview])
-
-  // Proactive coach analysis on first open — placed after kpi/cashflowData are declared
-  useEffect(() => {
-    if (!coachOpen || coachInitialized) return
-    setCoachInitialized(true)
-    setCoachLoading(true)
-    fetchWithAuth(`${API_URL}api/v1/ai-explanations/assist`, {
-      method: 'POST',
-      body: JSON.stringify({ question: '', context: { kpi, cashflow: cashflowData }, proactive: true }),
-    })
-      .then(r => r.json())
-      .then(json => {
-        const msg = json.data?.message ?? 'Hej! Jag är din ekonomicoach. Ställ mig en fråga om ditt kassaflöde eller åtgärder.'
-        setCoachHistory([{ role: 'ai', text: msg }])
-      })
-      .catch(() => {
-        setCoachHistory([{ role: 'ai', text: 'Hej! Jag är din ekonomicoach. Ställ en fråga om ditt kassaflöde, fakturor eller åtgärder.' }])
-      })
-      .finally(() => setCoachLoading(false))
-  }, [coachOpen, coachInitialized, kpi, cashflowData])
 
   const recentCashflowRows = useMemo(() => {
     const fmtDate = (d: string) => {
@@ -527,33 +478,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     setQuickAddSaving(false)
   }
 
-  const clearCoach = () => {
-    setCoachHistory([])
-    setCoachInitialized(false)
-    localStorage.removeItem(LS_COACH_KEY)
-  }
-
-  const sendCoachMessage = async (forcedQuestion?: string) => {
-    const question = (forcedQuestion ?? coachInput).trim()
-    if (!question || coachLoading) return
-    if (!forcedQuestion) setCoachInput('')
-    setCoachHistory((prev) => [...prev, { role: 'user', text: question }])
-    setCoachLoading(true)
-    try {
-      const res = await fetchWithAuth(`${API_URL}api/v1/ai-explanations/assist`, {
-        method: 'POST',
-        body: JSON.stringify({ question, context: { kpi, cashflow: cashflowData } }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`)
-      setCoachHistory((prev) => [...prev, { role: 'ai', text: json.data?.message ?? 'Inget svar.' }])
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Fel vid anrop.'
-      setCoachHistory((prev) => [...prev, { role: 'ai', text: `Kunde inte svara: ${msg}` }])
-    }
-    setCoachLoading(false)
-  }
-
   const triggerDownload = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -595,7 +519,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
+    <div className="min-h-screen font-sans">
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6">
@@ -607,7 +531,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <button
               onClick={exportExcel}
               disabled={exportingExcel}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-white/60 backdrop-blur border border-white/50 px-4 py-2.5 rounded-lg hover:bg-white/80 hover:shadow-md active:scale-[0.98] transition-all duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-white/60 backdrop-blur border border-white/50 px-4 py-2.5 rounded-lg hover:bg-white/40 hover:shadow-md active:scale-[0.98] transition-all duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
             >
               {exportingExcel ? (
                 <>
@@ -716,9 +640,22 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 ? `↓ Kostnader minskar${ct.changePercent != null ? ` ${fmtPct(Math.abs(ct.changePercent))}%` : ''}`
                 : '→ Kostnader stabila')
             : (kpi.liquidAssets > kpi.breakEven ? 'Inflöde > utflöde' : kpi.liquidAssets < kpi.breakEven ? 'Utflöde > inflöde' : 'I balans')
+          const runwayNull = kpi.runwayDays === null
+          const hasAnyData = transactions.length > 0 || cashflowDays.length > 0
           const rd = kpi.runwayDays ?? 0
-          const runwayTrend: KpiTrend = rd === 0 ? 'neutral' : rd > 90 ? 'up' : rd > 30 ? 'neutral' : 'down'
-          const runwayAccent: KpiAccent = rd === 0 ? 'blue' : rd > 90 ? 'green' : rd > 30 ? 'yellow' : 'red'
+          const runwayValue = runwayNull
+            ? (hasAnyData ? 'Beräknas...' : 'Importera data')
+            : rd === 0 ? '0 dagar'
+            : `${rd} dagar`
+          const runwaySubtitleVal = runwayNull ? '' : rd === 0 ? 'Saldot är negativt' : 'Beräknat kassaflöde'
+          const runwayTrend: KpiTrend = runwayNull ? 'neutral' : rd === 0 ? 'down' : rd > 90 ? 'up' : rd > 30 ? 'neutral' : 'down'
+          const runwayAccent: KpiAccent = runwayNull ? 'blue' : rd === 0 ? 'red' : rd > 90 ? 'green' : rd > 30 ? 'yellow' : 'red'
+          const runwayTrendLabel = runwayNull
+            ? (hasAnyData ? 'Beräknas' : 'Importera data')
+            : rd === 0 ? 'Kritiskt läge'
+            : rd > 90 ? 'Stark likviditet'
+            : rd > 30 ? 'Bevaka noggrant'
+            : 'Kritiskt lågt'
           const gm = kpi.grossMargin
           const gmOutOfRange = gm !== null && (gm < -200 || gm > 200)
           const gmTrend: KpiTrend = (gm === null || gmOutOfRange) ? 'neutral' : gm > 30 ? 'up' : gm >= 10 ? 'neutral' : 'down'
@@ -764,11 +701,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <KpiCard
                 icon={<Clock className="w-5 h-5" />}
                 label="Runway"
-                value={rd === 0 ? 'Beräknas när du har importerat data' : `${rd} dagar`}
-                subtitle={rd === 0 ? '' : 'Beräknat kassaflöde'}
+                value={runwayValue}
+                subtitle={runwaySubtitleVal}
                 trend={runwayTrend}
-                trendLabel={rd === 0 ? 'Importera data' : rd > 90 ? 'Stark likviditet' : rd > 30 ? 'Bevaka noggrant' : 'Kritiskt lågt'}
+                trendLabel={runwayTrendLabel}
                 accent={runwayAccent}
+                isPlaceholder={runwayNull}
                 onClick={() => navigate('/runway')}
                 onExplain={() => explainThis('diagnosis', { type: 'runway', value: rd })}
               />
@@ -780,6 +718,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 trend={gmTrend}
                 trendLabel={gmTrendLabel}
                 accent={gmAccent}
+                isPlaceholder={gm === null || gmOutOfRange}
                 onExplain={() => explainThis('diagnosis', { type: 'grossMargin', value: gm })}
               />
             </div>
@@ -797,7 +736,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             stable: { label: '→ Stabil',    cls: 'text-gray-500 bg-gray-100' },
           }[ct.direction]
           return (
-            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               <span className="text-gray-400 font-medium">Kostnadsutveckling</span>
               <span className="text-gray-300">·</span>
               <span className="text-gray-700">
@@ -817,15 +756,15 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Snabb-statistik */}
         {!loadingCashflow && cashflowDays.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{quickStats.totalTx}</p>
               <p className="text-xs text-gray-400 mt-1">Aktiva dagar</p>
             </div>
-            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(Math.round(quickStats.avgInflow))}</p>
               <p className="text-xs text-gray-400 mt-1">Genomsnittligt dagligt inflöde</p>
             </div>
-            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
               <p className="text-xs text-gray-400 mt-1">
                 Bästa dag{quickStats.bestDay?.date ? ` — ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
@@ -838,11 +777,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {loadingCashflow ? (
           <SkeletonChart />
         ) : cashflowError ? (
-          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 text-center text-red-400 text-sm">
+          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-red-400 text-sm">
             {cashflowError}
           </div>
         ) : cashflowDays.length > 0 ? (
-          <div data-tour="cashflow-chart" className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-6 shadow-sm">
+          <div data-tour="cashflow-chart" className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-bold text-gray-700 mb-0.5 tracking-tight">Kassaflöde</h2>
@@ -892,7 +831,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 text-center text-gray-400 text-sm">
+          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
             Ingen kassaflödesdata tillgänglig — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
           </div>
         )}
@@ -912,7 +851,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 ))}
               </div>
             ) : (
-              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 text-center text-gray-400 text-sm">
+              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
                 Inga rekommendationer just nu.
               </div>
             )}
@@ -924,14 +863,14 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             {loadingOverview ? (
               <SkeletonList rows={5} />
             ) : recentTransactionRows.length > 0 ? (
-              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   {(() => {
                     const hasCategory = recentTransactionRows.some(t => t.category !== null)
                     return (
                       <table className="w-full text-sm min-w-[420px]">
                         <thead>
-                          <tr className="border-b border-gray-100 bg-gray-50/50">
+                          <tr className="border-b border-white/30 bg-white/20">
                             <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Datum</th>
                             <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Beskrivning</th>
                             {hasCategory && <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Kategori</th>}
@@ -941,7 +880,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                         </thead>
                         <tbody>
                           {recentTransactionRows.map((t, i) => (
-                            <tr key={i} className={`${i !== 0 ? 'border-t border-white/40' : ''} ${i % 2 === 1 ? 'bg-white/30' : ''} hover:bg-white/50 transition-colors`}>
+                            <tr key={i} className={`${i !== 0 ? 'border-t border-white/40' : ''} ${i % 2 === 1 ? 'bg-white/30' : ''} hover:bg-white/30 transition-colors`}>
                               <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
                               <td className="px-5 py-3 text-gray-700">
                                 {t.description ?? <span className="text-gray-300">—</span>}
@@ -966,11 +905,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : recentCashflowRows.length > 0 ? (
-              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[320px]">
                     <thead>
-                      <tr className="border-b border-gray-100 bg-gray-50/50">
+                      <tr className="border-b border-white/30 bg-white/20">
                         <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Datum</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Typ</th>
                         <th className="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Belopp</th>
@@ -978,7 +917,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                     </thead>
                     <tbody>
                       {recentCashflowRows.map((t, i) => (
-                        <tr key={i} className={`${i !== 0 ? 'border-t border-white/40' : ''} ${i % 2 === 1 ? 'bg-white/30' : ''} hover:bg-white/50 transition-colors`}>
+                        <tr key={i} className={`${i !== 0 ? 'border-t border-white/40' : ''} ${i % 2 === 1 ? 'bg-white/30' : ''} hover:bg-white/30 transition-colors`}>
                           <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
                           <td className="px-5 py-3 text-gray-700">{t.type}</td>
                           <td className={`px-5 py-3 text-right font-medium whitespace-nowrap tabular-nums ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
@@ -991,7 +930,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : (
-              <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl p-6 text-center text-gray-400 text-sm">
+              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
                 Inga transaktioner — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
               </div>
             )}
@@ -1032,8 +971,8 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
       {/* Quick-add modal */}
       {quickAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={() => setQuickAddOpen(false)}>
-          <div className="bg-white/80 backdrop-blur-2xl rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md" onClick={() => setQuickAddOpen(false)}>
+          <div className="bg-white/60 backdrop-blur-3xl border border-white/50 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-gray-900">Ny transaktion</h2>
               <button onClick={() => setQuickAddOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
@@ -1122,8 +1061,8 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
       {/* AI Explain Modal */}
       {explainOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={() => setExplainOpen(false)}>
-          <div className="bg-white/80 backdrop-blur-2xl rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md" onClick={() => setExplainOpen(false)}>
+          <div className="bg-white/60 backdrop-blur-3xl border border-white/50 rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-primary font-semibold">
                 <SparkleIcon className="w-4 h-4 text-accent" /> AI-förklaring
@@ -1147,132 +1086,14 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         </div>
       )}
 
-      {/* AI Coach Panel */}
-      <div className={`fixed bottom-0 right-0 z-40 flex flex-col transition-all duration-300 ${
-        coachOpen
-          ? coachMinimized ? 'w-full sm:w-96 h-14' : 'w-full sm:w-96 h-[520px]'
-          : 'w-auto h-auto'
-      }`}>
-        {coachOpen && (
-          <div className="flex flex-col h-full bg-white border border-gray-200 rounded-t-2xl sm:rounded-2xl sm:mb-20 sm:mr-6 shadow-2xl overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 bg-primary shrink-0">
-              <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                <SparkleIcon className="w-4 h-4" /> Ekonomicoach
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={clearCoach}
-                  title="Rensa konversation"
-                  className="text-white/60 hover:text-white transition-colors p-0.5 rounded"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setCoachMinimized(v => !v)}
-                  title={coachMinimized ? 'Expandera' : 'Minimera'}
-                  className="text-white/60 hover:text-white transition-colors p-0.5 rounded"
-                >
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${coachMinimized ? 'rotate-180' : ''}`} />
-                </button>
-                <button onClick={() => setCoachOpen(false)} className="text-white/60 hover:text-white text-xl leading-none ml-1">&times;</button>
-              </div>
-            </div>
-
-            {!coachMinimized && (
-              <>
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
-
-                  {/* Initial proactive loading */}
-                  {coachHistory.length === 0 && coachLoading && (
-                    <div className="text-center text-gray-400 text-sm mt-6 flex flex-col items-center gap-3">
-                      <span className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                      <div>
-                        <p className="font-medium text-gray-600">Analyserar din ekonomi...</p>
-                        <p className="text-xs text-gray-400 mt-1">Din ekonomicoach analyserar just nu din situation.</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Chat messages */}
-                  {coachHistory.map((msg, i) => (
-                    <CoachMessage key={i} msg={msg} />
-                  ))}
-
-                  {/* Follow-up loading dots */}
-                  {coachLoading && coachHistory.length > 0 && (
-                    <div className="flex justify-start">
-                      <div className="bg-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Quick questions — shown after proactive reply, before user sends anything */}
-                  {!coachLoading && coachHistory.length > 0 && coachHistory.every(m => m.role === 'ai') && (
-                    <div className="flex flex-col gap-2 mt-1">
-                      {['Hur mår mitt företag?', 'Riskerar jag kassabrist?', 'Vad bör jag prioritera nu?'].map(q => (
-                        <button
-                          key={q}
-                          onClick={() => sendCoachMessage(q)}
-                          className="text-xs text-left border border-gray-200 rounded-xl px-3 py-2.5 hover:bg-gray-50 hover:border-accent/40 transition-colors text-gray-600 font-medium"
-                        >
-                          {q} →
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  <div ref={chatEndRef} />
-                </div>
-                {/* Input */}
-                <div className="border-t border-gray-100 px-4 py-3 flex gap-2 shrink-0">
-                  <input
-                    value={coachInput}
-                    onChange={(e) => setCoachInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCoachMessage() } }}
-                    placeholder="Skriv din fråga..."
-                    className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-                  />
-                  <button
-                    onClick={() => sendCoachMessage()}
-                    disabled={coachLoading || !coachInput.trim()}
-                    className="bg-accent text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
-                  >
-                    Skicka
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Floating buttons */}
-        {!coachOpen && (
-          <>
-            <button
-              onClick={() => setQuickAddOpen(true)}
-              className="fixed bottom-6 right-24 bg-white border border-gray-200 text-gray-700 rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-gray-50 active:scale-95 transition-all duration-200"
-              title="Lägg till transaktion"
-              aria-label="Lägg till transaktion"
-            >
-              <span className="text-3xl font-light leading-none pb-0.5" aria-hidden="true">+</span>
-            </button>
-            <button
-              data-tour="coach-button"
-              onClick={() => setCoachOpen(true)}
-              className="fixed bottom-6 right-6 bg-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary/90 active:scale-95 transition-all duration-200"
-              title="Öppna ekonomicoach"
-              aria-label="Öppna ekonomicoach"
-            >
-              <SparkleIcon className="w-6 h-6" aria-hidden="true" />
-            </button>
-          </>
-        )}
-      </div>
+      <button
+        onClick={() => setQuickAddOpen(true)}
+        className="fixed bottom-6 right-24 bg-white border border-gray-200 text-gray-700 rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-gray-50 active:scale-95 transition-all duration-200"
+        title="Lägg till transaktion"
+        aria-label="Lägg till transaktion"
+      >
+        <span className="text-3xl font-light leading-none pb-0.5" aria-hidden="true">+</span>
+      </button>
 
       {/* Onboarding tour */}
       {showTour && (
@@ -1295,7 +1116,7 @@ function CashflowTooltip({ active, payload, label }: {
   const { formatAmount: fmt } = useCurrency()
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl shadow-lg px-4 py-3 text-sm">
+    <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow-lg px-4 py-3 text-sm">
       <p className="font-semibold text-gray-700 mb-2">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
@@ -1314,7 +1135,7 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
   const p = PRIORITY_CONFIG[r.priority ?? 'medium']
 
   return (
-    <div className="group bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden hover:shadow-md hover:bg-white/80 transition-all duration-200 cursor-default shadow-sm">
+    <div className="group bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden hover:shadow-md hover:bg-white/40 transition-all duration-200 cursor-default shadow-sm">
       {/* Urgency strip */}
       <div className="h-1 w-full bg-gray-100">
         <div className={`h-full ${p.bar} transition-all`} style={{ width: `${p.urgencyPct}%` }} />
@@ -1404,13 +1225,13 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
 type KpiAccent = 'blue' | 'green' | 'red' | 'orange' | 'purple' | 'yellow'
 type KpiTrend = 'up' | 'down' | 'neutral'
 
-const ACCENT_STYLES: Record<KpiAccent, { glow: string; iconBg: string; iconText: string }> = {
-  blue:   { glow: 'shadow-[0_4px_28px_rgba(37,99,235,0.12)]',   iconBg: 'bg-blue-50/80',   iconText: 'text-blue-600' },
-  green:  { glow: 'shadow-[0_4px_28px_rgba(22,163,74,0.12)]',   iconBg: 'bg-green-50/80',  iconText: 'text-green-600' },
-  red:    { glow: 'shadow-[0_4px_28px_rgba(239,68,68,0.12)]',   iconBg: 'bg-red-50/80',    iconText: 'text-red-500' },
-  orange: { glow: 'shadow-[0_4px_28px_rgba(249,115,22,0.12)]',  iconBg: 'bg-orange-50/80', iconText: 'text-orange-600' },
-  purple: { glow: 'shadow-[0_4px_28px_rgba(147,51,234,0.12)]',  iconBg: 'bg-purple-50/80', iconText: 'text-purple-600' },
-  yellow: { glow: 'shadow-[0_4px_28px_rgba(234,179,8,0.12)]',   iconBg: 'bg-yellow-50/80', iconText: 'text-yellow-600' },
+const ACCENT_STYLES: Record<KpiAccent, { shadow: string; shadowHover: string; iconBg: string; iconText: string }> = {
+  blue:   { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(37,99,235,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(37,99,235,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-blue-600' },
+  green:  { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(22,163,74,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(22,163,74,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-green-600' },
+  red:    { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(239,68,68,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(239,68,68,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-red-500' },
+  orange: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(249,115,22,0.10)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(249,115,22,0.14)]',  iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-orange-600' },
+  purple: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(147,51,234,0.10)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(147,51,234,0.14)]',  iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-purple-600' },
+  yellow: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(234,179,8,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(234,179,8,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-yellow-600' },
 }
 
 const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }> = {
@@ -1419,7 +1240,7 @@ const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }
   neutral: { arrow: '→', text: 'text-yellow-600', bg: 'bg-yellow-50' },
 }
 
-function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'blue', onExplain, onClick }: {
+function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'blue', isPlaceholder = false, onExplain, onClick }: {
   icon: React.ReactNode
   label: string
   value: string
@@ -1427,6 +1248,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
   trend?: KpiTrend
   trendLabel?: string
   accent?: KpiAccent
+  isPlaceholder?: boolean
   onExplain?: () => void
   onClick?: () => void
 }) {
@@ -1436,9 +1258,10 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
   return (
     <div
       onClick={onClick}
-      className={`bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl px-5 py-6 group relative transition-all duration-200 ${c.glow} hover:shadow-lg hover:bg-white/80 ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
+      className={`bg-white/50 backdrop-blur-2xl border border-white/60 rounded-2xl px-5 py-5 group relative transition-all duration-300 min-h-[170px] flex flex-col ${c.shadow} ${c.shadowHover} hover:bg-white/60 ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
     >
-      <div className="flex items-start justify-between mb-4">
+      {/* Icon row */}
+      <div className="flex items-start justify-between mb-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.iconBg} ${c.iconText}`}>
           {icon}
         </div>
@@ -1453,75 +1276,26 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
         )}
       </div>
 
+      {/* Label */}
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</p>
-      <p className="text-3xl font-bold text-gray-900 tracking-tight tabular-nums mb-3">{value}</p>
 
-      <div className="flex items-center justify-between gap-2">
-        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+      {/* Value — flex-1 so it fills space, overflow-hidden so it never breaks layout */}
+      <div className="flex-1 min-h-0 overflow-hidden mb-2">
+        {isPlaceholder ? (
+          <p className="text-sm text-gray-500 font-medium leading-snug break-words">{value}</p>
+        ) : (
+          <p className="text-3xl font-bold text-gray-900 tracking-tight tabular-nums leading-tight">{value}</p>
+        )}
+      </div>
+
+      {/* Footer row — pinned to bottom */}
+      <div className="flex items-center justify-between gap-2 mt-auto">
+        {subtitle && <p className="text-xs text-gray-400 truncate">{subtitle}</p>}
         {t && trendLabel && (
           <span className={`ml-auto shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full ${t.text} ${t.bg}`}>
             {t.arrow} {trendLabel}
           </span>
         )}
-      </div>
-    </div>
-  )
-}
-
-function parseNumberedList(text: string): string[] | null {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
-  const items = lines.filter(l => /^\d+\.\s/.test(l)).map(l => l.replace(/^\d+\.\s*/, ''))
-  return items.length >= 2 ? items : null
-}
-
-function CoachMessage({ msg }: { msg: ChatMessage }) {
-  const [copied, setCopied] = useState(false)
-
-  const copy = () => {
-    navigator.clipboard.writeText(msg.text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    }).catch(() => {})
-  }
-
-  if (msg.role === 'user') {
-    return (
-      <div className="flex justify-end">
-        <div className="max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed bg-accent text-white rounded-br-sm">
-          {msg.text}
-        </div>
-      </div>
-    )
-  }
-
-  const items = parseNumberedList(msg.text)
-
-  return (
-    <div className="flex justify-start">
-      <div className="max-w-[85%] relative group/msg">
-        <div className="px-4 py-2.5 rounded-2xl text-sm leading-relaxed bg-gray-100 text-gray-800 rounded-bl-sm">
-          {items ? (
-            <ol className="flex flex-col gap-2">
-              {items.map((item, i) => (
-                <li key={i} className="flex gap-2 items-start">
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ol>
-          ) : msg.text}
-        </div>
-        <button
-          onClick={copy}
-          title="Kopiera"
-          className="absolute top-1.5 right-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200"
-        >
-          {copied
-            ? <span className="text-[10px] font-bold text-green-500">✓</span>
-            : <Copy className="w-3 h-3" />}
-        </button>
       </div>
     </div>
   )
@@ -1536,14 +1310,14 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
   const { formatAmount: fmt } = useCurrency()
   if (items.length === 0) {
     return (
-      <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-6 text-center text-gray-400 text-sm">
+      <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 text-center text-gray-400 text-sm">
         {emptyText}
       </div>
     )
   }
   const maxInflow = Math.max(...items.map(p => p.totalInflow), 1)
   return (
-    <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <div className="min-w-[360px]">
           <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">

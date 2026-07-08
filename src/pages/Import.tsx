@@ -319,7 +319,7 @@ export default function Import() {
   const isDone    = step === 'done'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
+    <div className="min-h-screen font-sans">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 sm:px-8 py-10">
 
@@ -471,7 +471,7 @@ export default function Import() {
                 {/* Preview table */}
                 <div>
                   <p className="text-sm font-semibold text-gray-700 mb-3">Ser detta rätt ut? Klicka <em>Importera</em> för att fortsätta.</p>
-                  <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
@@ -483,7 +483,7 @@ export default function Import() {
                         </thead>
                         <tbody>
                           {previewRows.map((row, i) => (
-                            <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
+                            <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-white/20' : ''}`}>
                               {previewHeaders.map(h => (
                                 <td key={h} className="px-4 py-2.5 text-gray-600 whitespace-nowrap max-w-[160px] truncate">
                                   {String(row[h] ?? '')}
@@ -503,7 +503,7 @@ export default function Import() {
                 </div>
 
                 {/* Column detection summary */}
-                <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-sm">
+                <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-4 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
                   <div className="space-y-3">
 
@@ -602,7 +602,7 @@ export default function Import() {
         {history.length > 0 && (
           <div className="mt-12">
             <h2 className="text-base font-bold text-gray-800 mb-4">Tidigare importer</h2>
-            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
               {history.map((rec, i) => (
                 <div
                   key={rec.id}

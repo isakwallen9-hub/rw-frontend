@@ -349,7 +349,7 @@ export default function Simulate() {
   const monthlyDiff = Math.round(netDiff / 3)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans">
+    <div className="min-h-screen font-sans">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
 
@@ -378,7 +378,7 @@ export default function Simulate() {
         )}
 
         {/* Scenario builder */}
-        <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-6 mb-6">
+        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6 mb-6">
 
           {/* Quick templates */}
           <div className="mb-5">
@@ -558,7 +558,7 @@ export default function Simulate() {
 
             {/* Detail cards */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className={`bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl px-5 py-4 ${netDiff >= 0 ? 'shadow-[0_4px_28px_rgba(22,163,74,0.12)]' : 'shadow-[0_4px_28px_rgba(239,68,68,0.12)]'}`}>
+              <div className={`bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-5 py-4 ${netDiff >= 0 ? 'shadow-[0_4px_28px_rgba(22,163,74,0.12)]' : 'shadow-[0_4px_28px_rgba(239,68,68,0.12)]'}`}>
                 <p className="text-xs text-gray-400 mb-2">Netto (90 dagar)</p>
                 <p className={`text-xl font-bold ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                   {fmt(result.simulatedNet)}
@@ -568,7 +568,7 @@ export default function Simulate() {
                   {netDiff >= 0 ? '+' : ''}{fmt(netDiff)} · {fmtPct(result.simulatedNet, result.baselineNet)}
                 </p>
               </div>
-              <div className={`bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl px-5 py-4 ${balanceDiff >= 0 ? 'shadow-[0_4px_28px_rgba(22,163,74,0.12)]' : 'shadow-[0_4px_28px_rgba(239,68,68,0.12)]'}`}>
+              <div className={`bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-5 py-4 ${balanceDiff >= 0 ? 'shadow-[0_4px_28px_rgba(22,163,74,0.12)]' : 'shadow-[0_4px_28px_rgba(239,68,68,0.12)]'}`}>
                 <p className="text-xs text-gray-400 mb-2">Slutsaldo (dag 90)</p>
                 <p className={`text-xl font-bold ${balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                   {fmt(result.simulatedEndBalance)}
@@ -581,7 +581,7 @@ export default function Simulate() {
             </div>
 
             {/* Forecast chart */}
-            <div className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-sm p-6">
+            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-semibold text-gray-700">Prognos — nästa 90 dagar</p>
                 <div className="flex gap-1">
