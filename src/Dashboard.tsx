@@ -271,8 +271,6 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     fetchWithAuth(`${API_URL}api/v1/cashflow/runway`)
       .then(r => r.json())
       .then(guard(json => {
-        console.log('[runway frontend] raw:', JSON.stringify(json))
-        console.log('[runway frontend] runwayDays parsed:', json?.data?.runwayDays)
         const rd = json?.data?.runwayDays ?? null
         if (rd !== null) setRunwayDays(Number(rd))
       }))
