@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom'
 import { CurrencyProvider } from './contexts/CurrencyContext'
 import { UserProvider } from './contexts/UserContext'
 import ErrorBoundary from './components/ErrorBoundary'
+import Sidebar from './components/Sidebar'
 import AiAssistant from './components/AiAssistant'
 import Admin from './pages/Admin'
 import Landing from './pages/Landing'
@@ -41,46 +42,64 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function SidebarLayout() {
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 lg:ml-60 min-w-0">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <>
-    {/* ── Global animated background — makes glassmorphism visible on all pages ── */}
-    <div className="fixed inset-0 -z-10 bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100" aria-hidden="true">
-      <div className="absolute top-[-15%] left-[10%] w-[600px] h-[600px] bg-blue-300/30 rounded-full blur-[130px] animate-pulse" style={{animationDuration:'8s'}} />
-      <div className="absolute bottom-[5%] right-[5%] w-[500px] h-[500px] bg-indigo-300/25 rounded-full blur-[120px] animate-pulse" style={{animationDuration:'10s'}} />
-      <div className="absolute top-[35%] left-[55%] w-[400px] h-[400px] bg-cyan-200/30 rounded-full blur-[100px] animate-pulse" style={{animationDuration:'12s'}} />
-    </div>
-    <ErrorBoundary>
-    <UserProvider>
-    <CurrencyProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/cashflow" element={<PrivateRoute><Cashflow /></PrivateRoute>} />
-        <Route path="/invoices" element={<PrivateRoute><Invoices /></PrivateRoute>} />
-        <Route path="/runway" element={<PrivateRoute><Runway /></PrivateRoute>} />
-        <Route path="/breakeven" element={<PrivateRoute><Breakeven /></PrivateRoute>} />
-        <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
-        <Route path="/simulate" element={<PrivateRoute><Simulate /></PrivateRoute>} />
-        <Route path="/import" element={<PrivateRoute><Import /></PrivateRoute>} />
-        <Route path="/actions" element={<PrivateRoute><Actions /></PrivateRoute>} />
-        <Route path="/diagnosis" element={<PrivateRoute><Diagnosis /></PrivateRoute>} />
-        <Route path="/budget" element={<PrivateRoute><Budget /></PrivateRoute>} />
-        <Route path="/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
-        <Route path="/insights" element={<PrivateRoute><Insights /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <AiAssistantGate />
-    </BrowserRouter>
-    </CurrencyProvider>
-    </UserProvider>
-    </ErrorBoundary>
+      {/* ── Global animated background ──────────────────────────────── */}
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-white via-slate-50 to-white" aria-hidden="true">
+        <div className="absolute top-[-15%] left-[10%] w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-[140px] animate-pulse" style={{animationDuration:'8s'}} />
+        <div className="absolute bottom-[5%] right-[5%] w-[500px] h-[500px] bg-slate-200/50 rounded-full blur-[130px] animate-pulse" style={{animationDuration:'10s'}} />
+        <div className="absolute top-[35%] left-[55%] w-[400px] h-[400px] bg-indigo-100/30 rounded-full blur-[120px] animate-pulse" style={{animationDuration:'12s'}} />
+      </div>
+
+      <ErrorBoundary>
+        <UserProvider>
+          <CurrencyProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* ── Public routes — full width, no sidebar ─────────── */}
+                <Route path="/"           element={<Landing />} />
+                <Route path="/login"      element={<Login />} />
+                <Route path="/register"   element={<Register />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+
+                {/* ── Sidebar layout routes ──────────────────────────── */}
+                <Route element={<SidebarLayout />}>
+                  <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                  <Route path="/cashflow"  element={<PrivateRoute><Cashflow /></PrivateRoute>} />
+                  <Route path="/invoices"  element={<PrivateRoute><Invoices /></PrivateRoute>} />
+                  <Route path="/runway"    element={<PrivateRoute><Runway /></PrivateRoute>} />
+                  <Route path="/breakeven" element={<PrivateRoute><Breakeven /></PrivateRoute>} />
+                  <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
+                  <Route path="/simulate"  element={<PrivateRoute><Simulate /></PrivateRoute>} />
+                  <Route path="/import"    element={<PrivateRoute><Import /></PrivateRoute>} />
+                  <Route path="/actions"   element={<PrivateRoute><Actions /></PrivateRoute>} />
+                  <Route path="/diagnosis" element={<PrivateRoute><Diagnosis /></PrivateRoute>} />
+                  <Route path="/budget"    element={<PrivateRoute><Budget /></PrivateRoute>} />
+                  <Route path="/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
+                  <Route path="/insights"  element={<PrivateRoute><Insights /></PrivateRoute>} />
+                  <Route path="/profile"   element={<PrivateRoute><Profile /></PrivateRoute>} />
+                  <Route path="/admin"     element={<PrivateRoute><Admin /></PrivateRoute>} />
+                </Route>
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+              <AiAssistantGate />
+            </BrowserRouter>
+          </CurrencyProvider>
+        </UserProvider>
+      </ErrorBoundary>
     </>
   )
 }

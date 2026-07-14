@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+﻿import { useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import RWLogo from '../assets/RWLogo'
 import {
@@ -190,7 +190,7 @@ export default function Landing() {
             </Link>
             <Link
               to="/login"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/60 backdrop-blur border border-white/50 text-gray-700 font-semibold text-base px-8 py-4 rounded-xl shadow-sm hover:bg-white/40 active:scale-[0.98] transition-all min-h-[52px]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/60 backdrop-blur border border-slate-200/60 text-gray-700 font-semibold text-base px-8 py-4 rounded-xl shadow-sm hover:bg-white/40 active:scale-[0.98] transition-all min-h-[52px]"
             >
               Logga in
               <ChevronRight className="w-4 h-4" aria-hidden="true" />
@@ -200,7 +200,7 @@ export default function Landing() {
 
         {/* Dashboard preview card */}
         <FadeSection delay={340} className="mt-16">
-          <div className="relative mx-auto max-w-3xl bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-xl p-6 sm:p-8">
+          <div className="relative mx-auto max-w-3xl bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-xl p-6 sm:p-8">
             <div className="grid grid-cols-3 gap-4 mb-4">
               {[
                 { label: 'Kassaflöde', value: '+124 500 kr', color: 'text-green-600' },
@@ -237,7 +237,7 @@ export default function Landing() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {STEPS.map((step, i) => (
             <FadeSection key={step.num} delay={i * 100}>
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 hover:shadow-md hover:bg-white/40 transition-all h-full">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 hover:bg-white/60 hover:shadow-[0_12px_40px_rgba(15,23,42,0.09)] transition-all h-full">
                 <div className="flex items-start gap-4">
                   <span className="text-5xl font-extrabold text-blue-100 tabular-nums select-none leading-none">{step.num}</span>
                   <div className="mt-1">
@@ -269,7 +269,7 @@ export default function Landing() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {FEATURES.map((feat, i) => (
             <FadeSection key={feat.title} delay={i * 60}>
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-sm hover:shadow-md hover:bg-white/40 active:scale-[0.98] transition-all h-full">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-sm hover:bg-white/60 hover:shadow-[0_12px_40px_rgba(15,23,42,0.09)] active:scale-[0.98] transition-all h-full">
                 <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${feat.bg} mb-4`}>
                   <feat.icon className={`w-5 h-5 ${feat.color}`} aria-hidden="true" />
                 </div>
@@ -283,7 +283,7 @@ export default function Landing() {
 
       {/* Varför RW Systems */}
       <section className="max-w-6xl mx-auto px-4 sm:px-8 py-20 sm:py-24">
-        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-3xl shadow-sm p-8 sm:p-12">
+        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-3xl shadow-sm p-8 sm:p-12">
           <FadeSection className="text-center mb-10">
             <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Jämförelse</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">Varför RW Systems?</h2>

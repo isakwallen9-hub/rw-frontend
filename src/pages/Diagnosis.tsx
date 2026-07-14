@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo } from 'react'
+﻿import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, AlertCircle, Info, Clock, FileWarning, Flame, TrendingDown, Activity, RefreshCw } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts'
-import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = import.meta.env.VITE_API_URL as string
@@ -177,20 +176,13 @@ export default function Diagnosis() {
   [history])
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-8">
 
         {/* Header */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1.5 mb-4"
-            >
-              ← Tillbaka
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Finansiell hälsodiagnos</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Finansiell hälsodiagnos</h1>
             <p className="text-sm text-gray-500">En samlad bedömning av ditt företags ekonomiska hälsa.</p>
           </div>
           <button
@@ -215,7 +207,7 @@ export default function Diagnosis() {
         ) : (
           <>
             {/* Score + Component breakdown */}
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6 md:p-8">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6 md:p-8">
               <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
 
                 {/* Circular score */}
@@ -277,7 +269,7 @@ export default function Diagnosis() {
                   ))}
                 </div>
               ) : rootCauses.length === 0 ? (
-                <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-8 text-center text-gray-400 text-sm">
+                <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-8 text-center text-gray-400 text-sm">
                   Inga rotorsaker identifierade — din ekonomi ser bra ut!
                 </div>
               ) : (
@@ -291,7 +283,7 @@ export default function Diagnosis() {
 
             {/* History chart */}
             {historyChartData.length >= 2 && (
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-bold text-gray-800">Hälsoscorehistorik</h2>
                   <span className="text-xs text-gray-400">{historyChartData.length} mätpunkter</span>
@@ -309,7 +301,7 @@ export default function Diagnosis() {
                     <Tooltip
                       content={({ active, payload, label }) =>
                         active && payload?.length ? (
-                          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow px-3 py-2 text-xs">
+                          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow px-3 py-2 text-xs">
                             <p className="text-gray-500 mb-0.5">{label}</p>
                             <p className="font-bold text-gray-900">Score: {payload[0].value}</p>
                           </div>
@@ -330,7 +322,7 @@ export default function Diagnosis() {
             )}
 
             {historyChartData.length === 1 && (
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm px-6 py-5">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm px-6 py-5">
                 <h2 className="text-base font-bold text-gray-800 mb-1">Hälsoscorehistorik</h2>
                 <p className="text-xs text-gray-400">
                   Historiken byggs upp automatiskt varje dag du besöker sidan. Kom tillbaka imorgon för att se din trend.

@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+﻿import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
 import {
@@ -570,15 +569,10 @@ export default function Analytics() {
   )
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10">
 
-        <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1.5 mb-6">
-          ← Tillbaka
-        </button>
-
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Analys</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Analys</h1>
         <p className="text-sm text-gray-500 mb-6">Jämför och filtrera din ekonomidata.</p>
 
         {/* Saved charts */}
@@ -599,7 +593,7 @@ export default function Analytics() {
         )}
 
         {/* Filters */}
-        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5 mb-4">
+        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5 mb-4">
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-5 items-end">
             <div className="col-span-2 sm:col-span-1">
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Gruppera efter</label>
@@ -769,15 +763,15 @@ export default function Analytics() {
           const net = inflow - outflow
           return (
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-4 py-4 shadow-sm">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-4 py-4 shadow-sm">
                 <p className="text-xs text-gray-400 mb-1">Totalt inflöde</p>
                 <p className="text-lg font-bold text-green-600">{formatAmount(inflow)}</p>
               </div>
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-4 py-4 shadow-sm">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-4 py-4 shadow-sm">
                 <p className="text-xs text-gray-400 mb-1">Totalt utflöde</p>
                 <p className="text-lg font-bold text-red-500">{formatAmount(outflow)}</p>
               </div>
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-4 py-4 shadow-sm">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-4 py-4 shadow-sm">
                 <p className="text-xs text-gray-400 mb-1">Netto</p>
                 <p className={`text-lg font-bold ${net >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                   {net >= 0 ? '+' : ''}{formatAmount(net)}
@@ -789,7 +783,7 @@ export default function Analytics() {
 
         {/* Trend analysis */}
         {trends.length > 0 && (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm mb-4">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm mb-4">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Trender — jämfört med föregående period</p>
             <div className="flex flex-col gap-2">
               {trends.map(t => (
@@ -810,7 +804,7 @@ export default function Analytics() {
 
         {/* Chart + Category ranking */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4 mb-4">
-        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
+        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-gray-700">
               {catMode
@@ -911,7 +905,7 @@ export default function Analytics() {
         </div>
 
         {/* Category ranking */}
-        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5 flex flex-col">
+        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5 flex flex-col">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
             Topp kategorier — {SHOW_LABEL[series[0]]}
           </p>
@@ -950,7 +944,7 @@ export default function Analytics() {
 
         {/* Period comparison summary */}
         {compareMode && !compareLoading && !compareError && compareRows.length > 0 && (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5 mb-4">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5 mb-4">
             <h3 className="text-sm font-bold text-gray-700 mb-4">
               Sammanfattning — {SHOW_LABEL[series[0]]}
             </h3>
@@ -985,7 +979,7 @@ export default function Analytics() {
 
         {/* Table */}
         {!loading && !error && rows.length > 0 && (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm overflow-hidden mb-8">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm overflow-hidden mb-8">
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
               <p className="text-sm font-semibold text-gray-700">Datatabell</p>
               <button
@@ -1101,7 +1095,7 @@ export default function Analytics() {
           ) : seasonalError ? (
             <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{seasonalError}</div>
           ) : seasonalData.length === 0 ? (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm h-[260px] flex items-center justify-center text-gray-400 text-sm">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm h-[260px] flex items-center justify-center text-gray-400 text-sm">
               Ingen säsongsdata tillgänglig.
             </div>
           ) : (
@@ -1130,7 +1124,7 @@ export default function Analytics() {
               )}
 
               {/* Bar chart */}
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6 mb-4">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6 mb-4">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm font-semibold text-gray-700">
                     {hasSeasonalCompare

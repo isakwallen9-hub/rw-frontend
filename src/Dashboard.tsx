@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo } from 'react'
+﻿import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, FileDown, Sheet } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
-import Navbar from './components/Navbar'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
 import Tour from './components/Tour'
 import { fetchWithAuth } from './utils/fetchWithAuth'
@@ -517,19 +516,18 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   }
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6">
 
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h1 className="text-lg font-bold text-gray-800 tracking-tight">Översikt</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Översikt</h1>
           <div className="flex items-center gap-2">
             <button
               onClick={exportExcel}
               disabled={exportingExcel}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-white/60 backdrop-blur border border-white/50 px-4 py-2.5 rounded-lg hover:bg-white/40 hover:shadow-md active:scale-[0.98] transition-all duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-white/60 backdrop-blur border border-slate-200/60 px-4 py-2.5 rounded-lg hover:bg-white/40 hover:shadow-md active:scale-[0.98] transition-all duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
             >
               {exportingExcel ? (
                 <>
@@ -734,7 +732,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             stable: { label: '→ Stabil',    cls: 'text-gray-500 bg-gray-100' },
           }[ct.direction]
           return (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               <span className="text-gray-400 font-medium">Kostnadsutveckling</span>
               <span className="text-gray-300">·</span>
               <span className="text-gray-700">
@@ -754,15 +752,15 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Snabb-statistik */}
         {!loadingCashflow && cashflowDays.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{quickStats.totalTx}</p>
               <p className="text-xs text-gray-400 mt-1">Aktiva dagar</p>
             </div>
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(Math.round(quickStats.avgInflow))}</p>
               <p className="text-xs text-gray-400 mt-1">Genomsnittligt dagligt inflöde</p>
             </div>
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
               <p className="text-xs text-gray-400 mt-1">
                 Bästa dag{quickStats.bestDay?.date ? ` — ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
@@ -775,11 +773,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {loadingCashflow ? (
           <SkeletonChart />
         ) : cashflowError ? (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-red-400 text-sm">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-red-400 text-sm">
             {cashflowError}
           </div>
         ) : cashflowDays.length > 0 ? (
-          <div data-tour="cashflow-chart" className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-sm">
+          <div data-tour="cashflow-chart" className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-bold text-gray-700 mb-0.5 tracking-tight">Kassaflöde</h2>
@@ -829,7 +827,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
             Ingen kassaflödesdata tillgänglig — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
           </div>
         )}
@@ -849,7 +847,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 ))}
               </div>
             ) : (
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
                 Inga rekommendationer just nu.
               </div>
             )}
@@ -861,7 +859,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             {loadingOverview ? (
               <SkeletonList rows={5} />
             ) : recentTransactionRows.length > 0 ? (
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   {(() => {
                     const hasCategory = recentTransactionRows.some(t => t.category !== null)
@@ -903,7 +901,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : recentCashflowRows.length > 0 ? (
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[320px]">
                     <thead>
@@ -928,7 +926,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : (
-              <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
                 Inga transaktioner — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
               </div>
             )}
@@ -970,7 +968,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       {/* Quick-add modal */}
       {quickAddOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md" onClick={() => setQuickAddOpen(false)}>
-          <div className="bg-white/60 backdrop-blur-3xl border border-white/50 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white/60 backdrop-blur-3xl border border-slate-200/60 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-gray-900">Ny transaktion</h2>
               <button onClick={() => setQuickAddOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
@@ -1060,7 +1058,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       {/* AI Explain Modal */}
       {explainOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md" onClick={() => setExplainOpen(false)}>
-          <div className="bg-white/60 backdrop-blur-3xl border border-white/50 rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white/60 backdrop-blur-3xl border border-slate-200/60 rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-primary font-semibold">
                 <SparkleIcon className="w-4 h-4 text-accent" /> AI-förklaring
@@ -1114,7 +1112,7 @@ function CashflowTooltip({ active, payload, label }: {
   const { formatAmount: fmt } = useCurrency()
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow-lg px-4 py-3 text-sm">
+    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow-lg px-4 py-3 text-sm">
       <p className="font-semibold text-gray-700 mb-2">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
@@ -1133,7 +1131,7 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
   const p = PRIORITY_CONFIG[r.priority ?? 'medium']
 
   return (
-    <div className="group bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden hover:shadow-md hover:bg-white/40 transition-all duration-200 cursor-default shadow-sm">
+    <div className="group bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden hover:bg-white/60 hover:shadow-[0_12px_40px_rgba(15,23,42,0.09)] transition-all duration-200 cursor-default">
       {/* Urgency strip */}
       <div className="h-1 w-full bg-gray-100">
         <div className={`h-full ${p.bar} transition-all`} style={{ width: `${p.urgencyPct}%` }} />
@@ -1224,12 +1222,12 @@ type KpiAccent = 'blue' | 'green' | 'red' | 'orange' | 'purple' | 'yellow'
 type KpiTrend = 'up' | 'down' | 'neutral'
 
 const ACCENT_STYLES: Record<KpiAccent, { shadow: string; shadowHover: string; iconBg: string; iconText: string }> = {
-  blue:   { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(37,99,235,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(37,99,235,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-blue-600' },
-  green:  { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(22,163,74,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(22,163,74,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-green-600' },
-  red:    { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(239,68,68,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(239,68,68,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-red-500' },
-  orange: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(249,115,22,0.10)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(249,115,22,0.14)]',  iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-orange-600' },
-  purple: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(147,51,234,0.10)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(147,51,234,0.14)]',  iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-purple-600' },
-  yellow: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(234,179,8,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(234,179,8,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-white/50', iconText: 'text-yellow-600' },
+  blue:   { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(37,99,235,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(37,99,235,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-blue-600' },
+  green:  { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(22,163,74,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(22,163,74,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-green-600' },
+  red:    { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(239,68,68,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(239,68,68,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-red-500' },
+  orange: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(249,115,22,0.10)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(249,115,22,0.14)]',  iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-orange-600' },
+  purple: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(147,51,234,0.10)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(147,51,234,0.14)]',  iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-purple-600' },
+  yellow: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(234,179,8,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(234,179,8,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-yellow-600' },
 }
 
 const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }> = {
@@ -1308,14 +1306,14 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
   const { formatAmount: fmt } = useCurrency()
   if (items.length === 0) {
     return (
-      <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 text-center text-gray-400 text-sm">
+      <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 text-center text-gray-400 text-sm">
         {emptyText}
       </div>
     )
   }
   const maxInflow = Math.max(...items.map(p => p.totalInflow), 1)
   return (
-    <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <div className="min-w-[360px]">
           <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">

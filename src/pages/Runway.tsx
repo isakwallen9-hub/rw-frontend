@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import {
   ResponsiveContainer,
@@ -65,16 +64,9 @@ export default function Runway() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1.5 mb-6"
-        >
-          ← Tillbaka
-        </button>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Runway — 90-dagarsprognos</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Runway — 90-dagarsprognos</h1>
         <p className="text-sm text-gray-500 mb-8">
           Prognos för hur länge nuvarande likviditet räcker.
         </p>

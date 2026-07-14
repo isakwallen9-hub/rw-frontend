@@ -1,11 +1,10 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+﻿import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CheckCircle, Circle, ChevronDown, ChevronUp,
   TrendingUp, AlertTriangle, AlertCircle, Info,
   Clock, FileText,
 } from 'lucide-react'
-import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = import.meta.env.VITE_API_URL as string
@@ -198,27 +197,23 @@ export default function Actions() {
   ]
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-8">
 
         {/* Header */}
         <div>
-          <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1.5 mb-4">
-            ← Tillbaka
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Åtgärder</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Åtgärder</h1>
           <p className="text-sm text-gray-500">Konkreta steg för att förbättra din ekonomiska hälsa.</p>
         </div>
 
         {/* Summary bar */}
         {!loading && actions.length > 0 && (
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center">
               <p className="text-2xl font-bold text-gray-900">{actions.length}</p>
               <p className="text-xs text-gray-400 mt-0.5">Åtgärder totalt</p>
             </div>
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center">
               <p className="text-2xl font-bold text-green-600">{doneCount}</p>
               <p className="text-xs text-gray-400 mt-0.5">Slutförda</p>
               <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -228,7 +223,7 @@ export default function Actions() {
                 />
               </div>
             </div>
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center">
               <p className="text-lg font-bold text-blue-600">{fmt(totalValue)}</p>
               <p className="text-xs text-gray-400 mt-0.5">Potentiellt värde</p>
             </div>
@@ -265,7 +260,7 @@ export default function Actions() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-10 text-center text-gray-400 text-sm">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-10 text-center text-gray-400 text-sm">
             {tab === 'done' ? 'Inga slutförda åtgärder ännu.' : 'Inga pågående åtgärder — bra jobbat!'}
           </div>
         ) : (
@@ -294,11 +289,11 @@ export default function Actions() {
           {loading ? (
             <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
           ) : invoices.length === 0 ? (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-8 text-center text-gray-400 text-sm">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-8 text-center text-gray-400 text-sm">
               Inga förfallna fakturor — allt är i ordning!
             </div>
           ) : (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
               <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
                 <span>Kund</span>
                 <span className="text-right pr-6">Fakturanr</span>
@@ -331,7 +326,7 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
     : []
 
   return (
-    <div className={`bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm transition-all duration-300 ${done ? 'opacity-70' : 'hover:shadow-md'}`}>
+    <div className={`bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm transition-all duration-300 ${done ? 'opacity-70' : 'hover:shadow-md'}`}>
       {/* Urgency strip */}
       <div className="h-1 w-full bg-gray-100">
         <div className={`h-full ${done ? 'bg-green-400' : p.bar} transition-all duration-500`} style={{ width: `${done ? 100 : p.urgencyPct}%` }} />

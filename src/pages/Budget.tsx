@@ -1,7 +1,6 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+﻿import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Target, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = import.meta.env.VITE_API_URL as string
@@ -100,7 +99,7 @@ function BudgetBar({
     'bg-red-500'
 
   return (
-    <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 shadow-sm">
+    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -264,20 +263,13 @@ export default function Budget() {
   const isCurrentMonth = period === toPeriodStr(new Date())
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
       <div className="max-w-2xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6">
 
         {/* Page header + month picker */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1 mb-2 transition-colors"
-            >
-              ← Tillbaka
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">Budget</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Budget</h1>
             <p className="text-sm text-gray-500 mt-0.5">Sätt och följ upp månatliga mål</p>
           </div>
 
@@ -305,7 +297,7 @@ export default function Budget() {
         </div>
 
         {/* Budget form */}
-        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
+        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
           <div className="flex items-center gap-2 mb-5">
             <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
               <Target className="w-5 h-5 text-blue-600" />
@@ -385,7 +377,7 @@ export default function Budget() {
           {loading ? (
             <div className="grid sm:grid-cols-2 gap-4">
               {[0, 1].map(i => (
-                <div key={i} className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 shadow-sm">
+                <div key={i} className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 shadow-sm">
                   <div className="space-y-3 animate-pulse">
                     <div className="h-4 bg-gray-100 rounded w-1/2" />
                     <div className="h-10 bg-gray-100 rounded" />
@@ -421,7 +413,7 @@ export default function Budget() {
 
         {/* Summary card — shown only when both budget and actual are available */}
         {data && (data.revenue.budget > 0 || data.costs.budget > 0) && (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-bold text-gray-700 mb-4">Sammanfattning</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>

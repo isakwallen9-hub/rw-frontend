@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ExcelJS from 'exceljs'
-import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { getImportHistoryKey } from '../utils/jwtUser'
 
@@ -319,13 +318,8 @@ export default function Import() {
   const isDone    = step === 'done'
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
       <div className="max-w-2xl mx-auto px-4 sm:px-8 py-10">
-
-        <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1.5 mb-8">
-          ← Tillbaka
-        </button>
 
         {/* ── Success banner ─────────────────────────────────────────────── */}
         {isDone && (
@@ -420,7 +414,7 @@ export default function Import() {
                   <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
                   <div>
                     <p className="text-base font-semibold text-gray-800">{msg.heading}</p>
-                    <p className="text-sm text-gray-400 mt-1">{msg.sub}</p>
+                    <p className="text-sm text-slate-500 mt-1">{msg.sub}</p>
                   </div>
                   <div className="w-48">
                     <div className="flex items-center justify-between mb-1">
@@ -471,7 +465,7 @@ export default function Import() {
                 {/* Preview table */}
                 <div>
                   <p className="text-sm font-semibold text-gray-700 mb-3">Ser detta rätt ut? Klicka <em>Importera</em> för att fortsätta.</p>
-                  <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+                  <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
@@ -503,7 +497,7 @@ export default function Import() {
                 </div>
 
                 {/* Column detection summary */}
-                <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-4 shadow-sm">
+                <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-4 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
                   <div className="space-y-3">
 
@@ -602,7 +596,7 @@ export default function Import() {
         {history.length > 0 && (
           <div className="mt-12">
             <h2 className="text-base font-bold text-gray-800 mb-4">Tidigare importer</h2>
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
               {history.map((rec, i) => (
                 <div
                   key={rec.id}

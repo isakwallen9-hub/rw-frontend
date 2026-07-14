@@ -1,6 +1,5 @@
-import { useEffect, useState, useMemo, Fragment } from 'react'
+﻿import { useEffect, useState, useMemo, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useUser } from '../contexts/UserContext'
 import { SkeletonCard } from '../components/Skeleton'
@@ -158,8 +157,7 @@ export default function Admin() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen font-sans">
-        <Navbar />
+      <div className="font-sans">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-4">
           {[...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-10 w-full" />)}
         </div>
@@ -169,15 +167,11 @@ export default function Admin() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen font-sans">
-        <Navbar />
+      <div className="font-sans">
         <div className="max-w-md mx-auto px-4 py-24 flex flex-col items-center text-center gap-4">
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-2xl">🔒</div>
           <h1 className="text-xl font-bold text-gray-900">Åtkomst nekad</h1>
           <p className="text-gray-400 text-sm">Du har inte behörighet att visa den här sidan.</p>
-          <button onClick={() => navigate('/dashboard')} className="mt-2 text-sm font-semibold text-accent hover:underline">
-            ← Tillbaka till dashboarden
-          </button>
         </div>
       </div>
     )
@@ -191,13 +185,12 @@ export default function Admin() {
   ]
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-10">
 
         <div>
-          <h1 className="text-2xl font-bold text-primary">Administration</h1>
-          <p className="text-sm text-gray-400 mt-1">Systemöversikt och hantering</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Administration</h1>
+          <p className="text-sm text-slate-500 mt-1">Systemöversikt och hantering</p>
         </div>
 
         {/* Stats */}
@@ -205,7 +198,7 @@ export default function Admin() {
           {loadingStats
             ? [...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-24" />)
             : STAT_CARDS.map(card => (
-              <div key={card.label} className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-5 shadow-sm">
+              <div key={card.label} className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-5 shadow-sm">
                 <div className="text-2xl mb-2">{card.icon}</div>
                 <div className="text-2xl font-bold text-gray-900">
                   {typeof card.value === 'number' ? card.value.toLocaleString('sv-SE') : card.value}
@@ -227,9 +220,9 @@ export default function Admin() {
           {loadingOrgs ? (
             <div className="flex flex-col gap-2">{[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-12" />)}</div>
           ) : orgs.length === 0 ? (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga organisationer.</div>
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga organisationer.</div>
           ) : (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[700px]">
                   <thead>
@@ -336,9 +329,9 @@ export default function Admin() {
           {loadingUsers ? (
             <div className="flex flex-col gap-2">{[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-12" />)}</div>
           ) : users.length === 0 ? (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga användare.</div>
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga användare.</div>
           ) : (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[560px]">
                   <thead>
@@ -383,7 +376,7 @@ export default function Admin() {
       {/* Delete confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md" onClick={() => setDeleteConfirm(null)}>
-          <div className="bg-white/60 backdrop-blur-3xl border border-white/50 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white/60 backdrop-blur-3xl border border-slate-200/60 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-xl shrink-0">🗑️</div>
               <div>

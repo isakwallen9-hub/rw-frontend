@@ -1,6 +1,5 @@
-import { useEffect, useState, useRef } from 'react'
+﻿import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { SkeletonCard } from '../components/Skeleton'
 import { useCurrency } from '../contexts/CurrencyContext'
@@ -161,15 +160,14 @@ export default function Profile() {
   const currentIndustry = INDUSTRIES.find((i) => i.value === industry)
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
       <div className="max-w-xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-8">
 
         {/* Profile card */}
         <div>
           <h1 className="text-2xl font-bold text-primary mb-4">Profil</h1>
           {loading ? (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 flex flex-col gap-4">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 flex flex-col gap-4">
               {[...Array(5)].map((_, i) => (
                 <SkeletonCard key={i} className="h-8 w-full" />
               ))}
@@ -177,7 +175,7 @@ export default function Profile() {
           ) : error ? (
             <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{error}</div>
           ) : profile ? (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
               <ProfileRow label="Förnamn" value={profile.firstName} />
               <ProfileRow label="Efternamn" value={profile.lastName} />
               <ProfileRow label="E-post" value={profile.email} />
@@ -201,7 +199,7 @@ export default function Profile() {
         {/* Industry picker */}
         <div>
           <h2 className="text-lg font-bold text-gray-800 mb-4">Bransch</h2>
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-4">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-4">
             {loading ? (
               <SkeletonCard className="h-40 w-full" />
             ) : (
@@ -231,7 +229,7 @@ export default function Profile() {
         {/* Currency picker */}
         <div>
           <h2 className="text-lg font-bold text-gray-800 mb-4">Valuta</h2>
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-4">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-4">
             {loading ? (
               <SkeletonCard className="h-16 w-full" />
             ) : (
@@ -263,13 +261,13 @@ export default function Profile() {
           <h2 className="text-lg font-bold text-gray-800 mb-4">Notifikationer</h2>
 
           {notifLoading ? (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 flex flex-col gap-4">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 flex flex-col gap-4">
               {[...Array(4)].map((_, i) => (
                 <SkeletonCard key={i} className="h-8 w-full" />
               ))}
             </div>
           ) : (
-            <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
 
               {/* Master enable/disable */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">

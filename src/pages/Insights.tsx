@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
-import Navbar from '../components/Navbar'
+﻿import { useEffect, useState, useRef, useCallback } from 'react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
 import {
@@ -271,7 +270,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
 
 function FeaturedChartCard({ chart }: { chart: FeaturedChart }) {
   return (
-    <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
+    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
       <h3 className="font-bold text-gray-900 tracking-tight mb-1">{chart.title}</h3>
       <div className="mt-4">
         <ChartBlock chart={chart} height={240} />
@@ -294,7 +293,7 @@ function InsightCard({ insight, formatAmount }: { insight: Insight; formatAmount
     : null
 
   return (
-    <div className={`bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent border-l-4 ${s.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
+    <div className={`bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent border-l-4 ${s.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <s.Icon className={`w-4 h-4 shrink-0 ${s.iconColor}`} aria-hidden="true" />
@@ -400,8 +399,7 @@ export default function Insights() {
     : []
 
   return (
-    <div className="min-h-screen font-sans">
-      <Navbar />
+    <div className="font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8">
 
         {/* ── Page header ── */}
@@ -410,13 +408,13 @@ export default function Insights() {
             <Sparkles className="w-5 h-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-none">AI-insikter</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">AI-insikter</h1>
             <p className="text-xs text-gray-400 mt-0.5">Genererat utifrån din ekonomidata</p>
           </div>
         </div>
 
         {/* ── AI Chart Generator ── */}
-        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Fråga AI om en graf</p>
           <div className="flex gap-2">
             <input
@@ -469,7 +467,7 @@ export default function Insights() {
 
         {/* ── Generated chart result ── */}
         {generatedChart && (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
@@ -497,7 +495,7 @@ export default function Insights() {
         )}
 
         {/* ── AI Summary ── */}
-        <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md shadow-blue-500/20">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
@@ -537,7 +535,7 @@ export default function Insights() {
           <section>
             <div className="h-5 bg-gray-200/80 rounded-lg w-40 animate-pulse mb-4" />
             {[0, 1].map(i => (
-              <div key={i} className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 mb-5 shadow-sm">
+              <div key={i} className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 mb-5 shadow-sm">
                 <div className="h-4 bg-gray-200/80 rounded-lg w-48 animate-pulse mb-4" />
                 <div className="h-56 bg-gray-100/80 rounded-xl animate-pulse" />
               </div>
@@ -567,7 +565,7 @@ export default function Insights() {
           <section>
             <div className="h-5 bg-gray-200/80 rounded-lg w-28 animate-pulse mb-4" />
             {[0, 1, 2].map(i => (
-              <div key={i} className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent border-l-4 border-l-gray-200 rounded-2xl p-5 mb-4 shadow-sm animate-pulse">
+              <div key={i} className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent border-l-4 border-l-gray-200 rounded-2xl p-5 mb-4 shadow-sm animate-pulse">
                 <div className="flex justify-between mb-3">
                   <div className="h-4 bg-gray-200/80 rounded-lg w-48" />
                   <div className="h-5 bg-gray-200/80 rounded-full w-16" />
@@ -583,7 +581,7 @@ export default function Insights() {
 
         {/* Empty state */}
         {!loading && !fetchError && !sortedInsights.length && !data?.featuredCharts?.length && (
-          <div className="bg-white/30 backdrop-blur-2xl border border-white/40 relative shadow-[0_8px_32px_rgba(31,38,135,0.08)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-10 text-center shadow-sm">
+          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-10 text-center shadow-sm">
             <Sparkles className="w-8 h-8 text-gray-300 mx-auto mb-3" aria-hidden="true" />
             <p className="text-sm text-gray-400">Inga insikter ännu — importera mer data för att aktivera AI-analysen.</p>
           </div>
