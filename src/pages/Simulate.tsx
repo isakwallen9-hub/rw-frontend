@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import {
   ResponsiveContainer,
@@ -103,6 +104,20 @@ interface SavedSim {
   scenarios: Scenario[]
 }
 
+interface InsightItem {
+  type: string
+  category?: string
+  direction?: string
+  changePercent?: number
+}
+
+interface AiSuggestion {
+  id: string
+  label: string
+  subLabel: string
+  scenario: Omit<Scenario, 'id'>
+}
+
 function loadSavedSims(): SavedSim[] {
   try { return JSON.parse(localStorage.getItem(LS_SIM_KEY) ?? '[]') } catch { return [] }
 }
@@ -182,6 +197,7 @@ export default function Simulate() {
   const [savedSims, setSavedSims] = useState<SavedSim[]>(loadSavedSims)
   const [saveSimName, setSaveSimName] = useState('')
   const [saveSimOpen, setSaveSimOpen] = useState(false)
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([])
 
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/analytics/categories`)
@@ -215,6 +231,57 @@ export default function Simulate() {
         }
       })
       .catch(() => {})
+  }, [])
+
+  // Fetch insights on mount to derive AI scenario suggestions
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchWithAuth(`${API_URL}api/v1/insights`, { signal: controller.signal })
+      .then(r => r.json())
+      .then(json => {
+        if (controller.signal.aborted) return
+        const items: InsightItem[] = Array.isArray(json?.data) ? json.data
+                                   : Array.isArray(json?.insights) ? json.insights
+                                   : []
+        const suggestions: AiSuggestion[] = []
+
+        const priceErosion = items.find(i => i.type === 'PRICE_EROSION' && i.category)
+        if (priceErosion?.category) {
+          suggestions.push({
+            id: 'price_erosion',
+            label: 'AI: Snittpriset har sjunkit — testa en höjning',
+            subLabel: `Höj ${priceErosion.category} med 10%`,
+            scenario: { type: 'change_amount', category: priceErosion.category, changePercent: 10 },
+          })
+        }
+
+        const trendBreak = items.find(i =>
+          i.type === 'TREND_BREAK' && i.category &&
+          (i.direction === 'negative' || (i.changePercent ?? 0) < 0)
+        )
+        if (trendBreak?.category) {
+          suggestions.push({
+            id: 'trend_break',
+            label: `Vad händer om ${trendBreak.category} fortsätter tappa?`,
+            subLabel: `Simulerar -20% på ${trendBreak.category}`,
+            scenario: { type: 'change_amount', category: trendBreak.category, changePercent: -20 },
+          })
+        }
+
+        const concentrationRisk = items.find(i => i.type === 'CONCENTRATION_RISK' && i.category)
+        if (concentrationRisk?.category) {
+          suggestions.push({
+            id: 'concentration_risk',
+            label: `Vad händer om jag tappar ${concentrationRisk.category}?`,
+            subLabel: `Tar bort hela ${concentrationRisk.category}`,
+            scenario: { type: 'remove_category', category: concentrationRisk.category },
+          })
+        }
+
+        setAiSuggestions(suggestions)
+      })
+      .catch(() => {})
+    return () => controller.abort()
   }, [])
 
   const handleAdd = () => {
@@ -285,12 +352,12 @@ export default function Simulate() {
     setSavedSims(updated)
   }
 
-  const handleSimulate = () => {
-    if (scenarios.length === 0) return
+  const runSimulation = (scenariosToRun: Scenario[]) => {
+    if (scenariosToRun.length === 0) return
     setLoading(true)
     setError('')
 
-    const payload = scenarios.map(({ id: _id, ...rest }) => {
+    const payload = scenariosToRun.map(({ id: _id, ...rest }) => {
       // Map frontend-only types to the backend's accepted types
       if (rest.type === 'change_revenue_percent') {
         return { type: 'change_amount', category: 'all', changePercent: rest.changePercent }
@@ -338,6 +405,16 @@ export default function Simulate() {
       .finally(() => setLoading(false))
   }
 
+  const handleSimulate = () => runSimulation(scenarios)
+
+  const applyAiSuggestion = (suggestion: AiSuggestion) => {
+    const scenario: Scenario = { ...suggestion.scenario, id: Date.now().toString() }
+    const next = [...scenarios, scenario]
+    setScenarios(next)
+    setResult(null)
+    runSimulation(next)
+  }
+
   const displayData = useMemo(
     () => result ? aggregateForecast(result.forecast, granularity) : [],
     [result, granularity]
@@ -366,6 +443,31 @@ export default function Simulate() {
                   </button>
                   <button onClick={() => handleDeleteSim(sim.id)} className="text-gray-300 hover:text-red-400 ml-1 leading-none">×</button>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* AI-föreslagna scenarion */}
+        {aiSuggestions.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-4 h-4 text-purple-500" aria-hidden="true" />
+              <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider">AI föreslår baserat på din data</p>
+            </div>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+              {aiSuggestions.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => applyAiSuggestion(s)}
+                  className="flex items-start gap-3 bg-white/40 backdrop-blur border border-purple-200/60 rounded-xl px-4 py-3 text-left hover:bg-purple-50/60 hover:border-purple-300 transition-all cursor-pointer min-h-[44px] group"
+                >
+                  <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5 group-hover:text-purple-600 transition-colors" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 leading-snug group-hover:text-purple-800 transition-colors">{s.label}</p>
+                    <p className="text-xs text-purple-500/80 mt-0.5">{s.subLabel}</p>
+                  </div>
+                </button>
               ))}
             </div>
           </div>
