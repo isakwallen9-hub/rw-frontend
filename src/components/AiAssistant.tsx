@@ -308,6 +308,17 @@ export default function AiAssistant() {
     if (open) setTimeout(() => inputRef.current?.focus(), 80)
   }, [open])
 
+  // Global open-with-question event (fired by dashboard sections)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const q = (e as CustomEvent<{ question?: string }>).detail?.question ?? ''
+      setOpen(true)
+      if (q) setInput(q)
+    }
+    window.addEventListener('rw:ai:open', handler)
+    return () => window.removeEventListener('rw:ai:open', handler)
+  }, [])
+
   const clearHistory = () => {
     setHistoryMap(prev => ({ ...prev, [ctx]: [] }))
   }

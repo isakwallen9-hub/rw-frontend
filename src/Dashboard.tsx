@@ -112,6 +112,18 @@ interface OverviewData {
   }
 }
 
+interface InsightItem {
+  title: string
+  severity: 'critical' | 'warning' | 'info'
+  impact?: number | null
+  category?: string
+  description?: string
+}
+interface BriefingData {
+  summary?: string | null
+  insights?: InsightItem[]
+}
+
 function translateAlert(msg: string): string {
   // "3 invoices are overdue based on your 30-day payment terms"
   const m1 = msg.match(/(\d+)\s+invoices?\s+(?:is|are)\s+overdue\s+based\s+on\s+your\s+(\d+)-day\s+payment\s+terms?/i)
@@ -168,6 +180,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [exportingExcel, setExportingExcel] = useState(false)
   const [exportError, setExportError] = useState('')
   const [showTour, setShowTour] = useState(false)
+
+  // AI briefing (parallel fetch, never blocks)
+  const [briefing, setBriefing]               = useState<BriefingData | null>(null)
+  const [briefingLoading, setBriefingLoading] = useState(true)
 
   // AI Explain modal
   const [explainOpen, setExplainOpen] = useState(false)
@@ -291,6 +307,19 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       }))
       .catch(guard(() => setRecommendations(MOCK_RECOMMENDATIONS)))
       .finally(guard(() => setLoadingRec(false)))
+
+    // AI briefing — parallel, never blocks dashboard
+    fetchWithAuth(`${API_URL}api/v1/insights`)
+      .then(r => r.json())
+      .then(guard(json => {
+        const d = json.data ?? json
+        setBriefing({
+          summary:  typeof d.summary === 'string' ? d.summary : null,
+          insights: Array.isArray(d.insights) ? (d.insights as InsightItem[]) : [],
+        })
+      }))
+      .catch(guard(() => setBriefing(null))) // graceful degradation
+      .finally(guard(() => setBriefingLoading(false)))
 
     return () => { cancelled = true }
   }, [])
@@ -617,6 +646,14 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           </div>
         )}
 
+        {/* AI-briefing */}
+        <AiBriefing
+          data={briefing}
+          loading={briefingLoading}
+          onNavigate={navigate}
+          formatAmount={fmt}
+        />
+
         {/* KPI-kort */}
         {loadingOverview ? (
           <SkeletonKpiCards />
@@ -660,6 +697,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           const gmSubtitle = (gm === null || gmOutOfRange) ? '' : gm < 0 ? 'Kostnader överstiger intäkter' : 'Av totalt inflöde'
           const gmTrendLabel = gm === null ? 'Ingen data' : gmOutOfRange ? 'Kontrollera data' : gm < 0 ? 'Kostnader överstiger intäkter' : gm > 30 ? 'Bra marginal' : gm >= 10 ? 'Acceptabel marginal' : 'Låg marginal'
           return (
+            <>
+            <div className="flex items-center justify-between -mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Nyckeltal</p>
+              <AskAiButton question="Förklara mina nyckeltal och vad jag bör agera på" />
+            </div>
             <div data-tour="kpi-cards" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <KpiCard
                 icon={<Banknote className="w-5 h-5" />}
@@ -718,6 +760,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 onExplain={() => explainThis('diagnosis', { type: 'grossMargin', value: gm })}
               />
             </div>
+            </>
           )
         })()}
 
@@ -801,6 +844,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 >
                   <SparkleIcon /> Förklara detta
                 </button>
+                <AskAiButton question="Förklara mitt kassaflöde just nu och vad jag bör göra" />
               </div>
             </div>
             <ResponsiveContainer width="100%" height={280}>
@@ -939,13 +983,19 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
             {/* Toppprodukter */}
             <div>
-              <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Toppprodukter</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-gray-800 tracking-tight">Toppprodukter</h2>
+                <AskAiButton question="Analysera mina toppprodukter och kategorier — vad driver intäkterna?" />
+              </div>
               <RankList items={topProducts} emptyText="Importera data för att se dina toppprodukter." rowLabel="Kategori" barColor="bg-blue-50" />
             </div>
 
             {/* Toppkunder */}
             <div>
-              <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Toppkunder</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-gray-800 tracking-tight">Toppkunder</h2>
+                <AskAiButton question="Analysera mina toppkunder — vem bör jag prioritera och varför?" />
+              </div>
               <RankList items={topCustomers} emptyText="Importera data för att se dina toppkunder." rowLabel="Kund" barColor="bg-purple-50" />
             </div>
 
@@ -1346,5 +1396,126 @@ function SparkleIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
     </svg>
+  )
+}
+
+// ─── AI helpers ───────────────────────────────────────────────────────────────
+
+function getGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return 'God morgon'
+  if (h < 18) return 'God eftermiddag'
+  return 'God kväll'
+}
+
+function openAiWith(question: string) {
+  window.dispatchEvent(new CustomEvent('rw:ai:open', { detail: { question } }))
+}
+
+function AskAiButton({ question }: { question: string }) {
+  return (
+    <button
+      onClick={() => openAiWith(question)}
+      className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-blue-50/60 min-h-[32px]"
+    >
+      <SparkleIcon className="w-3 h-3" />
+      Fråga AI
+    </button>
+  )
+}
+
+const SEVERITY_CFG = {
+  critical: { dot: 'bg-red-500',   text: 'text-red-700',   bg: 'bg-red-50/80',   border: 'border-red-200/80'   },
+  warning:  { dot: 'bg-amber-400', text: 'text-amber-700', bg: 'bg-amber-50/80', border: 'border-amber-200/80' },
+  info:     { dot: 'bg-blue-400',  text: 'text-blue-700',  bg: 'bg-blue-50/80',  border: 'border-blue-200/80'  },
+} as const
+
+function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
+  data: BriefingData | null
+  loading: boolean
+  onNavigate: (to: string) => void
+  formatAmount: (v: number) => string
+}) {
+  if (!loading && !data) return null
+
+  if (loading) {
+    return (
+      <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 flex items-center gap-4">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center shrink-0">
+          <SparkleIcon className="w-4 h-4 text-blue-500 animate-pulse" />
+        </div>
+        <div className="flex flex-col gap-1.5 flex-1">
+          <div className="h-3.5 bg-slate-200/80 rounded-full w-48 animate-pulse" />
+          <div className="h-3 bg-slate-100/80 rounded-full w-80 max-w-full animate-pulse" />
+          <div className="h-3 bg-slate-100/80 rounded-full w-64 max-w-full animate-pulse" />
+        </div>
+        <p className="text-xs text-slate-400 shrink-0 hidden sm:block">AI:n analyserar din ekonomi...</p>
+      </div>
+    )
+  }
+
+  const topInsights = [...(data?.insights ?? [])]
+    .sort((a, b) => {
+      const order: Record<string, number> = { critical: 0, warning: 1, info: 2 }
+      return (order[a.severity] ?? 2) - (order[b.severity] ?? 2)
+    })
+    .slice(0, 2)
+
+  return (
+    <div className="relative rounded-2xl p-[1px] bg-gradient-to-r from-blue-400/40 via-indigo-300/30 to-purple-300/20">
+      <div className="bg-white/70 backdrop-blur-2xl rounded-2xl px-6 py-5 flex flex-col gap-4">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
+              <SparkleIcon className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-0.5">AI-sammanfattning</p>
+              <p className="text-base font-bold text-slate-900 tracking-tight">{getGreeting()} — här är läget</p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate('/insights')}
+            className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors shrink-0 mt-1"
+          >
+            Se alla insikter →
+          </button>
+        </div>
+
+        {/* Summary */}
+        {data?.summary && (
+          <p className="text-sm text-slate-600 leading-relaxed border-l-2 border-blue-200 pl-3">
+            {data.summary}
+          </p>
+        )}
+
+        {/* Top insights */}
+        {topInsights.length > 0 && (
+          <div className="grid sm:grid-cols-2 gap-2">
+            {topInsights.map((ins, i) => {
+              const cfg = SEVERITY_CFG[ins.severity] ?? SEVERITY_CFG.info
+              return (
+                <button
+                  key={i}
+                  onClick={() => onNavigate('/insights')}
+                  className={`flex items-start gap-3 px-3.5 py-3 rounded-xl border text-left transition-all hover:shadow-sm active:scale-[0.99] ${cfg.bg} ${cfg.border}`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${cfg.dot} shrink-0 mt-1.5`} />
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-xs font-semibold leading-snug ${cfg.text}`}>{ins.title}</p>
+                    {ins.impact != null && (
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Påverkan: <span className="font-semibold">{fmt(ins.impact)}</span>
+                      </p>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
