@@ -1,5 +1,6 @@
 ﻿import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import ExcelJS from 'exceljs'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
@@ -145,6 +146,9 @@ export default function Onboarding() {
   const [stepError, setStepError]             = useState('')
   const [stepSuccess, setStepSuccess]         = useState('')
   const [progressLabel, setProgressLabel]     = useState('')
+  const [completedAll, setCompletedAll]       = useState(false)
+  const [aiSummary, setAiSummary]             = useState<string | null>(null)
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
 
   // ── Bank file state ────────────────────────────────────────────────────
   const [bankFile, setBankFile]                   = useState<File | null>(null)
@@ -276,6 +280,7 @@ export default function Onboarding() {
   const doReset = () => {
     setStep(0); setCompletedSteps([false, false, false, false])
     setStepError(''); setStepSuccess(''); setProgressLabel('')
+    setCompletedAll(false); setAiSummary(null); setAiSummaryLoading(false)
     setBankFile(null); setBankTotalRows(0); setBankPreviewHeaders([]); setBankPreviewRows([])
     setBankDetectedDate(null); setBankDetectedAmount(null); setBankDetectedCategory(null)
     setBankMappedDate(''); setBankMappedAmount(''); setBankMappedCategory('')
@@ -337,13 +342,78 @@ export default function Onboarding() {
       if (!res.ok) throw new Error(await parseErrorMessage(res))
     }
     markComplete(3)
-    navigate('/dashboard')
+    setCompletedAll(true)
+    // Fire-and-forget AI summary — graceful degradation on failure
+    setAiSummaryLoading(true)
+    fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        context: 'general',
+        question: `Jag importerade just ${bankTotalRows} transaktioner. Sammanfatta kort vad datan visar och om något sticker ut.`,
+      }),
+    })
+      .then(r => r.json())
+      .then(json => {
+        const answer = json?.data?.answer ?? json?.answer ?? ''
+        if (answer) setAiSummary(answer)
+      })
+      .catch(() => {})
+      .finally(() => setAiSummaryLoading(false))
   })
 
   const handlers   = [saveStep1, saveStep2, saveStep3, saveStep4]
   const saveLabels = ['Fortsätt', 'Fortsätt', 'Fortsätt', 'Skapa diagnos']
 
   const progressPct = ((step + (completedSteps[step] ? 1 : 0)) / STEP_LABELS.length) * 100
+
+  // ── Completion screen (shown after step 4) ─────────────────────────────
+  if (completedAll) {
+    return (
+      <div className="min-h-screen font-sans">
+        <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
+          <span className="font-semibold text-gray-900 tracking-tight">RW Systems</span>
+          <span className="text-sm text-green-600 font-medium">Klar!</span>
+        </div>
+        <div className="max-w-xl mx-auto px-4 py-16">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Allt är klart!</h1>
+            <p className="text-gray-500">Din data är uppladdad och redo att analyseras.</p>
+          </div>
+
+          {aiSummaryLoading && (
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 mb-6 flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
+              <p className="text-sm text-slate-500 italic">AI:n tittar på din nya data...</p>
+            </div>
+          )}
+          {!aiSummaryLoading && aiSummary && (
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
+                <p className="text-sm font-semibold text-slate-700">AI:ns första intryck</p>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed">{aiSummary}</p>
+            </div>
+          )}
+
+          <div className="text-center">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              Fortsätt till dashboard →
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Target, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Target, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = import.meta.env.VITE_API_URL as string
@@ -255,6 +255,9 @@ export default function Budget() {
     setSaving(false)
   }
 
+  const openAiWith = (question: string) =>
+    window.dispatchEvent(new CustomEvent('rw:ai:open', { detail: { question } }))
+
   const prevMonth = () => setPeriod(p => addMonths(p, -1))
   const nextMonth = () => {
     const next = addMonths(period, 1)
@@ -345,7 +348,7 @@ export default function Budget() {
             <p className="text-sm text-red-500 mb-3">{saveError}</p>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={handleSave}
               disabled={saving || (!formRevenue && !formCosts)}
@@ -357,6 +360,14 @@ export default function Budget() {
                   Sparar...
                 </>
               ) : 'Spara budget'}
+            </button>
+
+            <button
+              onClick={() => openAiWith(`Föreslå realistiska budgetmål för ${periodLabel(period)} baserat på min historik och säsongsmönster`)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white/40 backdrop-blur border border-slate-200/60 text-slate-700 text-sm font-medium rounded-xl hover:bg-white/60 hover:border-blue-300 hover:text-blue-700 transition-all min-h-[44px]"
+            >
+              <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
+              AI-förslag
             </button>
 
             {savedMsg && (
@@ -392,22 +403,45 @@ export default function Budget() {
               {fetchError}
             </div>
           ) : data ? (
-            <div className="grid sm:grid-cols-2 gap-4">
-              <BudgetBar
-                label="Intäkter"
-                icon={<TrendingUp className="w-5 h-5" />}
-                line={data.revenue}
-                statusFn={revenueStatus}
-                higherIsBetter={true}
-              />
-              <BudgetBar
-                label="Kostnader"
-                icon={<TrendingDown className="w-5 h-5" />}
-                line={data.costs}
-                statusFn={costsStatus}
-                higherIsBetter={false}
-              />
-            </div>
+            <>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <BudgetBar
+                  label="Intäkter"
+                  icon={<TrendingUp className="w-5 h-5" />}
+                  line={data.revenue}
+                  statusFn={revenueStatus}
+                  higherIsBetter={true}
+                />
+                <BudgetBar
+                  label="Kostnader"
+                  icon={<TrendingDown className="w-5 h-5" />}
+                  line={data.costs}
+                  statusFn={costsStatus}
+                  higherIsBetter={false}
+                />
+              </div>
+              {(() => {
+                const revDev = data.revenue.budget > 0
+                  ? Math.abs((data.revenue.actual - data.revenue.budget) / data.revenue.budget)
+                  : 0
+                const costDev = data.costs.budget > 0
+                  ? Math.abs((data.costs.actual - data.costs.budget) / data.costs.budget)
+                  : 0
+                if (revDev <= 0.2 && costDev <= 0.2) return null
+                const revUnder = data.revenue.budget > 0 && data.revenue.actual < data.revenue.budget * 0.8
+                const costsOver = data.costs.budget > 0 && data.costs.actual > data.costs.budget * 1.2
+                const direction = (!revUnder && costsOver) ? 'över' : 'under'
+                return (
+                  <button
+                    onClick={() => openAiWith(`Varför ligger jag ${direction} budget för ${periodLabel(period)}?`)}
+                    className="mt-2 w-full flex items-center gap-2 bg-white/40 backdrop-blur border border-slate-200/60 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-white/60 hover:border-blue-300 hover:text-blue-700 transition-all min-h-[44px]"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" aria-hidden="true" />
+                    Fråga AI varför du ligger {direction} budget
+                  </button>
+                )
+              })()}
+            </>
           ) : null}
         </div>
 
