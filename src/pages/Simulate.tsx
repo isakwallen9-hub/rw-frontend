@@ -190,6 +190,7 @@ export default function Simulate() {
   const [addDate, setAddDate] = useState(todayStr)
 
   // Results
+  const [currentBalance, setCurrentBalance] = useState(0)
   const [result, setResult] = useState<SimulateResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -229,6 +230,21 @@ export default function Simulate() {
         } else if (cats.length === 1) {
           setWorstCategory(cats[0])
         }
+      })
+      .catch(() => {})
+  }, [])
+
+  // Fetch current account balance for anchored chart
+  useEffect(() => {
+    fetchWithAuth(`${API_URL}api/v1/cashflow/runway`)
+      .then(r => r.json())
+      .then(json => {
+        const bal =
+          json?.data?.currentBalance ??
+          json?.data?.openingBalance ??
+          json?.data?.balance ??
+          json?.currentBalance ?? 0
+        if (typeof bal === 'number' && isFinite(bal)) setCurrentBalance(bal)
       })
       .catch(() => {})
   }, [])
@@ -382,23 +398,26 @@ export default function Simulate() {
         const data = json?.data ?? {}
         const baseline: { date: string; balance?: number; value?: number }[] = Array.isArray(data.baseline) ? data.baseline : []
         const simulated: { date: string; balance?: number; value?: number }[] = Array.isArray(data.simulated) ? data.simulated : []
+        // Anchor every point to currentBalance so the graph shows actual expected balance
         const forecast: ForecastPoint[] = baseline.map((b, i) => {
           const s = simulated[i]
           return {
             date: b.date,
             label: formatDate(b.date),
-            baseline: b.balance ?? b.value ?? 0,
-            simulated: s ? (s.balance ?? s.value ?? 0) : 0,
+            baseline: currentBalance + (b.balance ?? b.value ?? 0),
+            simulated: currentBalance + (s ? (s.balance ?? s.value ?? 0) : 0),
           }
         })
         const summary = data.summary ?? {}
-        const baselineNet         = summary.baseline?.netCashflow  ?? 0
-        const simulatedNet        = summary.simulated?.netCashflow ?? 0
-        // Prefer summary closingBalance; fall back to last forecast point if missing
-        const lastBaseline   = forecast.length > 0 ? forecast[forecast.length - 1].baseline  : 0
-        const lastSimulated  = forecast.length > 0 ? forecast[forecast.length - 1].simulated : 0
-        const baselineEndBalance  = summary.baseline?.closingBalance  ?? lastBaseline
-        const simulatedEndBalance = summary.simulated?.closingBalance ?? lastSimulated
+        const baselineNet    = summary.baseline?.netCashflow  ?? 0
+        const simulatedNet   = summary.simulated?.netCashflow ?? 0
+        // Add currentBalance to closing balances (API returns relative-to-zero values)
+        const lastBaseline   = forecast.length > 0 ? forecast[forecast.length - 1].baseline  : currentBalance
+        const lastSimulated  = forecast.length > 0 ? forecast[forecast.length - 1].simulated : currentBalance
+        const apiBaseEnd     = summary.baseline?.closingBalance
+        const apiSimEnd      = summary.simulated?.closingBalance
+        const baselineEndBalance  = apiBaseEnd  != null ? currentBalance + apiBaseEnd  : lastBaseline
+        const simulatedEndBalance = apiSimEnd   != null ? currentBalance + apiSimEnd   : lastSimulated
         setResult({ forecast, baselineNet, simulatedNet, baselineEndBalance, simulatedEndBalance })
       })
       .catch(() => setError('Kunde inte köra simulering. Kontrollera din anslutning och försök igen.'))
@@ -423,6 +442,8 @@ export default function Simulate() {
   const netDiff = result ? result.simulatedNet - result.baselineNet : 0
   const balanceDiff = result ? result.simulatedEndBalance - result.baselineEndBalance : 0
   const monthlyDiff = Math.round(netDiff / 3)
+  // First forecast point where simulated balance goes negative → cash runs out
+  const breakEvenPoint = result?.forecast.find(p => p.simulated < 0) ?? null
 
   return (
     <div className="font-sans">
@@ -650,28 +671,41 @@ export default function Simulate() {
                 <strong>{fmt(Math.abs(monthlyDiff))}</strong>{' '}
                 {netDiff >= 0 ? 'mer' : 'mindre'} per månad
               </p>
+              {result && (
+                <p className="text-xs text-gray-400 mt-2">
+                  Förväntat saldo om 90 dagar:{' '}
+                  <span className={result.simulatedEndBalance >= 0 ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'}>
+                    {fmt(result.simulatedEndBalance)}
+                  </span>
+                  {currentBalance !== 0 && <span> (idag: {fmt(currentBalance)})</span>}
+                </p>
+              )}
             </div>
 
             {/* Detail cards */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className={`bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-5 py-4 ${netDiff >= 0 ? 'shadow-[0_4px_28px_rgba(22,163,74,0.12)]' : 'shadow-[0_4px_28px_rgba(239,68,68,0.12)]'}`}>
-                <p className="text-xs text-gray-400 mb-2">Netto (90 dagar)</p>
-                <p className={`text-xl font-bold ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {fmt(result.simulatedNet)}
+              {/* Netto-kassaflöde — color by sign of simulated net */}
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-5 py-4">
+                <p className="text-xs text-gray-400 mb-2">Netto kassaflöde (90 dagar)</p>
+                <p className={`text-xl font-bold ${result.simulatedNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {result.simulatedNet >= 0 ? '+' : ''}{fmt(result.simulatedNet)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">vs {fmt(result.baselineNet)} baseline</p>
+                <p className="text-xs text-gray-400 mt-1">Baseline: {result.baselineNet >= 0 ? '+' : ''}{fmt(result.baselineNet)}</p>
                 <p className={`text-xs font-semibold mt-2 ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {netDiff >= 0 ? '+' : ''}{fmt(netDiff)} · {fmtPct(result.simulatedNet, result.baselineNet)}
+                  Scenario: {netDiff >= 0 ? '+' : ''}{fmt(netDiff)} · {fmtPct(result.simulatedNet, result.baselineNet)}
                 </p>
               </div>
-              <div className={`bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-5 py-4 ${balanceDiff >= 0 ? 'shadow-[0_4px_28px_rgba(22,163,74,0.12)]' : 'shadow-[0_4px_28px_rgba(239,68,68,0.12)]'}`}>
+              {/* Slutsaldo — color by sign of absolute balance, compare diff separately */}
+              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-5 py-4">
                 <p className="text-xs text-gray-400 mb-2">Slutsaldo (dag 90)</p>
-                <p className={`text-xl font-bold ${balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                <p className={`text-xl font-bold ${result.simulatedEndBalance >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                   {fmt(result.simulatedEndBalance)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">vs {fmt(result.baselineEndBalance)} baseline</p>
+                {currentBalance !== 0 && (
+                  <p className="text-xs text-gray-400 mt-1">Idag: {fmt(currentBalance)}</p>
+                )}
                 <p className={`text-xs font-semibold mt-2 ${balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {balanceDiff >= 0 ? '+' : ''}{fmt(balanceDiff)} · {fmtPct(result.simulatedEndBalance, result.baselineEndBalance)}
+                  vs baseline: {balanceDiff >= 0 ? '+' : ''}{fmt(balanceDiff)} · {fmtPct(result.simulatedEndBalance, result.baselineEndBalance)}
                 </p>
               </div>
             </div>
@@ -704,12 +738,25 @@ export default function Simulate() {
                     <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={55} />
                     <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1.5} strokeDasharray="4 3"
-                      label={{ value: 'Break-even', position: 'insideTopRight', fontSize: 10, fill: '#9ca3af' }} />
+                    <ReferenceLine y={0} stroke="#ef4444" strokeWidth={1} strokeDasharray="4 3"
+                      label={{ value: 'Saldo noll', position: 'insideTopRight', fontSize: 10, fill: '#ef4444' }} />
                     <Line type="monotone" dataKey="baseline" name="Baseline" stroke="#9ca3af" strokeWidth={2} dot={false} strokeDasharray="5 3" />
                     <Line type="monotone" dataKey="simulated" name="Simulerat" stroke="#2563eb" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
+              )}
+
+              {/* Break-even warning */}
+              {breakEvenPoint && (
+                <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                  <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm text-red-700">
+                    Med detta scenario tar kassan slut omkring{' '}
+                    <strong>{new Date(breakEvenPoint.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' })}</strong>.
+                  </p>
+                </div>
               )}
             </div>
           </>
