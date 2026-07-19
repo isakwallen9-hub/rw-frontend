@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { z } from 'zod'
 import { Sparkles } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import {
@@ -164,6 +164,87 @@ function scenarioChip(s: Scenario): string {
   }
 }
 
+function cleanScenarioLabel(label: string): string {
+  return label
+    .replace(/^(vad händer om\s+(?:jag|du|vi|man)\s+)/i, '')
+    .replace(/^om\s+(?:jag|du|vi|man)\s+/i, '')
+    .replace(/\?$/, '')
+    .trim()
+}
+
+// Zod schema for AI-extracted scenario validation
+const ScenarioSchema = z.object({
+  type: z.enum([
+    'remove_category', 'change_amount', 'add_revenue',
+    'change_revenue_percent', 'change_expenses_percent', 'one_time_expense',
+  ]),
+  category: z.string().optional(),
+  changePercent: z.number().optional(),
+  amount: z.number().optional(),
+  frequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
+  date: z.string().optional(),
+})
+
+function parseAiForecast(data: Record<string, unknown>, cb: number): ForecastPoint[] | null {
+  // Format 1: data.forecast = { baseline: [], simulated: [] }
+  const fcast = data.forecast as Record<string, unknown> | null | undefined
+  if (fcast && typeof fcast === 'object') {
+    const bl = Array.isArray(fcast.baseline)
+      ? (fcast.baseline as { date: string; balance?: number; value?: number }[])
+      : []
+    const sl = Array.isArray(fcast.simulated)
+      ? (fcast.simulated as { date: string; balance?: number; value?: number }[])
+      : []
+    if (bl.length > 0) {
+      return bl.map((b, i) => {
+        const s = sl[i]
+        return {
+          date: b.date,
+          label: formatDate(b.date),
+          baseline: cb + (b.balance ?? b.value ?? 0),
+          simulated: cb + (s ? (s.balance ?? s.value ?? 0) : (b.balance ?? b.value ?? 0)),
+        }
+      })
+    }
+  }
+  // Format 2: datasets array (AiAssistant chart format)
+  const tryDatasets = (src: Record<string, unknown>) => {
+    const ds = Array.isArray(src.datasets)
+      ? (src.datasets as { label: string; data: { x: string; y: number }[] }[])
+      : null
+    if (!ds || ds.length === 0) return null
+    const blDs = ds[0].data ?? []
+    const slDs = (ds[1] ?? ds[0]).data ?? []
+    if (blDs.length === 0) return null
+    return blDs.map((b, i) => ({
+      date: b.x,
+      label: formatDate(b.x),
+      baseline: cb + (b.y ?? 0),
+      simulated: cb + (slDs[i]?.y ?? b.y ?? 0),
+    }))
+  }
+  const fromData = tryDatasets(data)
+  if (fromData) return fromData
+  const chart = data.chart as Record<string, unknown> | null | undefined
+  if (chart && typeof chart === 'object') {
+    const fromChart = tryDatasets(chart as Record<string, unknown>)
+    if (fromChart) return fromChart
+  }
+  return null
+}
+
+function forecastToResult(forecast: ForecastPoint[]): SimulateResult {
+  const first = forecast[0]
+  const last = forecast[forecast.length - 1]
+  return {
+    forecast,
+    baselineNet: last.baseline - first.baseline,
+    simulatedNet: last.simulated - first.simulated,
+    baselineEndBalance: last.baseline,
+    simulatedEndBalance: last.simulated,
+  }
+}
+
 // Which types need a category dropdown
 const NEEDS_CATEGORY: ScenarioType[] = ['remove_category', 'change_amount']
 // Which types need a percent input
@@ -174,7 +255,6 @@ const NEEDS_AMOUNT_FREQ: ScenarioType[] = ['add_revenue']
 const NEEDS_AMOUNT_DATE: ScenarioType[] = ['one_time_expense']
 
 export default function Simulate() {
-  const navigate = useNavigate()
   const todayStr = toDateInput(new Date())
 
   const [categories, setCategories] = useState<string[]>([])
@@ -199,6 +279,14 @@ export default function Simulate() {
   const [saveSimName, setSaveSimName] = useState('')
   const [saveSimOpen, setSaveSimOpen] = useState(false)
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([])
+
+  // AI-first path
+  const [aiQuestion, setAiQuestion] = useState('')
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiSimFailed, setAiSimFailed] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
+  const [scenarioLabel, setScenarioLabel] = useState('')
 
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/analytics/categories`)
@@ -368,13 +456,12 @@ export default function Simulate() {
     setSavedSims(updated)
   }
 
-  const runSimulation = (scenariosToRun: Scenario[]) => {
-    if (scenariosToRun.length === 0) return
+  const runSimulation = (scenariosToRun: Scenario[]): Promise<void> => {
+    if (scenariosToRun.length === 0) return Promise.resolve()
     setLoading(true)
     setError('')
 
     const payload = scenariosToRun.map(({ id: _id, ...rest }) => {
-      // Map frontend-only types to the backend's accepted types
       if (rest.type === 'change_revenue_percent') {
         return { type: 'change_amount', category: 'all', changePercent: rest.changePercent }
       }
@@ -382,13 +469,12 @@ export default function Simulate() {
         return { type: 'change_amount', category: 'expenses', changePercent: rest.changePercent }
       }
       if (rest.type === 'one_time_expense') {
-        // Backend doesn't have a one-time type; send as add_revenue with a negative amount
         return { type: 'add_revenue', amount: -(rest.amount ?? 0), frequency: 'monthly' }
       }
       return rest
     })
 
-    fetchWithAuth(`${API_URL}api/v1/analytics/simulate`, {
+    return fetchWithAuth(`${API_URL}api/v1/analytics/simulate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scenarios: payload, days: 90 }),
@@ -398,7 +484,6 @@ export default function Simulate() {
         const data = json?.data ?? {}
         const baseline: { date: string; balance?: number; value?: number }[] = Array.isArray(data.baseline) ? data.baseline : []
         const simulated: { date: string; balance?: number; value?: number }[] = Array.isArray(data.simulated) ? data.simulated : []
-        // Anchor every point to currentBalance so the graph shows actual expected balance
         const forecast: ForecastPoint[] = baseline.map((b, i) => {
           const s = simulated[i]
           return {
@@ -411,7 +496,6 @@ export default function Simulate() {
         const summary = data.summary ?? {}
         const baselineNet    = summary.baseline?.netCashflow  ?? 0
         const simulatedNet   = summary.simulated?.netCashflow ?? 0
-        // Add currentBalance to closing balances (API returns relative-to-zero values)
         const lastBaseline   = forecast.length > 0 ? forecast[forecast.length - 1].baseline  : currentBalance
         const lastSimulated  = forecast.length > 0 ? forecast[forecast.length - 1].simulated : currentBalance
         const apiBaseEnd     = summary.baseline?.closingBalance
@@ -424,14 +508,105 @@ export default function Simulate() {
       .finally(() => setLoading(false))
   }
 
-  const handleSimulate = () => runSimulation(scenarios)
+  const handleSimulate = () => {
+    setScenarioLabel(scenarios.map(scenarioChip).join(' + '))
+    void runSimulation(scenarios)
+  }
 
   const applyAiSuggestion = (suggestion: AiSuggestion) => {
     const scenario: Scenario = { ...suggestion.scenario, id: Date.now().toString() }
     const next = [...scenarios, scenario]
     setScenarios(next)
     setResult(null)
-    runSimulation(next)
+    setScenarioLabel(suggestion.label)
+    void runSimulation(next)
+  }
+
+  const tryParseScenario = (raw: unknown): Scenario | null => {
+    try {
+      let obj: unknown
+      if (typeof raw === 'string') {
+        const match = raw.match(/\{[\s\S]*\}/)
+        if (!match) return null
+        obj = JSON.parse(match[0])
+      } else {
+        obj = raw
+      }
+      const validated = ScenarioSchema.safeParse(obj)
+      return validated.success ? { ...validated.data, id: `ai-extract-${Date.now()}` } : null
+    } catch {
+      return null
+    }
+  }
+
+  const handleAiAsk = async () => {
+    if (!aiQuestion.trim()) return
+    setAiLoading(true)
+    setAiAnswer(null)
+    setResult(null)
+    setScenarios([])
+    setScenarioLabel(aiQuestion)
+    setAiSimFailed(false)
+
+    try {
+      // ── First pass: AI interpretation ─────────────────────────────
+      const res = await fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: 'simulate', question: aiQuestion }),
+      })
+      const json = await res.json()
+      const data = (json?.data ?? json) as Record<string, unknown>
+      const answer = (data?.answer as string | undefined) ?? ''
+      if (answer) setAiAnswer(answer)
+
+      // Case 1: backend returned structured scenarios
+      const aiScenarios = Array.isArray(data?.scenarios)
+        ? (data.scenarios as Omit<Scenario, 'id'>[])
+        : []
+      if (aiScenarios.length > 0) {
+        const withIds = aiScenarios.map((s, i) => ({ ...s, id: `ai-${Date.now()}-${i}` }))
+        setScenarios(withIds)
+        await runSimulation(withIds)
+        return
+      }
+
+      // Case 2: backend returned forecast/chart data directly
+      const directForecast = parseAiForecast(data, currentBalance)
+      if (directForecast && directForecast.length > 0) {
+        setResult(forecastToResult(directForecast))
+        return
+      }
+
+      // ── Second pass: extract scenario from question ────────────────
+      const extractRes = await fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: 'simulate',
+          question: `Konvertera till simuleringsscenario-JSON för: "${aiQuestion}". Svara ENBART med ett JSON-objekt: {"type":"remove_category|change_amount|add_revenue|change_revenue_percent|change_expenses_percent","category":"string","changePercent":number,"amount":number,"frequency":"daily|weekly|monthly"}. Inkludera bara relevanta fält.`,
+        }),
+      })
+      const extractJson = await extractRes.json()
+      const extractData = (extractJson?.data ?? extractJson) as Record<string, unknown>
+
+      const extracted =
+        tryParseScenario((extractData?.answer as string | undefined) ?? '') ??
+        tryParseScenario(extractData?.scenario)
+
+      if (extracted) {
+        setScenarios([extracted])
+        await runSimulation([extracted])
+        return
+      }
+
+      // ── All paths failed: show fallback ───────────────────────────
+      setAiSimFailed(true)
+    } catch {
+      setAiSimFailed(true)
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   const displayData = useMemo(
@@ -439,217 +614,276 @@ export default function Simulate() {
     [result, granularity]
   )
 
-  const netDiff = result ? result.simulatedNet - result.baselineNet : 0
   const balanceDiff = result ? result.simulatedEndBalance - result.baselineEndBalance : 0
-  const monthlyDiff = Math.round(netDiff / 3)
   // First forecast point where simulated balance goes negative → cash runs out
   const breakEvenPoint = result?.forecast.find(p => p.simulated < 0) ?? null
+  const cleanedLabel = cleanScenarioLabel(scenarioLabel)
 
   return (
     <div className="font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
 
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Vad händer om...?</h1>
-        <p className="text-sm text-gray-500 mb-8">Bygg scenarion och se hur de påverkar din ekonomi de nästa 90 dagarna.</p>
+        <p className="text-sm text-gray-500 mb-6">Beskriv ett scenario och se hur det påverkar ditt saldo de nästa 90 dagarna.</p>
 
-        {/* Saved simulations */}
-        {savedSims.length > 0 && (
-          <div className="mb-6">
-            <p className="text-xs font-medium text-gray-500 mb-2">Sparade simuleringar</p>
-            <div className="flex flex-wrap gap-2">
-              {savedSims.map(sim => (
-                <div key={sim.id} className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm shadow-sm">
-                  <button onClick={() => handleLoadSim(sim)} className="text-gray-700 hover:text-blue-600 font-medium">
-                    {sim.name}
-                  </button>
-                  <button onClick={() => handleDeleteSim(sim.id)} className="text-gray-300 hover:text-red-400 ml-1 leading-none">×</button>
-                </div>
-              ))}
+        {/* ── AI main card ─────────────────────────────────────────── */}
+        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 mb-4">
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
-          </div>
-        )}
-
-        {/* AI-föreslagna scenarion */}
-        {aiSuggestions.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-4 h-4 text-purple-500" aria-hidden="true" />
-              <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider">AI föreslår baserat på din data</p>
-            </div>
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-              {aiSuggestions.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => applyAiSuggestion(s)}
-                  className="flex items-start gap-3 bg-white/40 backdrop-blur border border-purple-200/60 rounded-xl px-4 py-3 text-left hover:bg-purple-50/60 hover:border-purple-300 transition-all cursor-pointer min-h-[44px] group"
-                >
-                  <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5 group-hover:text-purple-600 transition-colors" aria-hidden="true" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800 leading-snug group-hover:text-purple-800 transition-colors">{s.label}</p>
-                    <p className="text-xs text-purple-500/80 mt-0.5">{s.subLabel}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Scenario builder */}
-        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6 mb-6">
-
-          {/* Quick templates */}
-          <div className="mb-5">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Snabb-scenarion</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {([
-                { key: 'remove_worst',   icon: '✕', label: 'Ta bort sämsta produkten', color: 'border-red-200 hover:border-red-400 hover:bg-red-50' },
-                { key: 'increase_prices', icon: '↑', label: 'Öka alla priser 10%',      color: 'border-green-200 hover:border-green-400 hover:bg-green-50' },
-                { key: 'cut_costs',      icon: '↓', label: 'Minska kostnader 15%',     color: 'border-orange-200 hover:border-orange-400 hover:bg-orange-50' },
-              ] as const).map(t => (
-                <button key={t.key} onClick={() => applyTemplate(t.key)}
-                  className={`flex sm:flex-col items-center gap-2 sm:gap-1.5 px-4 sm:px-3 py-3 bg-white border rounded-xl sm:text-center transition-colors min-h-[44px] ${t.color}`}>
-                  <span className="text-lg font-bold text-gray-600">{t.icon}</span>
-                  <span className="text-xs font-medium text-gray-600 leading-tight">{t.label}</span>
-                </button>
-              ))}
-            </div>
+            <p className="text-base font-semibold text-slate-800">Beskriv vad du funderar på — AI:n simulerar åt dig</p>
           </div>
 
-          <div className="border-t border-gray-100 pt-5">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Anpassat scenario</h2>
+          <textarea
+            value={aiQuestion}
+            onChange={e => setAiQuestion(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void handleAiAsk() }}
+            placeholder="T.ex. Vad händer om jag anställer en person för 25 000 kr i månaden?"
+            rows={3}
+            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition resize-none bg-white/60"
+          />
 
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-end">
-              <div className="w-full sm:w-auto">
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Typ</label>
-                <select value={addType} onChange={e => setAddType(e.target.value as ScenarioType)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
-                  {(Object.entries(SCENARIO_LABELS) as [ScenarioType, string][]).map(([v, l]) => (
-                    <option key={v} value={v}>{l}</option>
-                  ))}
-                </select>
-              </div>
-
-              {NEEDS_CATEGORY.includes(addType) && (
-                <div className="w-full sm:w-auto">
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori</label>
-                  <select value={addCategory} onChange={e => setAddCategory(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
-                    {categories.length === 0
-                      ? <option value="">Laddar...</option>
-                      : categories.map(cat => <option key={cat} value={cat}>{cat}</option>)
-                    }
-                  </select>
-                </div>
-              )}
-
-              {NEEDS_PERCENT.includes(addType) && (
-                <div className="w-full sm:w-auto">
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Förändring (%)</label>
-                  <input type="number" value={addPercent} onChange={e => setAddPercent(e.target.value)}
-                    placeholder="t.ex. -20"
-                    className="w-full sm:w-28 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
-                </div>
-              )}
-
-              {NEEDS_AMOUNT_FREQ.includes(addType) && (
-                <>
-                  <div className="w-full sm:w-auto">
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
-                    <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
-                      placeholder="t.ex. 10000"
-                      className="w-full sm:w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
-                  </div>
-                  <div className="w-full sm:w-auto">
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Frekvens</label>
-                    <select value={addFrequency} onChange={e => setAddFrequency(e.target.value as Frequency)}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
-                      <option value="daily">Dagligen</option>
-                      <option value="weekly">Veckovis</option>
-                      <option value="monthly">Månadsvis</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {NEEDS_AMOUNT_DATE.includes(addType) && (
-                <>
-                  <div className="w-full sm:w-auto">
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
-                    <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
-                      placeholder="t.ex. 5000"
-                      className="w-full sm:w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
-                  </div>
-                  <div className="w-full sm:w-auto">
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Datum</label>
-                    <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
-                  </div>
-                </>
-              )}
-
-              <button onClick={handleAdd}
-                className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]">
-                + Lägg till
+          <div className="flex flex-wrap gap-2 mt-3 mb-4">
+            {[
+              'Om jag höjer priserna 10%?',
+              'Om jag tappar min största kund?',
+              'Om jag investerar 50 000 kr i marknadsföring?',
+            ].map(q => (
+              <button
+                key={q}
+                onClick={() => setAiQuestion(q)}
+                className="text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:text-blue-700 transition-colors"
+              >
+                {q}
               </button>
-            </div>
+            ))}
           </div>
 
-          {/* Scenario cards */}
-          {scenarios.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-gray-100">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Aktiva scenarion</p>
-              <div className="grid sm:grid-cols-2 gap-3 mb-4">
-                {scenarios.map(s => {
-                  const cfg = SCENARIO_CONFIG[s.type]
-                  return (
-                    <div key={s.id} className={`flex items-start gap-3 p-4 rounded-xl border ${cfg.bg} ${cfg.border}`}>
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${cfg.iconBg}`}>
-                        {cfg.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${cfg.labelColor}`}>
-                          {SCENARIO_LABELS[s.type]}
-                        </p>
-                        <p className="text-sm font-medium text-gray-800 leading-snug">{scenarioChip(s)}</p>
-                      </div>
-                      <button onClick={() => handleRemove(s.id)}
-                        className="text-gray-300 hover:text-red-400 text-lg leading-none shrink-0 mt-0.5"
-                        title="Ta bort">×</button>
-                    </div>
-                  )
-                })}
-              </div>
+          <button
+            onClick={() => void handleAiAsk()}
+            disabled={!aiQuestion.trim() || aiLoading || loading}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 min-h-[44px]"
+          >
+            {aiLoading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                AI:n bygger ditt scenario...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" aria-hidden="true" />
+                Simulera med AI →
+              </>
+            )}
+          </button>
 
-              <div className="flex gap-2">
-                <button onClick={handleSimulate} disabled={loading}
-                  className="flex-1 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50">
-                  {loading ? 'Simulerar...' : 'Kör simulering →'}
+          {aiAnswer && !aiLoading && (
+            <div className="mt-5 pt-5 border-t border-slate-100">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">AI:ns förklaring</p>
+              <p className="text-sm text-slate-700 leading-relaxed">{aiAnswer}</p>
+            </div>
+          )}
+
+          {aiSimFailed && !result && !aiLoading && (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <p className="text-sm text-amber-800">
+                Kunde inte bygga ett scenario automatiskt.{' '}
+                <button
+                  onClick={() => setManualOpen(true)}
+                  className="font-semibold underline hover:text-amber-900 transition-colors"
+                >
+                  Prova det manuella läget
                 </button>
-                {!saveSimOpen ? (
-                  <button onClick={() => setSaveSimOpen(true)} disabled={scenarios.length === 0}
-                    className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:border-gray-300 transition-colors disabled:opacity-40">
-                    Spara
-                  </button>
-                ) : (
-                  <div className="flex gap-2 flex-1">
-                    <input autoFocus value={saveSimName} onChange={e => setSaveSimName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleSaveSim(); if (e.key === 'Escape') setSaveSimOpen(false) }}
-                      placeholder="Namn på simuleringen..."
-                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500" />
-                    <button onClick={handleSaveSim}
-                      className="px-3 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors">
-                      Spara
-                    </button>
-                    <button onClick={() => { setSaveSimOpen(false); setSaveSimName('') }}
-                      className="text-gray-400 hover:text-gray-600 px-2 text-sm">
-                      Avbryt
-                    </button>
-                  </div>
-                )}
-              </div>
+                {' '}för att bygga ditt scenario grafiskt.
+              </p>
             </div>
           )}
         </div>
+
+        {/* ── Manual mode toggle ───────────────────────────────────── */}
+        <button
+          onClick={() => setManualOpen(o => !o)}
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-6"
+        >
+          <span className={`transition-transform inline-block ${manualOpen ? 'rotate-90' : ''}`}>›</span>
+          {manualOpen ? 'Stäng manuellt läge' : 'Eller bygg scenariot själv →'}
+        </button>
+
+        {/* ── Manual builder ───────────────────────────────────────── */}
+        {manualOpen && (
+          <div className="mb-6 flex flex-col gap-4">
+
+            {aiSuggestions.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-purple-500" aria-hidden="true" />
+                  <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider">AI föreslår baserat på din data</p>
+                </div>
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                  {aiSuggestions.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => applyAiSuggestion(s)}
+                      className="flex items-start gap-3 bg-white/40 backdrop-blur border border-purple-200/60 rounded-xl px-4 py-3 text-left hover:bg-purple-50/60 hover:border-purple-300 transition-all cursor-pointer min-h-[44px] group"
+                    >
+                      <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5 group-hover:text-purple-600 transition-colors" aria-hidden="true" />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800 leading-snug group-hover:text-purple-800 transition-colors">{s.label}</p>
+                        <p className="text-xs text-purple-500/80 mt-0.5">{s.subLabel}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {savedSims.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-2">Sparade simuleringar</p>
+                <div className="flex flex-wrap gap-2">
+                  {savedSims.map(sim => (
+                    <div key={sim.id} className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm shadow-sm">
+                      <button onClick={() => handleLoadSim(sim)} className="text-gray-700 hover:text-blue-600 font-medium">
+                        {sim.name}
+                      </button>
+                      <button onClick={() => handleDeleteSim(sim.id)} className="text-gray-300 hover:text-red-400 ml-1 leading-none">×</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6">
+
+              <div className="mb-5">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Snabb-scenarion</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {([
+                    { key: 'remove_worst',    icon: '✕', label: 'Ta bort sämsta produkten', color: 'border-red-200 hover:border-red-400 hover:bg-red-50' },
+                    { key: 'increase_prices', icon: '↑', label: 'Öka alla priser 10%',       color: 'border-green-200 hover:border-green-400 hover:bg-green-50' },
+                    { key: 'cut_costs',       icon: '↓', label: 'Minska kostnader 15%',      color: 'border-orange-200 hover:border-orange-400 hover:bg-orange-50' },
+                  ] as const).map(t => (
+                    <button key={t.key} onClick={() => applyTemplate(t.key)}
+                      className={`flex sm:flex-col items-center gap-2 sm:gap-1.5 px-4 sm:px-3 py-3 bg-white border rounded-xl sm:text-center transition-colors min-h-[44px] ${t.color}`}>
+                      <span className="text-lg font-bold text-gray-600">{t.icon}</span>
+                      <span className="text-xs font-medium text-gray-600 leading-tight">{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100 pt-5">
+                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Anpassat scenario</h2>
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-end">
+                  <div className="w-full sm:w-auto">
+                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Typ</label>
+                    <select value={addType} onChange={e => setAddType(e.target.value as ScenarioType)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
+                      {(Object.entries(SCENARIO_LABELS) as [ScenarioType, string][]).map(([v, l]) => (
+                        <option key={v} value={v}>{l}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {NEEDS_CATEGORY.includes(addType) && (
+                    <div className="w-full sm:w-auto">
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori</label>
+                      <select value={addCategory} onChange={e => setAddCategory(e.target.value)}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
+                        {categories.length === 0
+                          ? <option value="">Laddar...</option>
+                          : categories.map(cat => <option key={cat} value={cat}>{cat}</option>)
+                        }
+                      </select>
+                    </div>
+                  )}
+
+                  {NEEDS_PERCENT.includes(addType) && (
+                    <div className="w-full sm:w-auto">
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Förändring (%)</label>
+                      <input type="number" value={addPercent} onChange={e => setAddPercent(e.target.value)}
+                        placeholder="t.ex. -20"
+                        className="w-full sm:w-28 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                    </div>
+                  )}
+
+                  {NEEDS_AMOUNT_FREQ.includes(addType) && (
+                    <>
+                      <div className="w-full sm:w-auto">
+                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
+                        <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
+                          placeholder="t.ex. 10000"
+                          className="w-full sm:w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                      </div>
+                      <div className="w-full sm:w-auto">
+                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Frekvens</label>
+                        <select value={addFrequency} onChange={e => setAddFrequency(e.target.value as Frequency)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
+                          <option value="daily">Dagligen</option>
+                          <option value="weekly">Veckovis</option>
+                          <option value="monthly">Månadsvis</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {NEEDS_AMOUNT_DATE.includes(addType) && (
+                    <>
+                      <div className="w-full sm:w-auto">
+                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
+                        <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
+                          placeholder="t.ex. 5000"
+                          className="w-full sm:w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                      </div>
+                      <div className="w-full sm:w-auto">
+                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Datum</label>
+                        <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                      </div>
+                    </>
+                  )}
+
+                  <button onClick={handleAdd}
+                    className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]">
+                    + Lägg till
+                  </button>
+                </div>
+              </div>
+
+              {scenarios.length > 0 && (
+                <div className="mt-5 pt-4 border-t border-gray-100">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Aktiva scenarion</p>
+                  <div className="grid sm:grid-cols-2 gap-3 mb-4">
+                    {scenarios.map(s => {
+                      const cfg = SCENARIO_CONFIG[s.type]
+                      return (
+                        <div key={s.id} className={`flex items-start gap-3 p-4 rounded-xl border ${cfg.bg} ${cfg.border}`}>
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${cfg.iconBg}`}>
+                            {cfg.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${cfg.labelColor}`}>
+                              {SCENARIO_LABELS[s.type]}
+                            </p>
+                            <p className="text-sm font-medium text-gray-800 leading-snug">{scenarioChip(s)}</p>
+                          </div>
+                          <button onClick={() => handleRemove(s.id)}
+                            className="text-gray-300 hover:text-red-400 text-lg leading-none shrink-0 mt-0.5"
+                            title="Ta bort">×</button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <button onClick={handleSimulate} disabled={loading}
+                    className="w-full py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50">
+                    {loading ? 'Simulerar...' : 'Kör simulering →'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm mb-6">
@@ -657,61 +891,34 @@ export default function Simulate() {
           </div>
         )}
 
-        {/* Results */}
+        {/* ── Result ──────────────────────────────────────────────── */}
         {result && (
           <>
-            {/* Big monthly diff banner */}
-            <div className={`rounded-2xl border shadow-sm p-6 mb-6 text-center ${netDiff >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Effekt per månad</p>
-              <p className={`text-5xl font-bold mb-2 ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                {netDiff >= 0 ? '↑' : '↓'} {fmt(Math.abs(monthlyDiff))}
-              </p>
-              <p className="text-sm text-gray-600">
-                Med detta scenario {netDiff >= 0 ? 'tjänar du' : 'förlorar du'}{' '}
-                <strong>{fmt(Math.abs(monthlyDiff))}</strong>{' '}
-                {netDiff >= 0 ? 'mer' : 'mindre'} per månad
-              </p>
-              {result && (
-                <p className="text-xs text-gray-400 mt-2">
-                  Förväntat saldo om 90 dagar:{' '}
-                  <span className={result.simulatedEndBalance >= 0 ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'}>
-                    {fmt(result.simulatedEndBalance)}
-                  </span>
-                  {currentBalance !== 0 && <span> (idag: {fmt(currentBalance)})</span>}
-                </p>
-              )}
-            </div>
-
-            {/* Detail cards */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {/* Netto-kassaflöde — color by sign of simulated net */}
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-5 py-4">
-                <p className="text-xs text-gray-400 mb-2">Netto kassaflöde (90 dagar)</p>
-                <p className={`text-xl font-bold ${result.simulatedNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {result.simulatedNet >= 0 ? '+' : ''}{fmt(result.simulatedNet)}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">Baseline: {result.baselineNet >= 0 ? '+' : ''}{fmt(result.baselineNet)}</p>
-                <p className={`text-xs font-semibold mt-2 ${netDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  Scenario: {netDiff >= 0 ? '+' : ''}{fmt(netDiff)} · {fmtPct(result.simulatedNet, result.baselineNet)}
-                </p>
-              </div>
-              {/* Slutsaldo — color by sign of absolute balance, compare diff separately */}
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-5 py-4">
-                <p className="text-xs text-gray-400 mb-2">Slutsaldo (dag 90)</p>
-                <p className={`text-xl font-bold ${result.simulatedEndBalance >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+            {/* Narrative sentence */}
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 mb-4">
+              <p className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+                {cleanedLabel
+                  ? <>Om du <span className="text-blue-700">{cleanedLabel}</span> förväntas</>
+                  : <>Med ditt scenario förväntas</>
+                }{' '}
+                ditt saldo bli{' '}
+                <span className={result.simulatedEndBalance >= 0 ? 'text-green-600' : 'text-red-500'}>
                   {fmt(result.simulatedEndBalance)}
-                </p>
-                {currentBalance !== 0 && (
-                  <p className="text-xs text-gray-400 mt-1">Idag: {fmt(currentBalance)}</p>
-                )}
-                <p className={`text-xs font-semibold mt-2 ${balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  vs baseline: {balanceDiff >= 0 ? '+' : ''}{fmt(balanceDiff)} · {fmtPct(result.simulatedEndBalance, result.baselineEndBalance)}
-                </p>
-              </div>
+                </span>
+                {' '}om 90 dagar
+                {balanceDiff !== 0 && (
+                  <> — det är{' '}
+                    <span className={balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}>
+                      {fmt(Math.abs(balanceDiff))} {balanceDiff >= 0 ? 'mer' : 'mindre'}
+                    </span>
+                    {' '}än om du inte gör något
+                  </>
+                )}.
+              </p>
             </div>
 
-            {/* Forecast chart */}
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
+            {/* Chart */}
+            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 mb-2">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-semibold text-gray-700">Prognos — nästa 90 dagar</p>
                 <div className="flex gap-1">
@@ -727,11 +934,11 @@ export default function Simulate() {
               </div>
 
               {displayData.length === 0 ? (
-                <div className="h-[320px] flex items-center justify-center text-gray-400 text-sm">
+                <div className="h-[280px] flex items-center justify-center text-gray-400 text-sm">
                   Ingen prognosdata returnerades.
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={displayData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
@@ -740,13 +947,12 @@ export default function Simulate() {
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="#ef4444" strokeWidth={1} strokeDasharray="4 3"
                       label={{ value: 'Saldo noll', position: 'insideTopRight', fontSize: 10, fill: '#ef4444' }} />
-                    <Line type="monotone" dataKey="baseline" name="Baseline" stroke="#9ca3af" strokeWidth={2} dot={false} strokeDasharray="5 3" />
-                    <Line type="monotone" dataKey="simulated" name="Simulerat" stroke="#2563eb" strokeWidth={2.5} dot={false} />
+                    <Line type="monotone" dataKey="baseline" name="Utan ändring" stroke="#9ca3af" strokeWidth={2} dot={false} strokeDasharray="5 3" />
+                    <Line type="monotone" dataKey="simulated" name="Med scenario" stroke="#2563eb" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
 
-              {/* Break-even warning */}
               {breakEvenPoint && (
                 <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
                   <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -759,12 +965,45 @@ export default function Simulate() {
                 </div>
               )}
             </div>
+
+            {/* Detail line */}
+            <p className="text-xs text-slate-400 text-center mb-5">
+              Idag: {fmt(currentBalance)} · Utan ändring om 90 dagar: {fmt(result.baselineEndBalance)}
+            </p>
+
+            {/* Save simulation */}
+            {scenarios.length > 0 && (
+              <div className="flex justify-center">
+                {!saveSimOpen ? (
+                  <button onClick={() => setSaveSimOpen(true)}
+                    className="text-sm text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl px-4 py-2 hover:border-slate-300 transition-colors min-h-[44px]">
+                    Spara simulering
+                  </button>
+                ) : (
+                  <div className="flex gap-2 w-full max-w-sm">
+                    <input autoFocus value={saveSimName} onChange={e => setSaveSimName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSaveSim(); if (e.key === 'Escape') { setSaveSimOpen(false); setSaveSimName('') } }}
+                      placeholder="Namn på simuleringen..."
+                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500" />
+                    <button onClick={handleSaveSim}
+                      className="px-3 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                      Spara
+                    </button>
+                    <button onClick={() => { setSaveSimOpen(false); setSaveSimName('') }}
+                      className="text-gray-400 hover:text-gray-600 px-2 text-sm">
+                      Avbryt
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
 
-        {!result && scenarios.length === 0 && (
+        {/* Empty state */}
+        {!result && !aiLoading && !aiAnswer && (
           <div className="bg-white border border-dashed border-gray-200 rounded-2xl p-10 text-center text-gray-400 text-sm">
-            Välj ett snabb-scenario ovan eller bygg ett eget — klicka sedan "Kör simulering" för att se prognosen.
+            Skriv in din fråga ovan och låt AI:n simulera, eller expandera det manuella läget.
           </div>
         )}
 
