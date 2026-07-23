@@ -66,6 +66,8 @@ export default function Customers() {
   const [reminderForm, setReminderForm] = useState<ReminderForm>({ email: '', amount: '', dueDate: '', message: '' })
   const [reminderSending, setReminderSending] = useState(false)
   const [reminderToast, setReminderToast] = useState('')
+  const [aiReminderLoading, setAiReminderLoading] = useState<string | null>(null)
+  const [reminderIsAiPrepared, setReminderIsAiPrepared] = useState(false)
 
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/customers`)
@@ -124,7 +126,33 @@ export default function Customers() {
     })
   }
 
-  const closeReminder = () => setReminderCustomer(null)
+  const closeReminder = () => { setReminderCustomer(null); setReminderIsAiPrepared(false) }
+
+  const openAiReminder = async (c: Customer) => {
+    setAiReminderLoading(c.name)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/ai/prepare-action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionType: 'payment_reminder', customerName: c.name, averageAmount: c.averageAmount }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      const d = json?.data ?? json
+      setReminderIsAiPrepared(true)
+      setReminderCustomer(c)
+      setReminderForm({
+        email: d.recipient ?? d.email ?? '',
+        amount: String(d.amount ?? Math.round(c.averageAmount ?? 0)),
+        dueDate: d.dueDate ?? '',
+        message: d.body ?? d.message ?? '',
+      })
+    } catch {
+      setReminderIsAiPrepared(false)
+      openReminder(c)
+    }
+    setAiReminderLoading(null)
+  }
 
   const sendReminder = async () => {
     if (!reminderCustomer || !reminderForm.email || !reminderForm.amount || !reminderForm.dueDate) return
@@ -214,17 +242,29 @@ export default function Customers() {
                   {c.paymentBehavior === 'inactive' && (
                     <div className="mt-1 flex flex-col gap-2">
                       <button
-                        onClick={() => openReminder(c)}
-                        className="text-xs font-semibold text-red-600 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition-colors text-left"
+                        onClick={() => void openAiReminder(c)}
+                        disabled={aiReminderLoading === c.name}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-50 transition-colors text-left disabled:opacity-60"
                       >
-                        Skicka påminnelse →
+                        {aiReminderLoading === c.name ? (
+                          <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                        ) : (
+                          <Sparkles className="w-3 h-3 shrink-0" aria-hidden="true" />
+                        )}
+                        {aiReminderLoading === c.name ? 'AI:n förbereder...' : 'Låt AI skriva påminnelsen'}
+                      </button>
+                      <button
+                        onClick={() => openReminder(c)}
+                        className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors text-left"
+                      >
+                        Skicka manuellt
                       </button>
                       <button
                         onClick={() => openAiWith(`Hur vinner jag tillbaka ${c.name}?`)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-50 transition-colors"
+                        className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors"
                       >
                         <Sparkles className="w-3 h-3 shrink-0" aria-hidden="true" />
-                        Fråga AI
+                        Fråga AI om återaktivering
                       </button>
                     </div>
                   )}
@@ -317,17 +357,22 @@ export default function Customers() {
                   {c.paymentBehavior === 'inactive' && (
                     <>
                       <button
-                        onClick={() => openReminder(c)}
-                        className="text-xs font-semibold text-red-600 border border-red-200 rounded-lg px-3 py-2 hover:bg-red-50 transition-colors whitespace-nowrap"
+                        onClick={() => void openAiReminder(c)}
+                        disabled={aiReminderLoading === c.name}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-50 transition-colors whitespace-nowrap disabled:opacity-60"
                       >
-                        Skicka påminnelse
+                        {aiReminderLoading === c.name ? (
+                          <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                        ) : (
+                          <Sparkles className="w-3 h-3 shrink-0" aria-hidden="true" />
+                        )}
+                        {aiReminderLoading === c.name ? 'AI:n förbereder...' : 'Låt AI skriva påminnelsen'}
                       </button>
                       <button
-                        onClick={() => openAiWith(`Hur vinner jag tillbaka ${c.name}?`)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-50 transition-colors whitespace-nowrap"
+                        onClick={() => openReminder(c)}
+                        className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors whitespace-nowrap"
                       >
-                        <Sparkles className="w-3 h-3 shrink-0" aria-hidden="true" />
-                        Fråga AI
+                        Skicka manuellt
                       </button>
                     </>
                   )}
@@ -346,7 +391,14 @@ export default function Customers() {
               <h2 className="text-base font-bold text-gray-900">Skicka påminnelse</h2>
               <button onClick={closeReminder} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
             </div>
-            <p className="text-sm text-gray-400 mb-5">{reminderCustomer.name}</p>
+            <p className="text-sm text-gray-400 mb-3">{reminderCustomer.name}</p>
+
+            {reminderIsAiPrepared && (
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 mb-4">
+                <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
+                <p className="text-xs font-medium text-blue-700">AI-förslag — granska och redigera innan du skickar</p>
+              </div>
+            )}
 
             <div className="flex flex-col gap-3">
               <div>

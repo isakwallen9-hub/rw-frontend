@@ -1,5 +1,4 @@
-﻿import { useEffect, useState, useRef, useCallback } from 'react'
-import { z } from 'zod'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Target, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Sparkles, Lightbulb } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
@@ -33,30 +32,6 @@ function addMonths(period: string, delta: number): string {
   return toPeriodStr(d)
 }
 
-function extractFirstAmount(text: string): string {
-  const match = text.match(/(\d[\d\s]*)\s*kr/i)
-  if (!match) return ''
-  return match[0].replace(/\s+/g, ' ').trim()
-}
-
-function parseBudgetProposal(text: string): ParsedBudgetProposal {
-  const parts = text.split(/\n?(?=\b[1-3][).]\s)/).map(p => p.trim()).filter(Boolean)
-  let revenueText = '', costText = '', focusTip = ''
-  for (const part of parts) {
-    if (part.match(/^1[).]/)) revenueText = part.replace(/^1[).]\s*/, '').trim()
-    else if (part.match(/^2[).]/)) costText = part.replace(/^2[).]\s*/, '').trim()
-    else if (part.match(/^3[).]/)) focusTip = part.replace(/^3[).]\s*/, '').trim()
-  }
-  return {
-    raw: text,
-    revenueText: revenueText || text,
-    costText,
-    focusTip,
-    revenueAmount: extractFirstAmount(revenueText),
-    costAmount: extractFirstAmount(costText),
-  }
-}
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface BudgetLine {
@@ -69,22 +44,13 @@ interface BudgetData {
   costs: BudgetLine
 }
 
-interface ParsedBudgetProposal {
-  raw: string
-  revenueText: string
-  costText: string
-  focusTip: string
-  revenueAmount: string
-  costAmount: string
+interface AiProposal {
+  revenueTarget: number
+  costCap: number
+  revenueReasoning?: string
+  costReasoning?: string
+  focusTip?: string
 }
-
-const BudgetProposalSchema = z.object({
-  revenueTarget: z.number().positive(),
-  costCap: z.number().positive(),
-  revenueReasoning: z.string().optional(),
-  costReasoning: z.string().optional(),
-  focusTip: z.string().optional(),
-})
 
 type StatusKey = 'achieved' | 'on_track' | 'behind'
 
@@ -199,7 +165,7 @@ export default function Budget() {
 
   // AI proposal state
   const [aiLoading, setAiLoading]     = useState(false)
-  const [aiProposal, setAiProposal]   = useState<ParsedBudgetProposal | null>(null)
+  const [aiProposal, setAiProposal]   = useState<AiProposal | null>(null)
   const [applying, setApplying]       = useState(false)
   const [applyError, setApplyError]   = useState('')
   const [aiSaved, setAiSaved]         = useState(false)
@@ -243,12 +209,13 @@ export default function Budget() {
 
   // ── Save logic ────────────────────────────────────────────────────────────
 
-  const handleSave = async (overrideRevenue?: string, overrideCosts?: string) => {
+  const handleSave = async (overrideRevenue?: string, overrideCosts?: string): Promise<boolean> => {
     const rev   = overrideRevenue ?? formRevenue
     const costs = overrideCosts   ?? formCosts
-    if (!rev && !costs) return
+    if (!rev && !costs) return false
     setSaving(true)
     setSaveError('')
+    let success = false
     try {
       const goals: { type: string; targetAmount: number; period: string }[] = []
       if (rev)   goals.push({ type: 'monthly_budget', targetAmount: Number(rev),   period })
@@ -267,10 +234,12 @@ export default function Budget() {
       setSavedMsg('Budget sparad!')
       savedTimer.current = setTimeout(() => setSavedMsg(''), 3500)
       await fetchBudget(period, false)
+      success = true
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Kunde inte spara budgeten.')
     }
     setSaving(false)
+    return success
   }
 
   // ── AI logic ──────────────────────────────────────────────────────────────
@@ -281,18 +250,21 @@ export default function Budget() {
     setAiSaved(false)
     setApplyError('')
     try {
-      const res = await fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
+      const res = await fetchWithAuth(`${API_URL}api/v1/ai/prepare-action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          context: 'budget',
-          question: `Föreslå en realistisk budget för ${periodLabel(period)}. Basera på min historik och säsongsmönster. Svara med: 1) Föreslaget intäktsmål med motivering, 2) Föreslaget kostnadstak med motivering, 3) En konkret sak att fokusera på för att nå målet. Inkludera exakta belopp i kr.`,
-        }),
+        body: JSON.stringify({ actionType: 'budget_proposal', period }),
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
-      const data = json?.data ?? json
-      const answer = (data?.answer as string | undefined) ?? ''
-      if (answer) setAiProposal(parseBudgetProposal(answer))
+      const d = json?.data ?? json
+      setAiProposal({
+        revenueTarget: Number(d.revenueTarget ?? 0),
+        costCap: Number(d.costCap ?? 0),
+        revenueReasoning: d.revenueReasoning ?? d.reasoning,
+        costReasoning: d.costReasoning,
+        focusTip: d.focusTip,
+      })
     } catch {
       // silent fail — button stays visible for retry
     } finally {
@@ -304,34 +276,10 @@ export default function Budget() {
     if (!aiProposal) return
     setApplying(true)
     setApplyError('')
-    try {
-      const res = await fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          context: 'budget',
-          question: `Extrahera beloppen från detta budgetförslag och returnera ENBART ett JSON-objekt: { "revenueTarget": number, "costCap": number, "revenueReasoning": "string", "costReasoning": "string", "focusTip": "string" }. Förslaget: ${aiProposal.raw}`,
-        }),
-      })
-      const json = await res.json()
-      const resData = json?.data ?? json
-      const answer = (resData?.answer as string | undefined) ?? ''
-
-      const match = answer.match(/\{[\s\S]*\}/)
-      if (!match) throw new Error('Ingen JSON')
-      const validated = BudgetProposalSchema.safeParse(JSON.parse(match[0]))
-      if (!validated.success) throw new Error('Ogiltig data')
-
-      const { revenueTarget, costCap } = validated.data
-      setFormRevenue(String(revenueTarget))
-      setFormCosts(String(costCap))
-      await handleSave(String(revenueTarget), String(costCap))
-      setAiSaved(true)
-    } catch {
-      setApplyError('Kunde inte extrahera belopp automatiskt. Öppna manuellt läge för att fylla i.')
-    } finally {
-      setApplying(false)
-    }
+    const ok = await handleSave(String(aiProposal.revenueTarget), String(aiProposal.costCap))
+    if (ok) setAiSaved(true)
+    else setApplyError('Kunde inte spara budgeten. Försök igen.')
+    setApplying(false)
   }
 
   // ── Navigation helpers ────────────────────────────────────────────────────
@@ -398,13 +346,19 @@ export default function Budget() {
           {aiLoading && (
             <div className="flex items-center gap-3 py-4 text-slate-600">
               <span className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
-              <p className="text-sm font-medium">AI:n analyserar din historik och säsong...</p>
+              <p className="text-sm font-medium">AI:n förbereder...</p>
             </div>
           )}
 
           {/* AI proposal result */}
           {aiProposal && !aiLoading && (
             <div className="flex flex-col gap-4">
+
+              {/* AI badge */}
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+                <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
+                <p className="text-xs font-medium text-blue-700">AI-förslag — granska och godkänn innan du sparar</p>
+              </div>
 
               {/* Revenue + cost cards */}
               <div className="grid sm:grid-cols-2 gap-3">
@@ -413,20 +367,20 @@ export default function Budget() {
                     <TrendingUp className="w-3 h-3" aria-hidden="true" />
                     Föreslaget intäktsmål
                   </p>
-                  {aiProposal.revenueAmount && (
-                    <p className="text-2xl font-bold text-green-700 mb-2">{aiProposal.revenueAmount}</p>
+                  <p className="text-2xl font-bold text-green-700 mb-2">{fmt(aiProposal.revenueTarget)}</p>
+                  {aiProposal.revenueReasoning && (
+                    <p className="text-xs text-slate-600 leading-relaxed">{aiProposal.revenueReasoning}</p>
                   )}
-                  <p className="text-xs text-slate-600 leading-relaxed">{aiProposal.revenueText}</p>
                 </div>
                 <div className="bg-orange-50/80 border border-orange-200/80 rounded-xl p-4">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600 mb-1.5 flex items-center gap-1">
                     <TrendingDown className="w-3 h-3" aria-hidden="true" />
                     Föreslaget kostnadstak
                   </p>
-                  {aiProposal.costAmount && (
-                    <p className="text-2xl font-bold text-orange-700 mb-2">{aiProposal.costAmount}</p>
+                  <p className="text-2xl font-bold text-orange-700 mb-2">{fmt(aiProposal.costCap)}</p>
+                  {aiProposal.costReasoning && (
+                    <p className="text-xs text-slate-600 leading-relaxed">{aiProposal.costReasoning}</p>
                   )}
-                  <p className="text-xs text-slate-600 leading-relaxed">{aiProposal.costText}</p>
                 </div>
               </div>
 
@@ -496,7 +450,7 @@ export default function Budget() {
         {/* ── Manual mode toggle ─────────────────────────────────────────── */}
         <button
           onClick={() => setManualOpen(o => !o)}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors self-start"
+          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors self-start"
         >
           <span className={`transition-transform inline-block ${manualOpen ? 'rotate-90' : ''}`}>›</span>
           {manualOpen ? 'Dölj manuell budget' : 'Eller sätt budgeten själv →'}

@@ -654,6 +654,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           formatAmount={fmt}
         />
 
+        {/* Veckans fokus */}
+        <WeeklyFocusSection />
+
         {/* KPI-kort */}
         {loadingOverview ? (
           <SkeletonKpiCards />
@@ -1405,6 +1408,126 @@ function SparkleIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
     </svg>
+  )
+}
+
+// ── Veckans fokus ─────────────────────────────────────────────────────────────
+
+interface FocusItem {
+  title: string
+  why?: string
+  estimatedImpact?: number
+}
+
+const WEEKLY_FOCUS_SS = 'rw_weekly_focus'
+
+function WeeklyFocusSection() {
+  const { formatAmount: fmt } = useCurrency()
+  const [items, setItems] = useState<FocusItem[]>(() => {
+    try { return JSON.parse(sessionStorage.getItem(WEEKLY_FOCUS_SS) ?? '[]') as FocusItem[] }
+    catch { return [] }
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const load = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/ai/prepare-action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionType: 'weekly_focus' }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      const d = json?.data ?? json
+      const focus: FocusItem[] = Array.isArray(d?.items) ? d.items : Array.isArray(d) ? d : []
+      setItems(focus)
+      sessionStorage.setItem(WEEKLY_FOCUS_SS, JSON.stringify(focus))
+    } catch {
+      setError('Kunde inte hämta veckofokus. Försök igen.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const openAiWith = (q: string) =>
+    window.dispatchEvent(new CustomEvent('rw:ai:open', { detail: { question: q } }))
+
+  return (
+    <div className="glass rounded-2xl p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shrink-0">
+          <SparkleIcon className="w-4 h-4 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider mb-0.5">Veckans fokus</p>
+          <p className="text-sm font-bold text-slate-900 tracking-tight">Vad bör du prioritera denna vecka?</p>
+        </div>
+        {items.length > 0 && !loading && (
+          <button
+            onClick={() => void load()}
+            className="text-xs text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+          >
+            Uppdatera
+          </button>
+        )}
+      </div>
+
+      {loading && (
+        <div className="flex items-center gap-3 py-2 text-slate-500">
+          <span className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin shrink-0" />
+          <p className="text-sm">AI:n förbereder...</p>
+        </div>
+      )}
+
+      {error && !loading && (
+        <p className="text-sm text-red-500">{error}</p>
+      )}
+
+      {!loading && !error && items.length === 0 && (
+        <button
+          onClick={() => void load()}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white text-sm font-semibold rounded-xl hover:bg-purple-700 transition-colors min-h-[44px]"
+        >
+          <SparkleIcon className="w-4 h-4 text-white" />
+          Vad ska jag fokusera på denna vecka?
+        </button>
+      )}
+
+      {!loading && items.length > 0 && (
+        <ol className="flex flex-col gap-3.5">
+          {items.map((item, i) => (
+            <li key={i} className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                {i + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-900">{item.title}</p>
+                    {item.why && (
+                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{item.why}</p>
+                    )}
+                    {item.estimatedImpact != null && item.estimatedImpact > 0 && (
+                      <p className="text-xs font-semibold text-green-600 mt-1">+{fmt(item.estimatedImpact)}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => openAiWith(`Berätta mer om detta fokusområde: ${item.title}`)}
+                    className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-blue-600 border border-blue-200 rounded-lg px-2.5 py-1 hover:bg-blue-50 transition-colors whitespace-nowrap mt-0.5"
+                  >
+                    <SparkleIcon className="w-3 h-3" />
+                    Fråga AI om detta
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   )
 }
 
