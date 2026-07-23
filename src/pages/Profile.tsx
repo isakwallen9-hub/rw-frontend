@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Trash2 } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { SkeletonCard } from '../components/Skeleton'
 import { useCurrency } from '../contexts/CurrencyContext'
@@ -29,6 +30,19 @@ interface UserProfile {
   organisationName: string
   organisationSlug: string
   industry?: string
+}
+
+interface MemoryStatus {
+  enabled: boolean
+  activatedAt?: string
+  conversationCount?: number
+}
+
+interface Conversation {
+  id: string
+  summary?: string
+  firstQuestion?: string
+  createdAt: string
 }
 
 interface NotificationSettings {
@@ -67,6 +81,15 @@ export default function Profile() {
   const [savedMsg, setSavedMsg] = useState('')
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const [memoryStatus, setMemoryStatus]             = useState<MemoryStatus | null>(null)
+  const [memoryLoading, setMemoryLoading]           = useState(true)
+  const [memoryActionLoading, setMemoryActionLoading] = useState(false)
+  const [conversations, setConversations]           = useState<Conversation[]>([])
+  const [convsLoading, setConvsLoading]             = useState(false)
+  const [deletingConvId, setDeletingConvId]         = useState<string | null>(null)
+  const [confirmTurnOff, setConfirmTurnOff]         = useState(false)
+  const [confirmDeleteAll, setConfirmDeleteAll]     = useState(false)
+
   useEffect(() => {
     fetchWithAuth(`${API_URL}api/v1/auth/me`)
       .then((r) => r.json())
@@ -88,7 +111,23 @@ export default function Profile() {
       })
       .catch(() => {})
       .finally(() => setNotifLoading(false))
+
+    fetchWithAuth(`${API_URL}api/v1/ai/memory-status`)
+      .then((r) => r.json())
+      .then((json) => setMemoryStatus(json?.data ?? json))
+      .catch(() => setMemoryStatus({ enabled: false }))
+      .finally(() => setMemoryLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!memoryStatus?.enabled) return
+    setConvsLoading(true)
+    fetchWithAuth(`${API_URL}api/v1/ai/conversations`)
+      .then((r) => r.json())
+      .then((json) => setConversations(json?.data ?? json?.conversations ?? []))
+      .catch(() => {})
+      .finally(() => setConvsLoading(false))
+  }, [memoryStatus?.enabled])
 
   const showSaved = () => {
     setSavedMsg('Inställningar sparade!')
@@ -149,6 +188,60 @@ export default function Profile() {
 
   const handleToggle = (key: keyof Omit<NotificationSettings, 'email'>) => {
     saveSettings({ [key]: !notif[key] })
+  }
+
+  const applyMemoryConsent = async (enabled: boolean) => {
+    setMemoryActionLoading(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/ai/memory-consent`, {
+        method: 'PUT',
+        body: JSON.stringify({ enabled }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const updated = json?.data ?? json
+        setMemoryStatus(prev => ({
+          enabled,
+          activatedAt: enabled ? (updated?.activatedAt ?? new Date().toISOString()) : undefined,
+          conversationCount: enabled ? (prev?.conversationCount ?? 0) : 0,
+        }))
+        if (!enabled) setConversations([])
+      }
+    } catch { /* best-effort */ }
+    setMemoryActionLoading(false)
+  }
+
+  const handleMemoryToggle = () => {
+    if (memoryStatus?.enabled) {
+      setConfirmTurnOff(true)
+    } else {
+      void applyMemoryConsent(true)
+    }
+  }
+
+  const deleteConversation = async (id: string) => {
+    setDeletingConvId(id)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/ai/conversations/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setConversations(prev => prev.filter(c => c.id !== id))
+        setMemoryStatus(prev => prev ? { ...prev, conversationCount: Math.max(0, (prev.conversationCount ?? 1) - 1) } : prev)
+      }
+    } catch { /* best-effort */ }
+    setDeletingConvId(null)
+  }
+
+  const deleteAllConversations = async () => {
+    setConfirmDeleteAll(false)
+    setMemoryActionLoading(true)
+    try {
+      const res = await fetchWithAuth(`${API_URL}api/v1/ai/conversations`, { method: 'DELETE' })
+      if (res.ok) {
+        setConversations([])
+        setMemoryStatus(prev => prev ? { ...prev, conversationCount: 0 } : prev)
+      }
+    } catch { /* best-effort */ }
+    setMemoryActionLoading(false)
   }
 
   const handleLogout = () => {
@@ -343,6 +436,102 @@ export default function Profile() {
           )}
         </div>
 
+        {/* AI-minne */}
+        <div>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">AI-minne</h2>
+
+          {memoryLoading ? (
+            <div className="glass rounded-xl p-6 flex flex-col gap-4">
+              <SkeletonCard className="h-8 w-full" />
+            </div>
+          ) : (
+            <div className="glass rounded-xl overflow-hidden">
+              {/* Main toggle */}
+              <div className="flex items-start justify-between px-5 py-4 border-b border-gray-50">
+                <div className="flex-1 pr-4">
+                  <p className="text-sm font-semibold text-gray-800">Låt AI:n komma ihåg våra samtal</p>
+                  <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
+                    När minnet är på kan AI-assistenten referera till tidigare frågor och ge mer träffsäkra svar över tid.
+                    Dina samtal sparas krypterat och används aldrig för att träna AI-modeller.
+                    Du kan när som helst stänga av minnet — då raderas all sparad historik omedelbart.
+                  </p>
+                </div>
+                <Toggle
+                  checked={memoryStatus?.enabled ?? false}
+                  onChange={handleMemoryToggle}
+                  disabled={memoryActionLoading}
+                />
+              </div>
+
+              {/* Status row — only when on */}
+              {memoryStatus?.enabled && (
+                <div className="px-5 py-3 flex gap-8 bg-green-50/50">
+                  {memoryStatus.activatedAt && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Aktiverat sedan</p>
+                      <p className="text-xs text-gray-700 mt-0.5">{fmtDate(memoryStatus.activatedAt)}</p>
+                    </div>
+                  )}
+                  {memoryStatus.conversationCount !== undefined && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sparade samtal</p>
+                      <p className="text-xs text-gray-700 mt-0.5">{memoryStatus.conversationCount}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Conversation list — only when memory is on */}
+          {!memoryLoading && memoryStatus?.enabled && (
+            <div className="mt-4">
+              {convsLoading ? (
+                <div className="glass rounded-xl p-5">
+                  <SkeletonCard className="h-16 w-full" />
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="glass rounded-xl px-5 py-8 text-center text-sm text-gray-400">
+                  Inga sparade samtal ännu
+                </div>
+              ) : (
+                <div className="glass rounded-xl overflow-hidden">
+                  {conversations.map((conv, i) => (
+                    <div
+                      key={conv.id}
+                      className={`flex items-center gap-3 px-5 py-3.5 ${i !== 0 ? 'border-t border-gray-50' : ''}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-800 truncate">
+                          {conv.summary ?? conv.firstQuestion ?? 'Samtal'}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{fmtDate(conv.createdAt)}</p>
+                      </div>
+                      <button
+                        onClick={() => void deleteConversation(conv.id)}
+                        disabled={deletingConvId === conv.id}
+                        aria-label="Radera samtal"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40 shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/50">
+                    <button
+                      onClick={() => setConfirmDeleteAll(true)}
+                      disabled={memoryActionLoading}
+                      className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors disabled:opacity-40"
+                    >
+                      Radera all historik
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <button
           onClick={handleLogout}
           className="w-full border border-red-200 text-red-600 font-semibold py-3 rounded-xl hover:bg-red-50 transition-colors text-sm min-h-[44px]"
@@ -351,7 +540,63 @@ export default function Profile() {
         </button>
       </div>
     </div>
+
+    {/* ── Confirm: turn off memory ──────────────────────────────────────── */}
+    {confirmTurnOff && (
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="glass rounded-2xl p-6 max-w-sm w-full shadow-xl">
+          <h3 className="text-base font-bold text-gray-900 mb-2">Stäng av AI-minnet?</h3>
+          <p className="text-sm text-gray-500 leading-relaxed mb-6">
+            All sparad samtalshistorik raderas permanent och kan inte återställas.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmTurnOff(false)}
+              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+            >
+              Avbryt
+            </button>
+            <button
+              onClick={() => { setConfirmTurnOff(false); void applyMemoryConsent(false) }}
+              className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors min-h-[44px]"
+            >
+              Radera
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ── Confirm: delete all conversations ────────────────────────────── */}
+    {confirmDeleteAll && (
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="glass rounded-2xl p-6 max-w-sm w-full shadow-xl">
+          <h3 className="text-base font-bold text-gray-900 mb-2">Radera all historik?</h3>
+          <p className="text-sm text-gray-500 leading-relaxed mb-6">
+            Alla sparade samtal raderas permanent. AI-minnet förblir aktivt.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmDeleteAll(false)}
+              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+            >
+              Avbryt
+            </button>
+            <button
+              onClick={() => void deleteAllConversations()}
+              className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors min-h-[44px]"
+            >
+              Radera allt
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   )
+}
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function ProfileRow({ label, value, last }: { label: string; value: string; last?: boolean }) {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowRight, Send, Sparkles, Trash2, X } from 'lucide-react'
+import { ArrowRight, Brain, Send, Sparkles, Trash2, X } from 'lucide-react'
 import {
   Bar, BarChart, CartesianGrid, Line, LineChart,
   ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -9,7 +9,8 @@ import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const CHART_COLORS = ['#2563eb', '#7c3aed', '#f59e0b', '#10b981', '#ef4444', '#06b6d4']
-const SS_KEY = 'rw_ai_history'
+const SS_KEY           = 'rw_ai_history'
+const MEMORY_NOTICE_KEY = 'rw_ai_memory_notice_dismissed'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -286,10 +287,13 @@ export default function AiAssistant() {
 
   const ctx: AiContext = ROUTE_CTX[location.pathname] ?? 'general'
 
-  const [open,       setOpen]       = useState(false)
-  const [input,      setInput]      = useState('')
-  const [loading,    setLoading]    = useState(false)
-  const [historyMap, setHistoryMap] = useState<HistoryMap>(loadMap)
+  const [open,           setOpen]           = useState(false)
+  const [input,          setInput]          = useState('')
+  const [loading,        setLoading]        = useState(false)
+  const [historyMap,     setHistoryMap]     = useState<HistoryMap>(loadMap)
+  const [memoryEnabled,  setMemoryEnabled]  = useState<boolean | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(null)
+  const [noticeVisible,  setNoticeVisible]  = useState(() => !localStorage.getItem(MEMORY_NOTICE_KEY))
 
   const history    = historyMap[ctx] ?? []
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -307,6 +311,14 @@ export default function AiAssistant() {
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 80)
   }, [open])
+
+  // Fetch memory status once at mount
+  useEffect(() => {
+    fetchWithAuth(`${API_URL}api/v1/ai/memory-status`)
+      .then(r => r.json())
+      .then(json => setMemoryEnabled(!!(json?.data?.enabled ?? json?.enabled)))
+      .catch(() => setMemoryEnabled(false))
+  }, [])
 
   // Global open-with-question event (fired by dashboard sections)
   useEffect(() => {
@@ -335,9 +347,12 @@ export default function AiAssistant() {
     setLoading(true)
 
     try {
+      const body: Record<string, unknown> = { question, context: ctx }
+      if (memoryEnabled && conversationId) body.conversationId = conversationId
+
       const res  = await fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
         method: 'POST',
-        body:   JSON.stringify({ question, context: ctx }),
+        body:   JSON.stringify(body),
       })
       const json = await res.json()
 
@@ -351,6 +366,7 @@ export default function AiAssistant() {
         }))
       } else {
         const d      = json.data ?? json
+        if (memoryEnabled && d.conversationId) setConversationId(String(d.conversationId))
         const intent: Intent = d.intent ?? 'answer'
         const text   = String(d.message ?? d.answer ?? '')
         const aiMsg: AiMessage = { role: 'ai', text, intent }
@@ -396,7 +412,7 @@ export default function AiAssistant() {
     setLoading(false)
   // ctx is stable within the async call — captured correctly by the closure
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, loading, ctx])
+  }, [input, loading, ctx, memoryEnabled, conversationId])
 
   return (
     <>
@@ -431,6 +447,13 @@ export default function AiAssistant() {
               <span className="text-xs font-medium text-blue-200 bg-blue-950/30 px-2 py-0.5 rounded-full">
                 {CTX_LABEL[ctx]}
               </span>
+              {memoryEnabled && (
+                <Brain
+                  className="w-3.5 h-3.5 text-blue-200"
+                  title="AI-minne aktivt — jag kommer ihåg våra tidigare samtal"
+                  aria-label="AI-minne aktivt"
+                />
+              )}
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -453,6 +476,30 @@ export default function AiAssistant() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0">
+            {/* One-time memory-off notice */}
+            {history.length === 0 && !loading && memoryEnabled === false && noticeVisible && (
+              <div className="bg-blue-50/80 border border-blue-100 rounded-xl px-4 py-3 mb-1">
+                <p className="text-xs text-blue-700 leading-relaxed mb-2">
+                  Vill du att jag ska komma ihåg våra samtal?{' '}
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="font-semibold underline underline-offset-2 hover:text-blue-800 transition-colors"
+                  >
+                    Aktivera AI-minne i Profil →
+                  </button>
+                </p>
+                <button
+                  onClick={() => {
+                    localStorage.setItem(MEMORY_NOTICE_KEY, '1')
+                    setNoticeVisible(false)
+                  }}
+                  className="text-[10px] text-blue-400 hover:text-blue-600 transition-colors"
+                >
+                  Visa inte igen
+                </button>
+              </div>
+            )}
+
             {history.length === 0 && !loading && (
               <div className="flex flex-col gap-1.5 mt-1">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 px-1 mb-1">
