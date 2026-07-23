@@ -627,7 +627,7 @@ export default function Simulate() {
         <p className="text-sm text-gray-500 mb-6">Beskriv ett scenario och se hur det påverkar ditt saldo de nästa 90 dagarna.</p>
 
         {/* ── AI main card ─────────────────────────────────────────── */}
-        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 mb-4">
+        <div className="glass rounded-2xl p-6 mb-4">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
@@ -754,7 +754,7 @@ export default function Simulate() {
               </div>
             )}
 
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6">
+            <div className="glass rounded-2xl p-6">
 
               <div className="mb-5">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Snabb-scenarion</p>
@@ -895,7 +895,7 @@ export default function Simulate() {
         {result && (
           <>
             {/* Narrative sentence */}
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 mb-4">
+            <div className="glass rounded-2xl px-6 py-5 mb-4">
               <p className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
                 {cleanedLabel
                   ? <>Om du <span className="text-blue-700">{cleanedLabel}</span> förväntas</>
@@ -918,7 +918,7 @@ export default function Simulate() {
             </div>
 
             {/* Chart */}
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 mb-2">
+            <div className="glass rounded-2xl p-6 mb-2">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-semibold text-gray-700">Prognos — nästa 90 dagar</p>
                 <div className="flex gap-1">

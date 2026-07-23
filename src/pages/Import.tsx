@@ -1,9 +1,10 @@
 ﻿import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, AlertTriangle, AlertCircle, Info } from 'lucide-react'
 import ExcelJS from 'exceljs'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { getImportHistoryKey } from '../utils/jwtUser'
+import { useCurrency } from '../contexts/CurrencyContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -18,6 +19,14 @@ function detectColumn(headers: string[], hints: string[]): string | null {
     if (match) return match
   }
   return null
+}
+
+// ── Anomaly types ───────────────────────────────────────────────────────────
+interface Anomaly {
+  severity: 'critical' | 'warning' | 'info'
+  title: string
+  description: string
+  affectedAmount?: number
 }
 
 // ── Import history ──────────────────────────────────────────────────────────
@@ -175,6 +184,31 @@ const STEPS = [
   },
 ]
 
+// ── Anomaly card ────────────────────────────────────────────────────────────
+const ANOMALY_CONFIG = {
+  critical: { border: 'border-l-red-500',    iconBg: 'bg-red-50',    iconColor: 'text-red-500',    Icon: AlertTriangle },
+  warning:  { border: 'border-l-yellow-500', iconBg: 'bg-yellow-50', iconColor: 'text-yellow-600', Icon: AlertCircle   },
+  info:     { border: 'border-l-blue-500',   iconBg: 'bg-blue-50',   iconColor: 'text-blue-500',   Icon: Info          },
+} as const
+
+function AnomalyCard({ anomaly, fmt }: { anomaly: Anomaly; fmt: (n: number) => string }) {
+  const c = ANOMALY_CONFIG[anomaly.severity]
+  return (
+    <div className={`glass border-l-[3px] ${c.border} rounded-xl px-4 py-3.5 flex gap-3 items-start`}>
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${c.iconBg}`}>
+        <c.Icon className={`w-3.5 h-3.5 ${c.iconColor}`} aria-hidden="true" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-slate-800">{anomaly.title}</p>
+        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{anomaly.description}</p>
+        {anomaly.affectedAmount !== undefined && (
+          <p className="text-xs font-medium text-slate-600 mt-1">Belopp: {fmt(anomaly.affectedAmount)}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Format a history date ───────────────────────────────────────────────────
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -183,6 +217,7 @@ function fmtDate(iso: string) {
 export default function Import() {
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { formatAmount: fmt } = useCurrency()
 
   const [file, setFile] = useState<File | null>(null)
   const [rowCount, setRowCount] = useState<number | null>(null)
@@ -200,35 +235,87 @@ export default function Import() {
   const [detectedAmount,   setDetectedAmount]   = useState<string | null>(null)
   const [detectedCategory, setDetectedCategory] = useState<string | null>(null)
 
-  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [sessionId, setSessionId]           = useState<string | null>(null)
+  const [aiSummary, setAiSummary]           = useState<string | null>(null)
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
+  const [anomalies, setAnomalies]           = useState<Anomaly[]>([])
+  const [anomaliesLoading, setAnomaliesLoading] = useState(false)
 
   useEffect(() => { setHistory(loadHistory()) }, [])
 
-  // Fire AI summary request once import succeeds
+  // After import: poll anomalies for 15 s, use aiSummary if found, else fall back to general AI
   useEffect(() => {
-    if (step !== 'done') return
-    let cancelled = false
-    setAiSummaryLoading(true)
+    if (step !== 'done' || !sessionId) return
+    const controller = new AbortController()
+    const { signal } = controller
+
+    setAnomaliesLoading(true)
+    setAnomalies([])
     setAiSummary(null)
-    fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        context: 'general',
-        question: `Jag importerade just ${rowCount ?? 'okänt antal'} transaktioner. Sammanfatta kort vad datan visar och om något sticker ut.`,
-      }),
-    })
-      .then(r => r.json())
-      .then(json => {
-        if (cancelled) return
-        const answer = json?.data?.answer ?? json?.answer ?? ''
-        if (answer) setAiSummary(answer)
+    setAiSummaryLoading(false)
+
+    const sleep = (ms: number) =>
+      new Promise<void>(res => {
+        const t = setTimeout(res, ms)
+        signal.addEventListener('abort', () => { clearTimeout(t); res() }, { once: true })
       })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setAiSummaryLoading(false) })
-    return () => { cancelled = true }
-  }, [step]) // rowCount is stable when step reaches 'done'
+
+    const poll = async () => {
+      const MAX_MS = 15_000
+      const start = Date.now()
+      let foundAnomalies = false
+
+      while (!signal.aborted && Date.now() - start < MAX_MS) {
+        try {
+          const res = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/anomalies`)
+          if (!signal.aborted && res.ok) {
+            const json = await res.json()
+            const data = json?.data ?? json
+            const count: number = data?.count ?? 0
+            const summary: string | undefined = data?.aiSummary || undefined
+            const items: Anomaly[] = Array.isArray(data?.anomalies) ? data.anomalies : []
+            if (count > 0 || summary) {
+              if (items.length > 0) { setAnomalies(items); foundAnomalies = true }
+              if (summary) {
+                setAnomaliesLoading(false)
+                setAiSummary(summary)
+                return  // aiSummary from anomaly endpoint — skip general AI call
+              }
+              break  // anomalies found but no aiSummary — use general AI as fallback
+            }
+          }
+        } catch { /* keep polling on network error */ }
+        if (Date.now() - start + 2_000 >= MAX_MS) break
+        await sleep(2_000)
+      }
+
+      if (signal.aborted) return
+      if (!foundAnomalies) setAnomaliesLoading(false)
+      else setAnomaliesLoading(false)
+
+      // Fallback: general AI summary
+      setAiSummaryLoading(true)
+      fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: 'general',
+          question: `Jag importerade just ${rowCount ?? 'okänt antal'} transaktioner. Sammanfatta kort vad datan visar och om något sticker ut.`,
+        }),
+      })
+        .then(r => r.json())
+        .then(json => {
+          if (signal.aborted) return
+          const answer = json?.data?.answer ?? json?.answer ?? ''
+          if (answer) setAiSummary(answer)
+        })
+        .catch(() => {})
+        .finally(() => { if (!signal.aborted) setAiSummaryLoading(false) })
+    }
+
+    void poll()
+    return () => controller.abort()
+  }, [step, sessionId]) // rowCount is stable when step reaches 'done'
 
   const handleFileChange = async (f: File) => {
     setFile(f)
@@ -296,18 +383,19 @@ export default function Import() {
         throw new Error(json?.error?.message ?? json?.message ?? `http ${uploadRes.status}`)
       }
       const uploadJson = await uploadRes.json()
-      const sessionId = uploadJson?.data?.sessionId
-      if (!sessionId) throw new Error('session')
+      const sId = uploadJson?.data?.sessionId
+      if (!sId) throw new Error('session')
+      setSessionId(sId)
 
       setStep('validating')
-      const validateRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/validate`, { method: 'POST' })
+      const validateRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sId}/validate`, { method: 'POST' })
       if (!validateRes.ok) {
         const json = await validateRes.json().catch(() => ({}))
         throw new Error(json?.error?.message ?? json?.message ?? `http ${validateRes.status}`)
       }
 
       setStep('committing')
-      const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/commit`, { method: 'POST' })
+      const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sId}/commit`, { method: 'POST' })
       if (!commitRes.ok) {
         const json = await commitRes.json().catch(() => ({}))
         throw new Error(json?.error?.message ?? json?.message ?? `http ${commitRes.status}`)
@@ -338,8 +426,11 @@ export default function Import() {
     setDetectedDate(null)
     setDetectedAmount(null)
     setDetectedCategory(null)
+    setSessionId(null)
     setAiSummary(null)
     setAiSummaryLoading(false)
+    setAnomalies([])
+    setAnomaliesLoading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -382,20 +473,33 @@ export default function Import() {
               </div>
             </div>
 
-            {/* AI first impression */}
-            {aiSummaryLoading && (
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 mb-8 flex items-center gap-3">
+            {/* AI first impression + anomalies */}
+            {anomaliesLoading && (
+              <div className="glass rounded-2xl px-6 py-5 mb-4 flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
+                <p className="text-sm text-slate-500 italic">AI:n letar efter avvikelser i din data...</p>
+              </div>
+            )}
+            {!anomaliesLoading && aiSummaryLoading && (
+              <div className="glass rounded-2xl px-6 py-5 mb-4 flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
                 <p className="text-sm text-slate-500 italic">AI:n tittar på din nya data...</p>
               </div>
             )}
-            {!aiSummaryLoading && aiSummary && (
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 mb-8">
+            {!anomaliesLoading && !aiSummaryLoading && aiSummary && (
+              <div className="glass rounded-2xl px-6 py-5 mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
                   <p className="text-sm font-semibold text-slate-700">AI:ns första intryck</p>
                 </div>
                 <p className="text-sm text-slate-600 leading-relaxed">{aiSummary}</p>
+              </div>
+            )}
+            {anomalies.length > 0 && (
+              <div className="space-y-2 mb-8">
+                {anomalies.map((a, i) => (
+                  <AnomalyCard key={i} anomaly={a} fmt={fmt} />
+                ))}
               </div>
             )}
           </>
@@ -515,7 +619,7 @@ export default function Import() {
                 {/* Preview table */}
                 <div>
                   <p className="text-sm font-semibold text-gray-700 mb-3">Ser detta rätt ut? Klicka <em>Importera</em> för att fortsätta.</p>
-                  <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+                  <div className="glass rounded-2xl overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
@@ -547,7 +651,7 @@ export default function Import() {
                 </div>
 
                 {/* Column detection summary */}
-                <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-4 shadow-sm">
+                <div className="glass rounded-2xl p-4 shadow-sm">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
                   <div className="space-y-3">
 
@@ -646,7 +750,7 @@ export default function Import() {
         {history.length > 0 && (
           <div className="mt-12">
             <h2 className="text-base font-bold text-gray-800 mb-4">Tidigare importer</h2>
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+            <div className="glass rounded-2xl overflow-hidden shadow-sm">
               {history.map((rec, i) => (
                 <div
                   key={rec.id}

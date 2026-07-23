@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+﻿import { useEffect, useState, useMemo } from 'react'
 import {
   AlertTriangle, AlertCircle, Info, Clock, FileWarning, Flame,
   TrendingDown, Activity, RefreshCw, Sparkles, CheckCircle, XCircle, Lightbulb,
@@ -345,7 +345,7 @@ export default function Diagnosis() {
         </div>
 
         {/* ── AI main card ──────────────────────────────────────────────── */}
-        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 sm:p-8">
+        <div className="glass rounded-2xl p-6 sm:p-8">
 
           {/* Card header */}
           <div className="flex items-start justify-between gap-4 mb-6">
@@ -533,7 +533,7 @@ export default function Diagnosis() {
             ) : (
               <>
                 {/* Score + Component breakdown */}
-                <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6 md:p-8">
+                <div className="glass rounded-2xl shadow-sm p-6 md:p-8">
                   <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
 
                     {/* Circular score */}
@@ -595,7 +595,7 @@ export default function Diagnosis() {
                       ))}
                     </div>
                   ) : rootCauses.length === 0 ? (
-                    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-8 text-center text-gray-400 text-sm">
+                    <div className="glass rounded-2xl p-8 text-center text-gray-400 text-sm">
                       Inga rotorsaker identifierade — din ekonomi ser bra ut!
                     </div>
                   ) : (
@@ -609,7 +609,7 @@ export default function Diagnosis() {
 
                 {/* History chart */}
                 {historyChartData.length >= 2 && (
-                  <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
+                  <div className="glass rounded-2xl shadow-sm p-6">
                     <div className="flex items-center justify-between mb-5">
                       <h2 className="text-base font-bold text-gray-800">Hälsoscorehistorik</h2>
                       <span className="text-xs text-gray-400">{historyChartData.length} mätpunkter</span>
@@ -627,7 +627,7 @@ export default function Diagnosis() {
                         <Tooltip
                           content={({ active, payload, label }) =>
                             active && payload?.length ? (
-                              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow px-3 py-2 text-xs">
+                              <div className="glass rounded-xl shadow px-3 py-2 text-xs">
                                 <p className="text-gray-500 mb-0.5">{label}</p>
                                 <p className="font-bold text-gray-900">Score: {payload[0].value}</p>
                               </div>
@@ -648,7 +648,7 @@ export default function Diagnosis() {
                 )}
 
                 {historyChartData.length === 1 && (
-                  <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm px-6 py-5">
+                  <div className="glass rounded-2xl shadow-sm px-6 py-5">
                     <h2 className="text-base font-bold text-gray-800 mb-1">Hälsoscorehistorik</h2>
                     <p className="text-xs text-gray-400">
                       Historiken byggs upp automatiskt varje dag du besöker sidan. Kom tillbaka imorgon för att se din trend.

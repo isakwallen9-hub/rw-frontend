@@ -1,8 +1,9 @@
 ﻿import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, AlertTriangle, AlertCircle, Info } from 'lucide-react'
 import ExcelJS from 'exceljs'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import { useCurrency } from '../contexts/CurrencyContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -17,6 +18,14 @@ function detectColumn(headers: string[], hints: string[]): string | null {
     if (match) return match
   }
   return null
+}
+
+// ── Anomaly types ───────────────────────────────────────────────────────────
+interface Anomaly {
+  severity: 'critical' | 'warning' | 'info'
+  title: string
+  description: string
+  affectedAmount?: number
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -140,6 +149,7 @@ const STEP_HINTS = [
 // ── Main component ──────────────────────────────────────────────────────────
 export default function Onboarding() {
   const navigate  = useNavigate()
+  const { formatAmount: fmt } = useCurrency()
   const [step, setStep]                       = useState(0)
   const [completedSteps, setCompletedSteps]   = useState<boolean[]>([false, false, false, false])
   const [stepLoading, setStepLoading]         = useState(false)
@@ -149,6 +159,10 @@ export default function Onboarding() {
   const [completedAll, setCompletedAll]       = useState(false)
   const [aiSummary, setAiSummary]             = useState<string | null>(null)
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
+  const [anomalies, setAnomalies]             = useState<Anomaly[]>([])
+  const [anomaliesLoading, setAnomaliesLoading] = useState(false)
+  const [bankSessionId, setBankSessionId]     = useState<string | null>(null)
+  const anomalyAbortRef                       = useRef<AbortController | null>(null)
 
   // ── Bank file state ────────────────────────────────────────────────────
   const [bankFile, setBankFile]                   = useState<File | null>(null)
@@ -235,11 +249,11 @@ export default function Onboarding() {
     }).catch(() => {})
   }
 
-  // ── Import flow ────────────────────────────────────────────────────────
+  // ── Import flow — returns sessionId ───────────────────────────────────────
   const runImportFlow = async (
     file: File,
     columnMapping: Record<string, string>,
-  ) => {
+  ): Promise<string> => {
     setProgressLabel('Läser fil…')
     const rows = await readFileAsRows(file)
     const orgId    = await getOrgId()
@@ -252,16 +266,18 @@ export default function Onboarding() {
     })
     if (!uploadRes.ok) throw new Error(await parseErrorMessage(uploadRes))
     const uploadJson = await uploadRes.json()
-    const sessionId  = uploadJson?.data?.sessionId
-    if (!sessionId) throw new Error('session')
+    const sId = uploadJson?.data?.sessionId
+    if (!sId) throw new Error('session')
 
     setProgressLabel('Analyserar…')
-    const validateRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/validate`, { method: 'POST' })
+    const validateRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sId}/validate`, { method: 'POST' })
     if (!validateRes.ok) throw new Error(await parseErrorMessage(validateRes))
 
     setProgressLabel('Sparar…')
-    const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sessionId}/commit`, { method: 'POST' })
+    const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sId}/commit`, { method: 'POST' })
     if (!commitRes.ok) throw new Error(await parseErrorMessage(commitRes))
+
+    return sId
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────
@@ -278,9 +294,12 @@ export default function Onboarding() {
     setStepLoading(false); setProgressLabel('')
   }
   const doReset = () => {
+    anomalyAbortRef.current?.abort()
+    anomalyAbortRef.current = null
     setStep(0); setCompletedSteps([false, false, false, false])
     setStepError(''); setStepSuccess(''); setProgressLabel('')
     setCompletedAll(false); setAiSummary(null); setAiSummaryLoading(false)
+    setAnomalies([]); setAnomaliesLoading(false); setBankSessionId(null)
     setBankFile(null); setBankTotalRows(0); setBankPreviewHeaders([]); setBankPreviewRows([])
     setBankDetectedDate(null); setBankDetectedAmount(null); setBankDetectedCategory(null)
     setBankMappedDate(''); setBankMappedAmount(''); setBankMappedCategory('')
@@ -297,7 +316,8 @@ export default function Onboarding() {
     if (!bankMappedDate || !bankMappedAmount) throw new Error('Välj vilka kolumner som är datum och belopp innan du fortsätter.')
     const mapping: Record<string, string> = { date: bankMappedDate, amount: bankMappedAmount }
     if (bankMappedCategory) mapping.category = bankMappedCategory
-    await runImportFlow(bankFile, mapping)
+    const sId = await runImportFlow(bankFile, mapping)
+    setBankSessionId(sId)
     markComplete(0)
     advanceAfter(`Bankfilen importerad — ${bankTotalRows} rader uppladdade.`, 1)
   })
@@ -343,23 +363,80 @@ export default function Onboarding() {
     }
     markComplete(3)
     setCompletedAll(true)
-    // Fire-and-forget AI summary — graceful degradation on failure
-    setAiSummaryLoading(true)
-    fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        context: 'general',
-        question: `Jag importerade just ${bankTotalRows} transaktioner. Sammanfatta kort vad datan visar och om något sticker ut.`,
-      }),
-    })
-      .then(r => r.json())
-      .then(json => {
-        const answer = json?.data?.answer ?? json?.answer ?? ''
-        if (answer) setAiSummary(answer)
+
+    // Fire-and-forget: poll anomalies, use aiSummary if returned, else fall back to general AI
+    const controller = new AbortController()
+    anomalyAbortRef.current?.abort()
+    anomalyAbortRef.current = controller
+    const { signal } = controller
+
+    const sid = bankSessionId
+    setAnomaliesLoading(true)
+    setAnomalies([])
+    setAiSummary(null)
+
+    const sleep = (ms: number) =>
+      new Promise<void>(res => {
+        const t = setTimeout(res, ms)
+        signal.addEventListener('abort', () => { clearTimeout(t); res() }, { once: true })
       })
-      .catch(() => {})
-      .finally(() => setAiSummaryLoading(false))
+
+    const startPolling = async () => {
+      const MAX_MS = 15_000
+      const start = Date.now()
+      let foundAnomalies = false
+
+      if (sid) {
+        while (!signal.aborted && Date.now() - start < MAX_MS) {
+          try {
+            const res = await fetchWithAuth(`${API_URL}api/v1/data-import/${sid}/anomalies`)
+            if (!signal.aborted && res.ok) {
+              const json = await res.json()
+              const data = json?.data ?? json
+              const count: number = data?.count ?? 0
+              const summary: string | undefined = data?.aiSummary || undefined
+              const items: Anomaly[] = Array.isArray(data?.anomalies) ? data.anomalies : []
+              if (count > 0 || summary) {
+                if (items.length > 0) { setAnomalies(items); foundAnomalies = true }
+                if (summary) {
+                  setAnomaliesLoading(false)
+                  setAiSummary(summary)
+                  return
+                }
+                break
+              }
+            }
+          } catch { /* keep polling */ }
+          if (Date.now() - start + 2_000 >= MAX_MS) break
+          await sleep(2_000)
+        }
+      }
+
+      if (signal.aborted) return
+      if (!foundAnomalies) setAnomaliesLoading(false)
+      else setAnomaliesLoading(false)
+
+      // Fallback: general AI summary
+      setAiSummaryLoading(true)
+      fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: 'general',
+          question: `Jag importerade just ${bankTotalRows} transaktioner. Sammanfatta kort vad datan visar och om något sticker ut.`,
+        }),
+      })
+        .then(r => r.json())
+        .then(json => {
+          if (signal.aborted) return
+          const answer = json?.data?.answer ?? json?.answer ?? ''
+          if (answer) setAiSummary(answer)
+        })
+        .catch(() => {})
+        .finally(() => { if (!signal.aborted) setAiSummaryLoading(false) })
+    }
+
+    void startPolling()
   })
 
   const handlers   = [saveStep1, saveStep2, saveStep3, saveStep4]
@@ -386,19 +463,32 @@ export default function Onboarding() {
             <p className="text-gray-500">Din data är uppladdad och redo att analyseras.</p>
           </div>
 
-          {aiSummaryLoading && (
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 mb-6 flex items-center gap-3">
+          {anomaliesLoading && (
+            <div className="glass rounded-2xl px-6 py-5 mb-4 flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
+              <p className="text-sm text-slate-500 italic">AI:n letar efter avvikelser i din data...</p>
+            </div>
+          )}
+          {!anomaliesLoading && aiSummaryLoading && (
+            <div className="glass rounded-2xl px-6 py-5 mb-4 flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
               <p className="text-sm text-slate-500 italic">AI:n tittar på din nya data...</p>
             </div>
           )}
-          {!aiSummaryLoading && aiSummary && (
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 mb-6">
+          {!anomaliesLoading && !aiSummaryLoading && aiSummary && (
+            <div className="glass rounded-2xl px-6 py-5 mb-4">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
                 <p className="text-sm font-semibold text-slate-700">AI:ns första intryck</p>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">{aiSummary}</p>
+            </div>
+          )}
+          {anomalies.length > 0 && (
+            <div className="space-y-2 mb-6">
+              {anomalies.map((a, i) => (
+                <AnomalyCard key={i} anomaly={a} fmt={fmt} />
+              ))}
             </div>
           )}
 
@@ -500,7 +590,7 @@ export default function Onboarding() {
                   </p>
 
                   {/* Dynamic preview table */}
-                  <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+                  <div className="glass rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
@@ -526,7 +616,7 @@ export default function Onboarding() {
                   </div>
 
                   {/* Column detection */}
-                  <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-4">
+                  <div className="glass rounded-xl p-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
                     <div className="space-y-3">
                       <ColumnRow
@@ -577,7 +667,7 @@ export default function Onboarding() {
                   </p>
 
                   {/* Dynamic preview table */}
-                  <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+                  <div className="glass rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
@@ -603,7 +693,7 @@ export default function Onboarding() {
                   </div>
 
                   {/* Column detection */}
-                  <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-4">
+                  <div className="glass rounded-xl p-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
                     <div className="space-y-3">
                       <ColumnRow
@@ -719,6 +809,31 @@ export default function Onboarding() {
         <p className="mt-4 text-center text-xs text-gray-400">
           Du kan alltid komma tillbaka och uppdatera detta senare.
         </p>
+      </div>
+    </div>
+  )
+}
+
+// ── Anomaly card ────────────────────────────────────────────────────────────
+const ANOMALY_CONFIG = {
+  critical: { border: 'border-l-red-500',    iconBg: 'bg-red-50',    iconColor: 'text-red-500',    Icon: AlertTriangle },
+  warning:  { border: 'border-l-yellow-500', iconBg: 'bg-yellow-50', iconColor: 'text-yellow-600', Icon: AlertCircle   },
+  info:     { border: 'border-l-blue-500',   iconBg: 'bg-blue-50',   iconColor: 'text-blue-500',   Icon: Info          },
+} as const
+
+function AnomalyCard({ anomaly, fmt }: { anomaly: Anomaly; fmt: (n: number) => string }) {
+  const c = ANOMALY_CONFIG[anomaly.severity]
+  return (
+    <div className={`glass border-l-[3px] ${c.border} rounded-xl px-4 py-3.5 flex gap-3 items-start`}>
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${c.iconBg}`}>
+        <c.Icon className={`w-3.5 h-3.5 ${c.iconColor}`} aria-hidden="true" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-slate-800">{anomaly.title}</p>
+        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{anomaly.description}</p>
+        {anomaly.affectedAmount !== undefined && (
+          <p className="text-xs font-medium text-slate-600 mt-1">Belopp: {fmt(anomaly.affectedAmount)}</p>
+        )}
       </div>
     </div>
   )

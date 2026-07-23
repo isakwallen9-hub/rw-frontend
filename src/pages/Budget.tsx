@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+﻿import { useEffect, useState, useRef, useCallback } from 'react'
 import { z } from 'zod'
 import { Target, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Sparkles, Lightbulb } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
@@ -135,7 +135,7 @@ function BudgetBar({
     'bg-red-500'
 
   return (
-    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 shadow-sm">
+    <div className="glass rounded-2xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500">{icon}</div>
@@ -370,7 +370,7 @@ export default function Budget() {
         </div>
 
         {/* ── AI main card ──────────────────────────────────────────────── */}
-        <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6">
+        <div className="glass rounded-2xl p-6">
 
           {/* Card header */}
           <div className="flex items-center gap-3 mb-5">
@@ -504,7 +504,7 @@ export default function Budget() {
 
         {/* ── Manual form (collapsed) ─────────────────────────────────────── */}
         {manualOpen && (
-          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-6">
+          <div className="glass rounded-2xl shadow-sm p-6">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
                 <Target className="w-5 h-5 text-blue-600" />
@@ -572,7 +572,7 @@ export default function Budget() {
           {loading ? (
             <div className="grid sm:grid-cols-2 gap-4">
               {[0, 1].map(i => (
-                <div key={i} className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-5 shadow-sm">
+                <div key={i} className="glass rounded-2xl p-5 shadow-sm">
                   <div className="space-y-3 animate-pulse">
                     <div className="h-4 bg-gray-100 rounded w-1/2" />
                     <div className="h-10 bg-gray-100 rounded" />
@@ -615,7 +615,7 @@ export default function Budget() {
 
         {/* ── Summary card ───────────────────────────────────────────────── */}
         {data && (data.revenue.budget > 0 || data.costs.budget > 0) && (
-          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl shadow-sm p-5">
+          <div className="glass rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-bold text-gray-700 mb-4">Sammanfattning</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>

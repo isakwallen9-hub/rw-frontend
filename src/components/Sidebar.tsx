@@ -48,10 +48,10 @@ function NavItem({ to, label, icon: Icon, onNav }: NavItem & { onNav?: () => voi
       to={to}
       onClick={onNav}
       className={({ isActive }) =>
-        `relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+        `relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
           isActive
-            ? 'bg-blue-50/80 text-blue-700'
-            : 'text-slate-600 hover:bg-white/60 hover:text-slate-900'
+            ? 'bg-blue-600/[.07] text-blue-700 shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)]'
+            : 'text-slate-500 hover:bg-white/75 hover:text-slate-900 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)]'
         }`
       }
     >
@@ -87,7 +87,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
       {/* Logo */}
       <div className="px-4 pt-5 pb-3 shrink-0">
         <NavLink to="/dashboard" className="flex items-center gap-2.5 group" onClick={onNav}>
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-[0_2px_10px_rgba(37,99,235,0.45)]">
             <span className="text-white text-[11px] font-black tracking-tight">RW</span>
           </div>
           <span className="font-bold tracking-tight text-slate-900 text-sm group-hover:text-blue-700 transition-colors">
@@ -98,9 +98,9 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
 
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto px-2 pb-4" aria-label="Huvudmeny">
-        {NAV_GROUPS.map(g => (
+        {NAV_GROUPS.map((g, gi) => (
           <div key={g.label}>
-            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold px-3 mt-6 mb-1.5">
+            <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] text-slate-400 px-3 mb-1.5 ${gi === 0 ? 'mt-4' : 'mt-1 pt-4 border-t border-slate-200/50'}`}>
               {g.label}
             </p>
             {g.items.map(item => (
@@ -111,7 +111,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
       </nav>
 
       {/* Bottom section */}
-      <div className="px-2 pb-5 shrink-0 border-t border-slate-200/60 pt-3">
+      <div className="px-2 pb-5 shrink-0 border-t border-slate-200/50 pt-3">
         <NavItem to="/profile" label="Profil" icon={User} onNav={onNav} />
         {isAdmin && (
           <NavItem to="/admin" label="Admin" icon={Shield} onNav={onNav} />
@@ -134,7 +134,7 @@ export default function Sidebar() {
   return (
     <>
       {/* ── Desktop sidebar ──────────────────────────────────────────── */}
-      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-60 bg-white/60 backdrop-blur-2xl border-r border-slate-200/60 z-30 shadow-[1px_0_0_0_rgba(15,23,42,0.04)]">
+      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-60 z-30 glass-sidebar">
         <SidebarContent />
       </aside>
 

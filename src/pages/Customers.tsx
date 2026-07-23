@@ -189,7 +189,7 @@ export default function Customers() {
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Topp 3 kunder</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {top3.map((c, i) => (
-                <div key={c.name} className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-5 flex flex-col gap-3 shadow-sm relative overflow-hidden">
+                <div key={c.name} className="glass rounded-xl p-5 flex flex-col gap-3 shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
                     <svg viewBox="0 0 64 64" fill="currentColor" className={i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : 'text-amber-700'}>
                       <path d="M32 4l7.6 15.4L56 22l-12 11.7 2.8 16.5L32 42.4 17.2 50.2 20 33.7 8 22l16.4-2.6z"/>
@@ -276,7 +276,7 @@ export default function Customers() {
         ) : sorted.length === 0 ? (
           <EmptyState hasSearch={search.length > 0} />
         ) : (
-          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+          <div className="glass rounded-xl overflow-hidden">
             {/* Table header */}
             <div className="hidden sm:grid grid-cols-[1fr_130px_100px_130px_130px_110px_150px] gap-4 px-5 py-3 border-b border-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide">
               <span>Kund</span>
@@ -438,13 +438,13 @@ function BehaviorBadge({ behavior }: { behavior: PaymentBehavior }) {
 function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   if (hasSearch) {
     return (
-      <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-6 py-12 flex flex-col items-center text-center gap-2">
+      <div className="glass rounded-xl px-6 py-12 flex flex-col items-center text-center gap-2">
         <p className="text-gray-500 text-sm">Inga kunder matchade din sökning.</p>
       </div>
     )
   }
   return (
-    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-6 py-12 flex flex-col items-center text-center gap-3">
+    <div className="glass rounded-xl px-6 py-12 flex flex-col items-center text-center gap-3">
       <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
       </svg>

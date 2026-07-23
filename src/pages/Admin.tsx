@@ -198,7 +198,7 @@ export default function Admin() {
           {loadingStats
             ? [...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-24" />)
             : STAT_CARDS.map(card => (
-              <div key={card.label} className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-5 shadow-sm">
+              <div key={card.label} className="glass rounded-xl px-5 py-5 shadow-sm">
                 <div className="text-2xl mb-2">{card.icon}</div>
                 <div className="text-2xl font-bold text-gray-900">
                   {typeof card.value === 'number' ? card.value.toLocaleString('sv-SE') : card.value}
@@ -220,9 +220,9 @@ export default function Admin() {
           {loadingOrgs ? (
             <div className="flex flex-col gap-2">{[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-12" />)}</div>
           ) : orgs.length === 0 ? (
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga organisationer.</div>
+            <div className="glass rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga organisationer.</div>
           ) : (
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+            <div className="glass rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[700px]">
                   <thead>
@@ -329,9 +329,9 @@ export default function Admin() {
           {loadingUsers ? (
             <div className="flex flex-col gap-2">{[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-12" />)}</div>
           ) : users.length === 0 ? (
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga användare.</div>
+            <div className="glass rounded-xl px-5 py-8 text-center text-gray-400 text-sm">Inga användare.</div>
           ) : (
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl overflow-hidden">
+            <div className="glass rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[560px]">
                   <thead>

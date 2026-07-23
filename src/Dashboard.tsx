@@ -698,8 +698,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           const gmTrendLabel = gm === null ? 'Ingen data' : gmOutOfRange ? 'Kontrollera data' : gm < 0 ? 'Kostnader överstiger intäkter' : gm > 30 ? 'Bra marginal' : gm >= 10 ? 'Acceptabel marginal' : 'Låg marginal'
           return (
             <>
-            <div className="flex items-center justify-between -mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Nyckeltal</p>
+            <div className="flex items-center gap-3 -mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 shrink-0">Nyckeltal</p>
+              <div className="h-px bg-slate-200/70 flex-1" />
               <AskAiButton question="Förklara mina nyckeltal och vad jag bör agera på" />
             </div>
             <div data-tour="kpi-cards" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -775,7 +776,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             stable: { label: '→ Stabil',    cls: 'text-gray-500 bg-gray-100' },
           }[ct.direction]
           return (
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <div className="glass rounded-xl px-5 py-3 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               <span className="text-gray-400 font-medium">Kostnadsutveckling</span>
               <span className="text-gray-300">·</span>
               <span className="text-gray-700">
@@ -795,15 +796,15 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Snabb-statistik */}
         {!loadingCashflow && cashflowDays.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="glass rounded-xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{quickStats.totalTx}</p>
               <p className="text-xs text-gray-400 mt-1">Aktiva dagar</p>
             </div>
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(Math.round(quickStats.avgInflow))}</p>
               <p className="text-xs text-gray-400 mt-1">Genomsnittligt dagligt inflöde</p>
             </div>
-            <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
               <p className="text-xs text-gray-400 mt-1">
                 Bästa dag{quickStats.bestDay?.date ? ` — ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
@@ -816,11 +817,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {loadingCashflow ? (
           <SkeletonChart />
         ) : cashflowError ? (
-          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-red-400 text-sm">
+          <div className="glass rounded-xl p-6 text-center text-red-400 text-sm">
             {cashflowError}
           </div>
         ) : cashflowDays.length > 0 ? (
-          <div data-tour="cashflow-chart" className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 shadow-sm">
+          <div data-tour="cashflow-chart" className="glass rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-bold text-gray-700 mb-0.5 tracking-tight">Kassaflöde</h2>
@@ -871,7 +872,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
+          <div className="glass rounded-xl p-6 text-center text-gray-400 text-sm">
             Ingen kassaflödesdata tillgänglig — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
           </div>
         )}
@@ -881,7 +882,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
           {/* Rekommendationer */}
           <div>
-            <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Rekommenderade åtgärder</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-base font-bold text-gray-800 tracking-tight shrink-0">Rekommenderade åtgärder</h2>
+              <div className="h-px bg-slate-200/70 flex-1" />
+            </div>
             {loadingRec ? (
               <SkeletonList rows={3} />
             ) : recommendations.length > 0 ? (
@@ -891,7 +895,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 ))}
               </div>
             ) : (
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
+              <div className="glass rounded-xl p-6 text-center text-gray-400 text-sm">
                 Inga rekommendationer just nu.
               </div>
             )}
@@ -899,18 +903,21 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
           {/* Senaste transaktioner */}
           <div>
-            <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Senaste transaktioner</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-base font-bold text-gray-800 tracking-tight shrink-0">Senaste transaktioner</h2>
+              <div className="h-px bg-slate-200/70 flex-1" />
+            </div>
             {loadingOverview ? (
               <SkeletonList rows={5} />
             ) : recentTransactionRows.length > 0 ? (
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+              <div className="glass rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   {(() => {
                     const hasCategory = recentTransactionRows.some(t => t.category !== null)
                     return (
                       <table className="w-full text-sm min-w-[420px]">
                         <thead>
-                          <tr className="border-b border-white/30 bg-white/20">
+                          <tr className="border-b border-slate-100 bg-slate-50/40">
                             <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Datum</th>
                             <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Beskrivning</th>
                             {hasCategory && <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Kategori</th>}
@@ -920,7 +927,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                         </thead>
                         <tbody>
                           {recentTransactionRows.map((t, i) => (
-                            <tr key={i} className={`${i !== 0 ? 'border-t border-white/40' : ''} ${i % 2 === 1 ? 'bg-white/30' : ''} hover:bg-white/30 transition-colors`}>
+                            <tr key={i} className={`${i !== 0 ? 'border-t border-slate-100' : ''} ${i % 2 === 1 ? 'bg-slate-50/30' : ''} hover:bg-white/50 transition-colors`}>
                               <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
                               <td className="px-5 py-3 text-gray-700">
                                 {t.description ?? <span className="text-gray-300">—</span>}
@@ -945,11 +952,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : recentCashflowRows.length > 0 ? (
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+              <div className="glass rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[320px]">
                     <thead>
-                      <tr className="border-b border-white/30 bg-white/20">
+                      <tr className="border-b border-slate-100 bg-slate-50/40">
                         <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Datum</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Typ</th>
                         <th className="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Belopp</th>
@@ -957,7 +964,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                     </thead>
                     <tbody>
                       {recentCashflowRows.map((t, i) => (
-                        <tr key={i} className={`${i !== 0 ? 'border-t border-white/40' : ''} ${i % 2 === 1 ? 'bg-white/30' : ''} hover:bg-white/30 transition-colors`}>
+                        <tr key={i} className={`${i !== 0 ? 'border-t border-slate-100' : ''} ${i % 2 === 1 ? 'bg-slate-50/30' : ''} hover:bg-white/50 transition-colors`}>
                           <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{t.label}</td>
                           <td className="px-5 py-3 text-gray-700">{t.type}</td>
                           <td className={`px-5 py-3 text-right font-medium whitespace-nowrap tabular-nums ${t.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
@@ -970,7 +977,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : (
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl p-6 text-center text-gray-400 text-sm">
+              <div className="glass rounded-xl p-6 text-center text-gray-400 text-sm">
                 Inga transaktioner — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
               </div>
             )}
@@ -983,8 +990,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
             {/* Toppprodukter */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-gray-800 tracking-tight">Toppprodukter</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-base font-bold text-gray-800 tracking-tight shrink-0">Toppprodukter</h2>
+                <div className="h-px bg-slate-200/70 flex-1" />
                 <AskAiButton question="Analysera mina toppprodukter och kategorier — vad driver intäkterna?" />
               </div>
               <RankList items={topProducts} emptyText="Importera data för att se dina toppprodukter." rowLabel="Kategori" barColor="bg-blue-50" />
@@ -992,8 +1000,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
             {/* Toppkunder */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-gray-800 tracking-tight">Toppkunder</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-base font-bold text-gray-800 tracking-tight shrink-0">Toppkunder</h2>
+                <div className="h-px bg-slate-200/70 flex-1" />
                 <AskAiButton question="Analysera mina toppkunder — vem bör jag prioritera och varför?" />
               </div>
               <RankList items={topCustomers} emptyText="Importera data för att se dina toppkunder." rowLabel="Kund" barColor="bg-purple-50" />
@@ -1162,7 +1171,7 @@ function CashflowTooltip({ active, payload, label }: {
   const { formatAmount: fmt } = useCurrency()
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-xl shadow-lg px-4 py-3 text-sm">
+    <div className="glass rounded-xl shadow-lg px-4 py-3 text-sm">
       <p className="font-semibold text-gray-700 mb-2">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
@@ -1181,7 +1190,7 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
   const p = PRIORITY_CONFIG[r.priority ?? 'medium']
 
   return (
-    <div className="group bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden hover:bg-white/60 hover:shadow-[0_12px_40px_rgba(15,23,42,0.09)] transition-all duration-200 cursor-default">
+    <div className="group glass rounded-2xl overflow-hidden hover:bg-white/82 hover:shadow-[0_12px_40px_rgba(15,23,42,0.09)] transition-all duration-200 cursor-default">
       {/* Urgency strip */}
       <div className="h-1 w-full bg-gray-100">
         <div className={`h-full ${p.bar} transition-all`} style={{ width: `${p.urgencyPct}%` }} />
@@ -1271,13 +1280,13 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
 type KpiAccent = 'blue' | 'green' | 'red' | 'orange' | 'purple' | 'yellow'
 type KpiTrend = 'up' | 'down' | 'neutral'
 
-const ACCENT_STYLES: Record<KpiAccent, { shadow: string; shadowHover: string; iconBg: string; iconText: string }> = {
-  blue:   { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(37,99,235,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(37,99,235,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-blue-600' },
-  green:  { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(22,163,74,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(22,163,74,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-green-600' },
-  red:    { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(239,68,68,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(239,68,68,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-red-500' },
-  orange: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(249,115,22,0.10)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(249,115,22,0.14)]',  iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-orange-600' },
-  purple: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(147,51,234,0.10)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(147,51,234,0.14)]',  iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-purple-600' },
-  yellow: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(234,179,8,0.10)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.06),0_8px_32px_rgba(234,179,8,0.14)]',   iconBg: 'bg-white/60 backdrop-blur border border-slate-200/60', iconText: 'text-yellow-600' },
+const ACCENT_STYLES: Record<KpiAccent, { shadow: string; shadowHover: string; iconBg: string; iconText: string; accentBorder: string }> = {
+  blue:   { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(37,99,235,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(37,99,235,0.16)]',   iconBg: 'bg-blue-50   border border-blue-100',   iconText: 'text-blue-600',   accentBorder: 'border-l-blue-500'   },
+  green:  { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(22,163,74,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(22,163,74,0.16)]',   iconBg: 'bg-green-50  border border-green-100',  iconText: 'text-green-600',  accentBorder: 'border-l-green-500'  },
+  red:    { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(239,68,68,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(239,68,68,0.16)]',   iconBg: 'bg-red-50    border border-red-100',    iconText: 'text-red-500',    accentBorder: 'border-l-red-500'    },
+  orange: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(249,115,22,0.12)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(249,115,22,0.16)]',  iconBg: 'bg-orange-50 border border-orange-100', iconText: 'text-orange-600', accentBorder: 'border-l-orange-500' },
+  purple: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(147,51,234,0.12)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(147,51,234,0.16)]',  iconBg: 'bg-purple-50 border border-purple-100', iconText: 'text-purple-600', accentBorder: 'border-l-purple-500' },
+  yellow: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(234,179,8,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(234,179,8,0.16)]',   iconBg: 'bg-yellow-50 border border-yellow-100', iconText: 'text-yellow-600', accentBorder: 'border-l-yellow-500' },
 }
 
 const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }> = {
@@ -1304,7 +1313,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
   return (
     <div
       onClick={onClick}
-      className={`bg-white/50 backdrop-blur-2xl border border-white/60 rounded-2xl px-5 py-5 group relative transition-all duration-300 min-h-[170px] flex flex-col ${c.shadow} ${c.shadowHover} hover:bg-white/60 ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
+      className={`glass-kpi border-l-[3px] ${c.accentBorder} rounded-2xl px-5 py-5 group relative transition-all duration-300 min-h-[160px] flex flex-col ${c.shadow} ${c.shadowHover} hover:bg-white/90 ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
     >
       {/* Icon row */}
       <div className="flex items-start justify-between mb-3">
@@ -1330,7 +1339,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
         {isPlaceholder ? (
           <p className="text-sm text-gray-500 font-medium leading-snug break-words">{value}</p>
         ) : (
-          <p className="text-3xl font-bold text-gray-900 tracking-tight tabular-nums leading-tight">{value}</p>
+          <p className="text-[1.9rem] font-extrabold text-gray-900 tracking-tight tabular-nums leading-none">{value}</p>
         )}
       </div>
 
@@ -1338,7 +1347,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
       <div className="flex items-center justify-between gap-2 mt-auto">
         {subtitle && <p className="text-xs text-gray-400 truncate">{subtitle}</p>}
         {t && trendLabel && (
-          <span className={`ml-auto shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full ${t.text} ${t.bg}`}>
+          <span className={`ml-auto shrink-0 text-[10.5px] font-semibold px-2 py-0.5 rounded-md tracking-wide ${t.text} ${t.bg}`}>
             {t.arrow} {trendLabel}
           </span>
         )}
@@ -1356,17 +1365,17 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
   const { formatAmount: fmt } = useCurrency()
   if (items.length === 0) {
     return (
-      <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl p-6 text-center text-gray-400 text-sm">
+      <div className="glass rounded-2xl p-6 text-center text-gray-400 text-sm">
         {emptyText}
       </div>
     )
   }
   const maxInflow = Math.max(...items.map(p => p.totalInflow), 1)
   return (
-    <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl overflow-hidden shadow-sm">
+    <div className="glass rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <div className="min-w-[360px]">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
+          <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-slate-100">
             <span>{rowLabel}</span>
             <span className="text-right pr-6">Inflöde</span>
             <span className="text-right pr-6">Antal</span>
@@ -1376,7 +1385,7 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
             const barPct = (p.totalInflow / maxInflow) * 100
             const avg = p.transactionCount > 0 ? p.totalInflow / p.transactionCount : 0
             return (
-              <div key={i} className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 ${i !== 0 ? 'border-t border-gray-50' : ''}`}>
+              <div key={i} className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 hover:bg-white/40 transition-colors ${i !== 0 ? 'border-t border-slate-100/60' : ''}`}>
                 <div className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-500`} style={{ width: `${barPct}%` }} />
                 <span className="relative text-sm font-semibold text-gray-800 truncate pr-4">{p.label}</span>
                 <span className="relative text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap tabular-nums">{fmt(p.totalInflow)}</span>
@@ -1440,7 +1449,7 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
 
   if (loading) {
     return (
-      <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/60 relative shadow-[0_8px_32px_rgba(15,23,42,0.06)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent rounded-2xl px-6 py-5 flex items-center gap-4">
+      <div className="glass rounded-2xl px-6 py-5 flex items-center gap-4">
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center shrink-0">
           <SparkleIcon className="w-4 h-4 text-blue-500 animate-pulse" />
         </div>
