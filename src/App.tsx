@@ -46,7 +46,7 @@ function SidebarLayout() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 lg:ml-60 min-w-0">
+      <main className="flex-1 lg:ml-60 min-w-0 animate-fade-rise">
         <Outlet />
       </main>
     </div>

@@ -511,7 +511,7 @@ export default function Onboarding() {
 
       {/* Top bar */}
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
-        <span onClick={() => navigate('/')} className="font-semibold text-gray-900 cursor-pointer select-none tracking-tight">
+        <span onClick={() => navigate('/dashboard')} className="font-semibold text-gray-900 cursor-pointer select-none tracking-tight">
           RW Systems
         </span>
         <span className="text-sm text-gray-400">Steg {step + 1} av {STEP_LABELS.length}</span>
