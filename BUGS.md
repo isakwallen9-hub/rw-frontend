@@ -178,8 +178,9 @@ För att grönmarkera gaten utan att nedgradera infördes ett dokumenterat undan
 
 - **`audit-exceptions.json`** (projektroten) listar advisoryn: id, paket, `added`, `review_by` (3 mån framåt = **2026-11-06**) och skäl.
 - **`scripts/audit-check.mjs`** kör `npm audit --audit-level=high --json`, filtrerar bort undantagna advisories och **failar på allt annat** med severity high/critical. Ingen `|| true`, tröskeln oförändrad. Exit-koden från skriptet är gaten.
-- CI-steget "Security audit" kör `node scripts/audit-check.mjs`. Skriptet **skriver ut aktiva undantag vid varje körning** (med `review_by`, plus varning om datumet passerats eller om undantaget inte längre matchar något fynd) så att de inte glöms bort.
-- **Verifierat:** gaten passerar nu (react-router-advisoryn ursäktad, exit 0) och **failar fortfarande** om en ny high/critical-advisory tillkommer (testat med syntetiskt fynd, exit 1). Måttliga fynd (uuid/exceljs) ligger under `high`-tröskeln och påverkar inte gaten.
+- **Automatisk utgång:** ett undantag **slutar gälla när `review_by` passerats**. Ett förfallet undantag ursäktar inte längre sitt fynd och får dessutom skriptet att **exita 1** med ett tydligt meddelande om att undantaget måste omprövas. Undantag kan alltså inte glömmas bort tyst.
+- CI-steget "Security audit" kör `node scripts/audit-check.mjs`. Skriptet **skriver ut aktiva och förfallna undantag vid varje körning** (med `review_by`, plus notering om undantaget inte längre matchar något fynd).
+- **Verifierat:** gaten passerar nu (react-router-advisoryn ursäktad, exit 0); **failar** om en ny high/critical-advisory tillkommer (syntetiskt fynd, exit 1); och **failar** när `review_by` satts bakåt i tiden (förfallet undantag, exit 1) och passerar igen efter återställt datum. Måttliga fynd (uuid/exceljs) ligger under `high`-tröskeln och påverkar inte gaten.
 
 > **Ompröva undantaget** för GHSA-qwww-vcr4-c8h2 när react-router släpper en patchad version (7.18.x+/8.2.1+ utanför det sårbara intervallet 7.12.0-8.2.0). Ta då bort posten ur `audit-exceptions.json`, uppgradera `react-router-dom` och verifiera att gaten passerar utan undantag. Senast vid `review_by` (2026-11-06) ska undantaget omprövas oavsett.
 

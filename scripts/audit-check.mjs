@@ -16,7 +16,13 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url))
 // --- Läs undantagen ---------------------------------------------------------
 const exFile = new URL('../audit-exceptions.json', import.meta.url)
 const exceptions = JSON.parse(readFileSync(exFile, 'utf8')).exceptions ?? []
-const excused = new Map(exceptions.map((e) => [e.advisory, e]))
+
+// Ett undantag slutar gälla automatiskt när review_by passerats. Endast aktiva
+// (ej förfallna) undantag ursäktar fynd; förfallna tvingar fram exit 1.
+const today = new Date().toISOString().slice(0, 10)
+const expired = exceptions.filter((e) => e.review_by && e.review_by < today)
+const active = exceptions.filter((e) => !expired.includes(e))
+const excused = new Map(active.map((e) => [e.advisory, e]))
 
 // --- Hämta audit-data (npm audit exitar !=0 när fynd finns; fånga stdout) ----
 function getAuditJson() {
@@ -44,20 +50,23 @@ for (const vuln of Object.values(audit.vulnerabilities ?? {})) {
   }
 }
 
-// --- Redovisa aktiva undantag varje körning ---------------------------------
+// --- Redovisa undantag varje körning ----------------------------------------
 console.log('── npm audit-gate (high/critical) ─────────────────────────────')
-const today = new Date().toISOString().slice(0, 10)
-if (exceptions.length === 0) {
+if (active.length === 0) {
   console.log('Aktiva undantag: inga.')
 } else {
-  console.log(`Aktiva undantag (${exceptions.length}):`)
-  for (const e of exceptions) {
+  console.log(`Aktiva undantag (${active.length}):`)
+  for (const e of active) {
     const matched = advisories.has(e.advisory)
-    const overdue = e.review_by && e.review_by < today
     console.log(`  • ${e.advisory} [${e.package}] tillagt ${e.added}, omprövas senast ${e.review_by}` +
-      `${overdue ? '  ⚠️ FÖRFALLET – ompröva nu' : ''}` +
       `${matched ? '' : '  ⚠️ matchar inget aktuellt fynd (kan vara inaktuellt)'}`)
     console.log(`      skäl: ${e.reason}`)
+  }
+}
+if (expired.length) {
+  console.log(`\n⛔ FÖRFALLNA undantag (${expired.length}) – gäller inte längre, måste omprövas:`)
+  for (const e of expired) {
+    console.log(`  • ${e.advisory} [${e.package}] granskningsdatum ${e.review_by} har passerats (idag ${today}).`)
   }
 }
 
@@ -72,11 +81,20 @@ if (waived.length) {
 }
 
 if (blocking.length) {
-  console.log(`\n❌ Blockerande high/critical-fynd utan undantag (${blocking.length}):`)
+  console.log(`\n❌ Blockerande high/critical-fynd utan giltigt undantag (${blocking.length}):`)
   for (const a of blocking) console.log(`  ✗ ${a.id} ${a.severity} – ${a.package}: ${a.title}\n    ${a.url ?? ''}`)
+}
+
+if (expired.length) {
+  console.log(`\n❌ Gaten FAILAR: ${expired.length} undantag har passerat sitt granskningsdatum (review_by) och gäller inte längre.`)
+  console.log('   Ompröva undantaget i audit-exceptions.json: ta bort det om det är åtgärdat, annars förnya review_by med ett nytt motiverat datum.')
+  process.exit(1)
+}
+
+if (blocking.length) {
   console.log('\nGaten FAILAR. Åtgärda sårbarheten eller lägg ett dokumenterat undantag i audit-exceptions.json.')
   process.exit(1)
 }
 
-console.log('\n✅ Gaten PASSERAR: inga high/critical-fynd utanför dokumenterade undantag.')
+console.log('\n✅ Gaten PASSERAR: inga high/critical-fynd utanför giltiga, ej förfallna undantag.')
 process.exit(0)
