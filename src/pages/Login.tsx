@@ -78,7 +78,7 @@ export default function Login() {
               <p className="text-xs text-gray-400">The system for you</p>
             </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Logga in</h1>
+          <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Logga in</h1>
           <p className="text-gray-500 text-sm mb-8">Välkommen tillbaka till RW Systems</p>
 
           <div className="flex flex-col gap-4">

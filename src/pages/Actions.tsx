@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   CheckCircle, Circle, ChevronDown, ChevronUp,
   TrendingUp, AlertTriangle, AlertCircle, Info,
@@ -111,7 +110,6 @@ const MOCK_INVOICES: LateInvoice[] = [
 ]
 
 export default function Actions() {
-  const navigate  = useNavigate()
   const [actions, setActions]           = useState<Action[]>([])
   const [invoices, setInvoices]         = useState<LateInvoice[]>([])
   const [completedIds, setCompletedIds] = useState<Set<string>>(loadProgress)
@@ -202,7 +200,7 @@ export default function Actions() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Åtgärder</h1>
+          <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Åtgärder</h1>
           <p className="text-sm text-gray-500">Konkreta steg för att förbättra din ekonomiska hälsa.</p>
         </div>
 
@@ -261,7 +259,7 @@ export default function Actions() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="glass rounded-2xl p-10 text-center text-gray-400 text-sm">
-            {tab === 'done' ? 'Inga slutförda åtgärder ännu.' : 'Inga pågående åtgärder — bra jobbat!'}
+            {tab === 'done' ? 'Inga slutförda åtgärder ännu.' : 'Inga pågående åtgärder. Bra jobbat!'}
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -280,7 +278,7 @@ export default function Actions() {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <FileText className="w-4 h-4 text-gray-400" />
-            <h2 className="text-base font-bold text-gray-800">Förfallna fakturor</h2>
+            <h2 className="text-xl text-gray-800">Förfallna fakturor</h2>
             {invoices.length > 0 && (
               <span className="text-xs bg-red-100 text-red-600 font-semibold px-2 py-0.5 rounded-full">{invoices.length} st</span>
             )}
@@ -290,7 +288,7 @@ export default function Actions() {
             <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
           ) : invoices.length === 0 ? (
             <div className="glass rounded-2xl p-8 text-center text-gray-400 text-sm">
-              Inga förfallna fakturor — allt är i ordning!
+              Inga förfallna fakturor. Allt är i ordning!
             </div>
           ) : (
             <div className="glass rounded-2xl overflow-hidden shadow-sm">

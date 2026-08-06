@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import {
   ResponsiveContainer,
@@ -29,7 +28,6 @@ function fmt(amount: number): string {
 }
 
 export default function Breakeven() {
-  const navigate = useNavigate()
   const [summary, setSummary] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -57,7 +55,7 @@ export default function Breakeven() {
     <div className="font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
 
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Break-even</h1>
+        <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Break-even</h1>
         <p className="text-sm text-gray-500 mb-8">
           Jämförelse mellan totalt inflöde och utflöde.
         </p>
@@ -105,7 +103,7 @@ export default function Breakeven() {
         </div>
 
         <div className="mt-8 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-8 text-center text-gray-400 text-sm">
-          Egna grafer — kommer snart
+          Egna grafer: kommer snart
         </div>
       </div>
     </div>

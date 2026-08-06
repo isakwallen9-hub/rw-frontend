@@ -51,7 +51,7 @@ export default function Register() {
         <div className="mb-6">
           <span className="font-bold text-2xl tracking-tight">RW Systems</span>
         </div>
-        <h2 className="text-3xl font-bold leading-snug mb-8">
+        <h2 className="text-4xl leading-tight mb-8">
           Kom igång med kassaflödeskontroll på 5 minuter
         </h2>
         <ul className="flex flex-col gap-4">
@@ -77,7 +77,7 @@ export default function Register() {
 
           {step === 1 ? (
             <>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Skapa konto</h1>
+              <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Skapa konto</h1>
               <p className="text-gray-500 text-sm mb-8">Gratis att komma igång</p>
 
               <div className="flex flex-col gap-4">
@@ -152,7 +152,7 @@ export default function Register() {
                 Tillbaka
               </button>
 
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Välj din bransch</h1>
+              <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Välj din bransch</h1>
               <p className="text-gray-500 text-sm mb-6">Vi anpassar upplevelsen efter din verksamhet</p>
 
               {error && <p className="text-red-500 text-sm mb-4">{error}</p>}

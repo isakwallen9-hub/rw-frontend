@@ -225,8 +225,8 @@ export default function Landing() {
             </FadeIn>
 
             <FadeIn delay={90}>
-              <h1 className="mt-6 text-[2.6rem] leading-[1.04] sm:text-6xl sm:leading-[1.03] font-extrabold text-slate-900 tracking-tight text-balance">
-                Se vart pengarna tar vägen&nbsp;—{' '}
+              <h1 className="mt-6 text-[3.25rem] leading-[1.02] sm:text-[5rem] sm:leading-[0.98] text-slate-900 text-balance">
+                Se vart pengarna tar vägen,{' '}
                 <span className="text-primary">medan det händer.</span>
               </h1>
             </FadeIn>
@@ -234,7 +234,7 @@ export default function Landing() {
             <FadeIn delay={170}>
               <p className="mt-6 text-lg text-slate-500 leading-relaxed max-w-md">
                 RW Systems samlar kassaflöde, budget, kundanalys och en AI-ekonomicoach i en enda vy.
-                För dig som vill <span className="text-slate-700 font-medium">förstå</span> siffrorna — inte bara bokföra dem.
+                För dig som vill <span className="text-slate-700 font-medium">förstå</span> siffrorna, inte bara bokföra dem.
               </p>
             </FadeIn>
 
@@ -325,7 +325,7 @@ export default function Landing() {
                     </div>
                     <p className="text-[13px] text-slate-600 leading-snug">
                       <span className="font-semibold text-slate-800">Din AI-coach:</span>{' '}
-                      Intäkterna ökade 18% mot juni — starkast från återkommande kunder.
+                      Intäkterna ökade 18% mot juni. Starkast från återkommande kunder.
                     </p>
                   </div>
                 </div>
@@ -372,11 +372,11 @@ export default function Landing() {
       <section className="max-w-6xl mx-auto px-4 sm:px-8 py-20 sm:py-28">
         <FadeIn className="max-w-xl mb-12">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600 mb-3">Allt på ett ställe</p>
-          <h2 className="text-3xl sm:text-[2.75rem] sm:leading-[1.08] font-extrabold text-slate-900 tracking-tight text-balance">
+          <h2 className="text-[2.25rem] sm:text-5xl sm:leading-[1.02] text-slate-900 text-balance">
             Ett system. Hela ekonomin.
           </h2>
           <p className="mt-4 text-slate-500 leading-relaxed">
-            Sex verktyg som pratar med varandra — och en AI som förklarar vad siffrorna faktiskt betyder.
+            Sex verktyg som pratar med varandra, och en AI som förklarar vad siffrorna faktiskt betyder.
           </p>
         </FadeIn>
 
@@ -393,7 +393,7 @@ export default function Landing() {
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 tracking-tight">Din AI-ekonomicoach</h3>
                   <p className="mt-2 text-slate-500 leading-relaxed max-w-sm">
-                    Ställ en fråga i klarspråk. Få svar grundade i din faktiska data — med konkreta åtgärder, inte floskler.
+                    Ställ en fråga i klarspråk. Få svar grundade i din faktiska data, med konkreta åtgärder, inte floskler.
                   </p>
                 </div>
 
@@ -454,7 +454,7 @@ export default function Landing() {
                 <TrendingUp className="w-5 h-5 text-indigo-600" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-slate-900 tracking-tight">Scenariosimulering</h3>
-              <p className="mt-2 text-sm text-slate-500 leading-relaxed">Testa beslut innan du fattar dem — se utfallet direkt.</p>
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">Testa beslut innan du fattar dem. Se utfallet direkt.</p>
             </div>
           </FadeIn>
 
@@ -465,7 +465,7 @@ export default function Landing() {
                 <Users className="w-5 h-5 text-cyan-600" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-slate-900 tracking-tight">Kundanalys</h3>
-              <p className="mt-2 text-sm text-slate-500 leading-relaxed">Se vilka kunder som driver lönsamheten — och vilka som kostar.</p>
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">Se vilka kunder som driver lönsamheten, och vilka som kostar.</p>
             </div>
           </FadeIn>
 
@@ -477,7 +477,7 @@ export default function Landing() {
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-slate-900 tracking-tight">Export & rapporter</h3>
-                <p className="mt-1 text-sm text-slate-500 leading-relaxed">Exportera till CSV och dela snygga rapporter med revisorn — på ett klick.</p>
+                <p className="mt-1 text-sm text-slate-500 leading-relaxed">Exportera till CSV och dela snygga rapporter med revisorn, på ett klick.</p>
               </div>
               <Link
                 to={loggedIn ? '/dashboard' : '/register'}
@@ -501,7 +501,7 @@ export default function Landing() {
             />
             <div className="relative max-w-xl">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600 mb-4">Kom igång idag</p>
-              <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.06] text-balance">
+              <h2 className="text-[2.5rem] sm:text-6xl text-slate-900 leading-[1.02] text-balance">
                 Redo att se klart?
               </h2>
               <p className="mt-5 text-lg text-slate-500 leading-relaxed">

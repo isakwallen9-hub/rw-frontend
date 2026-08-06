@@ -221,7 +221,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
           fontSize: 12,
           boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
         }}
-        formatter={(v: number) => [v.toLocaleString('sv-SE'), undefined]}
+        formatter={(value) => [Number(value).toLocaleString('sv-SE'), undefined]}
       />
       {nonZero.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
       {hasZeroRef && (
@@ -386,12 +386,12 @@ export default function Insights() {
         setQuery('')
       }
     } catch {
-      setGenerateError({ error: 'Nätverksfel — försök igen.' })
+      setGenerateError({ error: 'Nätverksfel. Försök igen.' })
     }
     setGenerating(false)
   }, [query, generating])
 
-  const sortedInsights = data?.insights
+  const sortedInsights = Array.isArray(data?.insights)
     ? [...data.insights].sort(
         (a, b) =>
           (SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9)
@@ -408,7 +408,7 @@ export default function Insights() {
             <Sparkles className="w-5 h-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">AI-insikter</h1>
+            <h1 className="text-3xl tracking-tight text-slate-900">AI-insikter</h1>
             <p className="text-xs text-gray-400 mt-0.5">Genererat utifrån din ekonomidata</p>
           </div>
         </div>
@@ -500,7 +500,7 @@ export default function Insights() {
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md shadow-blue-500/20">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
-            <h2 className="font-bold text-gray-900 tracking-tight">Läget just nu</h2>
+            <h2 className="text-xl text-gray-900 tracking-tight">Läget just nu</h2>
           </div>
 
           {loading ? (
@@ -521,7 +521,7 @@ export default function Insights() {
         {/* ── Featured charts ── */}
         {!loading && !fetchError && data?.featuredCharts?.length ? (
           <section>
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight mb-4">Utvalda grafer</h2>
+            <h2 className="text-xl text-gray-900 tracking-tight mb-4">Utvalda grafer</h2>
             <div className="flex flex-col gap-5">
               {data.featuredCharts.map((chart, i) => (
                 <FeaturedChartCard key={i} chart={chart} />
@@ -547,7 +547,7 @@ export default function Insights() {
         {!loading && !fetchError && sortedInsights.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900 tracking-tight">Insikter</h2>
+              <h2 className="text-xl text-gray-900 tracking-tight">Insikter</h2>
               <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
                 {sortedInsights.length} st
               </span>
@@ -583,7 +583,7 @@ export default function Insights() {
         {!loading && !fetchError && !sortedInsights.length && !data?.featuredCharts?.length && (
           <div className="glass rounded-2xl p-10 text-center shadow-sm">
             <Sparkles className="w-8 h-8 text-gray-300 mx-auto mb-3" aria-hidden="true" />
-            <p className="text-sm text-gray-400">Inga insikter ännu — importera mer data för att aktivera AI-analysen.</p>
+            <p className="text-sm text-gray-400">Inga insikter ännu. Importera mer data för att aktivera AI-analysen.</p>
           </div>
         )}
 

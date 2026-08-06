@@ -452,7 +452,7 @@ export default function Import() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-green-800 mb-1">Klart!</h2>
+              <h2 className="text-3xl text-green-800 mb-1">Klart!</h2>
               <p className="text-green-700 text-base mb-6">
                 {rowCount !== null ? `${rowCount} rader importerade.` : 'Datan importerades.'}{' '}
                 Din dashboard uppdateras nu.
@@ -510,7 +510,7 @@ export default function Import() {
           <>
             {/* Welcome heading */}
             <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Ladda upp din ekonomifil</h1>
+              <h1 className="text-4xl text-gray-900 mb-2">Ladda upp din ekonomifil</h1>
               <p className="text-gray-500 text-base">Vi tar hand om resten automatiskt.</p>
             </div>
 
@@ -538,7 +538,7 @@ export default function Import() {
               </svg>
               <p className="text-sm text-blue-700 leading-relaxed">
                 Din fil kan vara en <strong>Excel-fil (.xlsx)</strong> eller <strong>CSV-fil</strong>.
-                Den behöver ha kolumner för datum och belopp — det spelar ingen roll vad de heter, vi hittar dem automatiskt!
+                Den behöver ha kolumner för datum och belopp. Det spelar ingen roll vad de heter, vi hittar dem automatiskt!
               </p>
             </div>
 
@@ -664,13 +664,13 @@ export default function Import() {
                         <span className="text-sm text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-mono">{detectedDate}</span>
                       ) : (
                         <div className="flex-1">
-                          <p className="text-xs text-red-500 mb-1">Datum hittades inte — välj rätt kolumn:</p>
+                          <p className="text-xs text-red-500 mb-1">Datum hittades inte. Välj rätt kolumn:</p>
                           <select
                             value={mappedDate}
                             onChange={e => setMappedDate(e.target.value)}
                             className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
                           >
-                            <option value="">— Välj kolumn —</option>
+                            <option value="">Välj kolumn</option>
                             {previewHeaders.map(h => <option key={h} value={h}>{h}</option>)}
                           </select>
                         </div>
@@ -686,13 +686,13 @@ export default function Import() {
                         <span className="text-sm text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-mono">{detectedAmount}</span>
                       ) : (
                         <div className="flex-1">
-                          <p className="text-xs text-red-500 mb-1">Belopp hittades inte — välj rätt kolumn:</p>
+                          <p className="text-xs text-red-500 mb-1">Belopp hittades inte. Välj rätt kolumn:</p>
                           <select
                             value={mappedAmount}
                             onChange={e => setMappedAmount(e.target.value)}
                             className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
                           >
-                            <option value="">— Välj kolumn —</option>
+                            <option value="">Välj kolumn</option>
                             {previewHeaders.map(h => <option key={h} value={h}>{h}</option>)}
                           </select>
                         </div>
@@ -711,7 +711,7 @@ export default function Import() {
                       ) : (
                         <span className="flex items-center gap-1.5 text-sm text-gray-400 font-medium">
                           <span className="text-gray-300">✗</span> Kategori
-                          <span className="font-normal ml-1">— saknas (valfritt)</span>
+                          <span className="font-normal ml-1">saknas (valfritt)</span>
                         </span>
                       )}
                     </div>
@@ -749,7 +749,7 @@ export default function Import() {
         {/* ── Import history ──────────────────────────────────────────────── */}
         {history.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-base font-bold text-gray-800 mb-4">Tidigare importer</h2>
+            <h2 className="text-xl text-gray-800 mb-4">Tidigare importer</h2>
             <div className="glass rounded-2xl overflow-hidden shadow-sm">
               {history.map((rec, i) => (
                 <div

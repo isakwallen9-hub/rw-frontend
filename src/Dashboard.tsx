@@ -24,11 +24,11 @@ const MOCK_OVERVIEW: OverviewData = {
       { month: 'Mar', in: 255000, out: 198000 },
     ],
     recentTransactions: [
-      { date: '2026-03-22', description: 'Inbetalning — Bergström & Co', amount: 48500 },
+      { date: '2026-03-22', description: 'Inbetalning: Bergström & Co', amount: 48500 },
       { date: '2026-03-20', description: 'Hyra mars', amount: -24000 },
-      { date: '2026-03-18', description: 'Inbetalning — Lindqvist AB', amount: 31200 },
+      { date: '2026-03-18', description: 'Inbetalning: Lindqvist AB', amount: 31200 },
       { date: '2026-03-15', description: 'Löner', amount: -87000 },
-      { date: '2026-03-12', description: 'Inbetalning — Nordin Group', amount: 19800 },
+      { date: '2026-03-12', description: 'Inbetalning: Nordin Group', amount: 19800 },
     ],
   },
 }
@@ -138,10 +138,10 @@ function translateAlert(msg: string): string {
   if (m3) return `Kassaflödet räcker i mindre än ${m3[1]} dagar. Åtgärda snarast.`
 
   // Generic English patterns
-  if (/negative\s+cashflow/i.test(msg)) return 'Negativt kassaflöde — utgifterna överstiger inkomsterna.'
-  if (/low\s+cash\s+balance/i.test(msg)) return 'Lågt kassasaldo — bevaka likviditeten.'
+  if (/negative\s+cashflow/i.test(msg)) return 'Negativt kassaflöde: utgifterna överstiger inkomsterna.'
+  if (/low\s+cash\s+balance/i.test(msg)) return 'Lågt kassasaldo: bevaka likviditeten.'
   if (/overdue/i.test(msg)) return 'Du har förfallna fakturor som kräver uppföljning.'
-  if (/runway/i.test(msg)) return 'Låg likviditet — kontrollera ditt kassaflöde.'
+  if (/runway/i.test(msg)) return 'Låg likviditet: kontrollera ditt kassaflöde.'
 
   return msg
 }
@@ -238,15 +238,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     fetchWithAuth(`${API_URL}api/v1/recommendations/top3`)
       .then((r) => r.json())
       .then((json) => {
-        const actions = json.data?.actions ?? json.data ?? json ?? []
+        const rawRec = json.data?.actions ?? json.data ?? json ?? []
+        const actions = Array.isArray(rawRec) ? rawRec : []
         setRecommendations(actions.map((a: Record<string, unknown>) => ({
-          id: a.id,
-          title: a.title,
-          description: a.description,
-          how: a.how,
+          id: a.id != null ? String(a.id) : undefined,
+          title: String(a.title ?? ''),
+          description: String(a.description ?? ''),
+          how: a.how != null ? String(a.how) : undefined,
           estimatedValue: Array.isArray(a.targets) ? (a.targets as { value: number }[]).reduce((sum, t) => sum + (t.value ?? 0), 0) : 0,
-          priority: (a.impact as 'high' | 'medium' | 'low') ?? 'medium',
-          targets: a.targets,
+          priority: (['high', 'medium', 'low'].includes(a.impact as string) ? a.impact : 'medium') as 'high' | 'medium' | 'low',
+          targets: Array.isArray(a.targets) ? (a.targets as Recommendation['targets']) : undefined,
         })))
       })
       .catch(() => setRecommendations(MOCK_RECOMMENDATIONS))
@@ -262,7 +263,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     }
     if (!isTourCompleted()) setShowTour(true)
     let cancelled = false
-    const guard = <T,>(fn: (v: T) => void) => (v: T) => { if (!cancelled) fn(v) }
+    const guard = <T,>(fn: (v: T) => void) => (v?: T) => { if (!cancelled) fn(v as T) }
 
     fetchWithAuth(`${API_URL}api/v1/dashboard/overview`)
       .then(r => r.json())
@@ -294,15 +295,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     fetchWithAuth(`${API_URL}api/v1/recommendations/top3`)
       .then(r => r.json())
       .then(guard(json => {
-        const actions = json.data?.actions ?? json.data ?? json ?? []
+        const rawRec = json.data?.actions ?? json.data ?? json ?? []
+        const actions = Array.isArray(rawRec) ? rawRec : []
         setRecommendations(actions.map((a: Record<string, unknown>) => ({
-          id: a.id,
-          title: a.title,
-          description: a.description,
-          how: a.how,
+          id: a.id != null ? String(a.id) : undefined,
+          title: String(a.title ?? ''),
+          description: String(a.description ?? ''),
+          how: a.how != null ? String(a.how) : undefined,
           estimatedValue: Array.isArray(a.targets) ? (a.targets as { value: number }[]).reduce((sum, t) => sum + (t.value ?? 0), 0) : 0,
-          priority: (a.impact as 'high' | 'medium' | 'low') ?? 'medium',
-          targets: a.targets,
+          priority: (['high', 'medium', 'low'].includes(a.impact as string) ? a.impact : 'medium') as 'high' | 'medium' | 'low',
+          targets: Array.isArray(a.targets) ? (a.targets as Recommendation['targets']) : undefined,
         })))
       }))
       .catch(guard(() => setRecommendations(MOCK_RECOMMENDATIONS)))
@@ -406,7 +408,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         const sunday = new Date(monday)
         sunday.setDate(monday.getDate() + 6)
         const f = (dt: Date) => dt.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
-        label = `${f(monday)}–${f(sunday)}`
+        label = `${f(monday)} till ${f(sunday)}`
       } else {
         key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
         label = date.toLocaleDateString('sv-SE', { month: 'short', year: '2-digit' })
@@ -551,7 +553,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Översikt</h1>
+          <h1 className="text-3xl tracking-tight text-slate-900">Översikt</h1>
           <div className="flex items-center gap-2">
             <button
               onClick={exportExcel}
@@ -810,7 +812,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
               <p className="text-xl font-bold text-gray-900 tracking-tight">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
               <p className="text-xs text-gray-400 mt-1">
-                Bästa dag{quickStats.bestDay?.date ? ` — ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
+                Bästa dag{quickStats.bestDay?.date ? `: ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
               </p>
             </div>
           </div>
@@ -827,7 +829,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           <div data-tour="cashflow-chart" className="glass rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-sm font-bold text-gray-700 mb-0.5 tracking-tight">Kassaflöde</h2>
+                <h2 className="text-lg text-gray-700 mb-0.5 tracking-tight">Kassaflöde</h2>
                 {periodLabel && <p className="text-xs text-gray-400">{periodLabel}</p>}
               </div>
               <div className="flex items-center gap-2">
@@ -876,7 +878,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           </div>
         ) : (
           <div className="glass rounded-xl p-6 text-center text-gray-400 text-sm">
-            Ingen kassaflödesdata tillgänglig — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
+            Ingen kassaflödesdata tillgänglig. Importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
           </div>
         )}
 
@@ -886,7 +888,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           {/* Rekommendationer */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-base font-bold text-gray-800 tracking-tight shrink-0">Rekommenderade åtgärder</h2>
+              <h2 className="text-xl text-gray-800 tracking-tight shrink-0">Rekommenderade åtgärder</h2>
               <div className="h-px bg-slate-200/70 flex-1" />
             </div>
             {loadingRec ? (
@@ -907,7 +909,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           {/* Senaste transaktioner */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-base font-bold text-gray-800 tracking-tight shrink-0">Senaste transaktioner</h2>
+              <h2 className="text-xl text-gray-800 tracking-tight shrink-0">Senaste transaktioner</h2>
               <div className="h-px bg-slate-200/70 flex-1" />
             </div>
             {loadingOverview ? (
@@ -981,7 +983,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               </div>
             ) : (
               <div className="glass rounded-xl p-6 text-center text-gray-400 text-sm">
-                Inga transaktioner — importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
+                Inga transaktioner. Importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
               </div>
             )}
           </div>
@@ -994,9 +996,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             {/* Toppprodukter */}
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-base font-bold text-gray-800 tracking-tight shrink-0">Toppprodukter</h2>
+                <h2 className="text-xl text-gray-800 tracking-tight shrink-0">Toppprodukter</h2>
                 <div className="h-px bg-slate-200/70 flex-1" />
-                <AskAiButton question="Analysera mina toppprodukter och kategorier — vad driver intäkterna?" />
+                <AskAiButton question="Analysera mina toppprodukter och kategorier. Vad driver intäkterna?" />
               </div>
               <RankList items={topProducts} emptyText="Importera data för att se dina toppprodukter." rowLabel="Kategori" barColor="bg-blue-50" />
             </div>
@@ -1004,9 +1006,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             {/* Toppkunder */}
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-base font-bold text-gray-800 tracking-tight shrink-0">Toppkunder</h2>
+                <h2 className="text-xl text-gray-800 tracking-tight shrink-0">Toppkunder</h2>
                 <div className="h-px bg-slate-200/70 flex-1" />
-                <AskAiButton question="Analysera mina toppkunder — vem bör jag prioritera och varför?" />
+                <AskAiButton question="Analysera mina toppkunder. Vem bör jag prioritera och varför?" />
               </div>
               <RankList items={topCustomers} emptyText="Importera data för att se dina toppkunder." rowLabel="Kund" barColor="bg-purple-50" />
             </div>
@@ -1032,7 +1034,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md" onClick={() => setQuickAddOpen(false)}>
           <div className="bg-white/60 backdrop-blur-3xl border border-slate-200/60 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-bold text-gray-900">Ny transaktion</h2>
+              <h2 className="text-xl text-gray-900">Ny transaktion</h2>
               <button onClick={() => setQuickAddOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
             </div>
 
@@ -1604,7 +1606,7 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
             </div>
             <div>
               <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-0.5">AI-sammanfattning</p>
-              <p className="text-base font-bold text-slate-900 tracking-tight">{getGreeting()} — här är läget</p>
+              <p className="text-base font-bold text-slate-900 tracking-tight">{getGreeting()}, här är läget</p>
             </div>
           </div>
           <button

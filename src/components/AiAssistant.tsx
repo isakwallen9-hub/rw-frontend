@@ -164,7 +164,7 @@ function ChartBlock({ chart, height = 190 }: { chart: InlineChart; height?: numb
       />
       <Tooltip
         contentStyle={{ background: 'rgba(255,255,255,0.97)', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 11 }}
-        formatter={(v: number) => [v.toLocaleString('sv-SE'), undefined]}
+        formatter={(value) => [Number(value).toLocaleString('sv-SE'), undefined]}
       />
       {hasZRef && <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 2" strokeWidth={1.5} />}
     </>
@@ -361,7 +361,7 @@ export default function AiAssistant() {
           ...prev,
           [ctx]: [...(prev[ctx] ?? []), {
             role: 'error' as const,
-            text: toErrStr(json?.error, `Fel ${res.status} — försök igen.`),
+            text: toErrStr(json?.error, `Fel ${res.status}. Försök igen.`),
           }],
         }))
       } else {
@@ -404,7 +404,7 @@ export default function AiAssistant() {
         ...prev,
         [ctx]: [...(prev[ctx] ?? []), {
           role: 'error' as const,
-          text: toErrStr(err, 'Nätverksfel — försök igen.'),
+          text: toErrStr(err, 'Nätverksfel. Försök igen.'),
         }],
       }))
     }
@@ -448,11 +448,9 @@ export default function AiAssistant() {
                 {CTX_LABEL[ctx]}
               </span>
               {memoryEnabled && (
-                <Brain
-                  className="w-3.5 h-3.5 text-blue-200"
-                  title="AI-minne aktivt — jag kommer ihåg våra tidigare samtal"
-                  aria-label="AI-minne aktivt"
-                />
+                <span title="AI-minne aktivt: jag kommer ihåg våra tidigare samtal" className="inline-flex">
+                  <Brain className="w-3.5 h-3.5 text-blue-200" aria-label="AI-minne aktivt" />
+                </span>
               )}
             </div>
             <div className="flex items-center gap-1">

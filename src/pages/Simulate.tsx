@@ -58,12 +58,6 @@ function fmt(amount: number): string {
   return n.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 })
 }
 
-function fmtPct(a: number, b: number): string {
-  if (b === 0) return '—'
-  const pct = ((a - b) / Math.abs(b)) * 100
-  return (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%'
-}
-
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
   return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
@@ -353,7 +347,7 @@ export default function Simulate() {
         if (priceErosion?.category) {
           suggestions.push({
             id: 'price_erosion',
-            label: 'AI: Snittpriset har sjunkit — testa en höjning',
+            label: 'AI: Snittpriset har sjunkit. Testa en höjning',
             subLabel: `Höj ${priceErosion.category} med 10%`,
             scenario: { type: 'change_amount', category: priceErosion.category, changePercent: 10 },
           })
@@ -623,7 +617,7 @@ export default function Simulate() {
     <div className="font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
 
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Vad händer om...?</h1>
+        <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Vad händer om...?</h1>
         <p className="text-sm text-gray-500 mb-6">Beskriv ett scenario och se hur det påverkar ditt saldo de nästa 90 dagarna.</p>
 
         {/* ── AI main card ─────────────────────────────────────────── */}
@@ -632,7 +626,7 @@ export default function Simulate() {
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
-            <p className="text-base font-semibold text-slate-800">Beskriv vad du funderar på — AI:n simulerar åt dig</p>
+            <p className="text-base font-semibold text-slate-800">Beskriv vad du funderar på. AI:n simulerar åt dig</p>
           </div>
 
           <textarea
@@ -774,7 +768,7 @@ export default function Simulate() {
               </div>
 
               <div className="border-t border-gray-100 pt-5">
-                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Anpassat scenario</h2>
+                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3 font-sans">Anpassat scenario</h2>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-end">
                   <div className="w-full sm:w-auto">
                     <label className="block text-xs font-medium text-gray-500 mb-1.5">Typ</label>
@@ -907,7 +901,7 @@ export default function Simulate() {
                 </span>
                 {' '}om 90 dagar
                 {balanceDiff !== 0 && (
-                  <> — det är{' '}
+                  <>, det är{' '}
                     <span className={balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}>
                       {fmt(Math.abs(balanceDiff))} {balanceDiff >= 0 ? 'mer' : 'mindre'}
                     </span>
@@ -920,7 +914,7 @@ export default function Simulate() {
             {/* Chart */}
             <div className="glass rounded-2xl p-6 mb-2">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold text-gray-700">Prognos — nästa 90 dagar</p>
+                <p className="text-sm font-semibold text-gray-700">Prognos: nästa 90 dagar</p>
                 <div className="flex gap-1">
                   {(['day', 'week', 'month'] as Granularity[]).map(g => (
                     <button key={g} onClick={() => setGranularity(g)}

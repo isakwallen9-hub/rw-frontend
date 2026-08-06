@@ -163,7 +163,7 @@ const SEVERITY_CONFIG = {
 
 const MOCK_DIAGNOSIS: DiagnosisData = {
   score: 62,
-  summary: 'Din ekonomi är i relativt gott skick men det finns förbättringsområden — framförallt gällande förfallna fakturor och burn rate.',
+  summary: 'Din ekonomi är i relativt gott skick men det finns förbättringsområden, framförallt gällande förfallna fakturor och burn rate.',
   components: [
     { name: 'runway',           score: 18, maxScore: 25, description: '47 dagars runway' },
     { name: 'overdue_invoices', score: 12, maxScore: 25, description: '3 förfallna fakturor' },
@@ -340,7 +340,7 @@ export default function Diagnosis() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Finansiell hälsodiagnos</h1>
+          <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Finansiell hälsodiagnos</h1>
           <p className="text-sm text-gray-500">En samlad bedömning av ditt företags ekonomiska hälsa.</p>
         </div>
 
@@ -397,7 +397,7 @@ export default function Diagnosis() {
           {!aiLoading && !aiDiagnosis && (
             <div className="flex flex-col items-center gap-4 py-8 text-center">
               <p className="text-sm text-slate-500 max-w-sm">
-                AI:n analyserar ditt kassaflöde, marginaler, kostnader och risker — och ger dig en tydlig bild av ditt företags hälsa.
+                AI:n analyserar ditt kassaflöde, marginaler, kostnader och risker, och ger dig en tydlig bild av ditt företags hälsa.
               </p>
               <button
                 onClick={() => void runAiDiagnosis()}
@@ -511,7 +511,7 @@ export default function Diagnosis() {
 
             {/* Technical header with refresh */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h2 className="text-base font-semibold text-slate-700">Teknisk diagnos</h2>
+              <h2 className="text-xl text-slate-700">Teknisk diagnos</h2>
               <button
                 onClick={() => fetchData(true)}
                 disabled={refreshing || loading}
@@ -551,7 +551,7 @@ export default function Diagnosis() {
 
                     {/* Component bars */}
                     <div className="flex flex-col gap-5">
-                      <h2 className="text-sm font-bold text-gray-700">Komponent-breakdown</h2>
+                      <h2 className="text-lg text-gray-700">Komponent-breakdown</h2>
                       {components.map(c => {
                         const meta = COMPONENT_META[c.name] ?? { label: c.label ?? c.name, icon: <Activity className="w-4 h-4" /> }
                         const label = c.label ?? meta.label
@@ -587,7 +587,7 @@ export default function Diagnosis() {
 
                 {/* Root causes */}
                 <div>
-                  <h2 className="text-base font-bold text-gray-800 mb-4">Rotorsaker</h2>
+                  <h2 className="text-xl text-gray-800 mb-4">Rotorsaker</h2>
                   {loadingRC ? (
                     <div className="grid sm:grid-cols-2 gap-4">
                       {[...Array(3)].map((_, i) => (
@@ -596,7 +596,7 @@ export default function Diagnosis() {
                     </div>
                   ) : rootCauses.length === 0 ? (
                     <div className="glass rounded-2xl p-8 text-center text-gray-400 text-sm">
-                      Inga rotorsaker identifierade — din ekonomi ser bra ut!
+                      Inga rotorsaker identifierade. Din ekonomi ser bra ut!
                     </div>
                   ) : (
                     <div className="grid sm:grid-cols-2 gap-4">
@@ -611,7 +611,7 @@ export default function Diagnosis() {
                 {historyChartData.length >= 2 && (
                   <div className="glass rounded-2xl shadow-sm p-6">
                     <div className="flex items-center justify-between mb-5">
-                      <h2 className="text-base font-bold text-gray-800">Hälsoscorehistorik</h2>
+                      <h2 className="text-xl text-gray-800">Hälsoscorehistorik</h2>
                       <span className="text-xs text-gray-400">{historyChartData.length} mätpunkter</span>
                     </div>
                     <ResponsiveContainer width="100%" height={160}>
@@ -649,7 +649,7 @@ export default function Diagnosis() {
 
                 {historyChartData.length === 1 && (
                   <div className="glass rounded-2xl shadow-sm px-6 py-5">
-                    <h2 className="text-base font-bold text-gray-800 mb-1">Hälsoscorehistorik</h2>
+                    <h2 className="text-xl text-gray-800 mb-1">Hälsoscorehistorik</h2>
                     <p className="text-xs text-gray-400">
                       Historiken byggs upp automatiskt varje dag du besöker sidan. Kom tillbaka imorgon för att se din trend.
                     </p>

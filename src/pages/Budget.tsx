@@ -303,7 +303,7 @@ export default function Budget() {
         {/* Page header + month picker */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Budget</h1>
+            <h1 className="text-3xl tracking-tight text-slate-900">Budget</h1>
             <p className="text-sm text-gray-500 mt-0.5">Sätt och följ upp månatliga mål</p>
           </div>
           <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl shadow-sm px-2 py-1.5 self-start sm:self-auto">
@@ -357,7 +357,7 @@ export default function Budget() {
               {/* AI badge */}
               <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
                 <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
-                <p className="text-xs font-medium text-blue-700">AI-förslag — granska och godkänn innan du sparar</p>
+                <p className="text-xs font-medium text-blue-700">AI-förslag: granska och godkänn innan du sparar</p>
               </div>
 
               {/* Revenue + cost cards */}
@@ -403,7 +403,7 @@ export default function Budget() {
                   <svg className="w-4 h-4 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <p className="text-sm font-medium text-green-700">Budget satt av AI — följ upp här nedanför</p>
+                  <p className="text-sm font-medium text-green-700">Budget satt av AI. Följ upp här nedanför</p>
                 </div>
               )}
 
@@ -464,7 +464,7 @@ export default function Budget() {
                 <Target className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-gray-800">Sätt budget manuellt</h2>
+                <h2 className="text-lg text-gray-800">Sätt budget manuellt</h2>
                 <p className="text-xs text-gray-400">för {periodLabel(period)}</p>
               </div>
             </div>
@@ -521,7 +521,7 @@ export default function Budget() {
 
         {/* ── Budget vs actual (always visible) ─────────────────────────── */}
         <div>
-          <h2 className="text-base font-bold text-gray-800 mb-3">Budget vs utfall — {periodLabel(period)}</h2>
+          <h2 className="text-xl text-gray-800 mb-3">Budget vs utfall: {periodLabel(period)}</h2>
 
           {loading ? (
             <div className="grid sm:grid-cols-2 gap-4">

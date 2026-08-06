@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState, useMemo, Fragment } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useUser } from '../contexts/UserContext'
 import { SkeletonCard } from '../components/Skeleton'
@@ -74,7 +73,6 @@ function fmt(n: number | undefined) {
 }
 
 export default function Admin() {
-  const navigate = useNavigate()
   const { isAdmin, loading: userLoading } = useUser()
 
   const [stats, setStats] = useState<AdminStats | null>(null)
@@ -83,6 +81,7 @@ export default function Admin() {
   const [loadingStats, setLoadingStats] = useState(true)
   const [loadingOrgs, setLoadingOrgs] = useState(true)
   const [loadingUsers, setLoadingUsers] = useState(true)
+  const [error, setError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [expandedOrgId, setExpandedOrgId] = useState<string | null>(null)
@@ -95,7 +94,7 @@ export default function Admin() {
     fetchWithAuth(`${API_URL}api/v1/admin/stats`)
       .then(r => r.json())
       .then(json => setStats(json.data ?? json))
-      .catch(() => {})
+      .catch(() => setError('Kunde inte hämta admindata.'))
       .finally(() => setLoadingStats(false))
 
     fetchWithAuth(`${API_URL}api/v1/admin/organisations`)
@@ -104,7 +103,7 @@ export default function Admin() {
         const list = json.data?.organisations ?? json.data ?? json ?? []
         setOrgs(Array.isArray(list) ? list : [])
       })
-      .catch(() => {})
+      .catch(() => setError('Kunde inte hämta admindata.'))
       .finally(() => setLoadingOrgs(false))
 
     fetchWithAuth(`${API_URL}api/v1/admin/users`)
@@ -113,7 +112,7 @@ export default function Admin() {
         const list = json.data?.users ?? json.data ?? json ?? []
         setUsers(Array.isArray(list) ? list : [])
       })
-      .catch(() => {})
+      .catch(() => setError('Kunde inte hämta admindata.'))
       .finally(() => setLoadingUsers(false))
   }, [isAdmin, userLoading])
 
@@ -170,7 +169,7 @@ export default function Admin() {
       <div className="font-sans">
         <div className="max-w-md mx-auto px-4 py-24 flex flex-col items-center text-center gap-4">
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-2xl">🔒</div>
-          <h1 className="text-xl font-bold text-gray-900">Åtkomst nekad</h1>
+          <h1 className="text-2xl text-gray-900">Åtkomst nekad</h1>
           <p className="text-gray-400 text-sm">Du har inte behörighet att visa den här sidan.</p>
         </div>
       </div>
@@ -189,9 +188,15 @@ export default function Admin() {
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 flex flex-col gap-10">
 
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Administration</h1>
+          <h1 className="text-3xl tracking-tight text-slate-900">Administration</h1>
           <p className="text-sm text-slate-500 mt-1">Systemöversikt och hantering</p>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -212,7 +217,7 @@ export default function Admin() {
         {/* Organisations */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-800">Organisationer</h2>
+            <h2 className="text-xl text-gray-800">Organisationer</h2>
             {!loadingOrgs && orgs.length > 0 && (
               <SearchInput value={orgSearch} onChange={setOrgSearch} placeholder="Sök organisation..." />
             )}
@@ -321,7 +326,7 @@ export default function Admin() {
         {/* Users */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-800">Användare</h2>
+            <h2 className="text-xl text-gray-800">Användare</h2>
             {!loadingUsers && users.length > 0 && (
               <SearchInput value={userSearch} onChange={setUserSearch} placeholder="Sök email..." />
             )}
@@ -380,7 +385,7 @@ export default function Admin() {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-xl shrink-0">🗑️</div>
               <div>
-                <h2 className="text-base font-bold text-gray-900">Ta bort organisation?</h2>
+                <h2 className="text-xl text-gray-900">Ta bort organisation?</h2>
                 <p className="text-sm text-gray-400 mt-0.5">Detta går inte att ångra.</p>
               </div>
             </div>

@@ -1,0 +1,13 @@
+{
+  "$comment": "Dokumenterade undantag för npm audit-gaten i CI. Varje undantag måste omprövas senast vid review_by. Ta bort undantaget så fort en patchad version finns. Se BUGS.md §9.",
+  "exceptions": [
+    {
+      "advisory": "GHSA-qwww-vcr4-c8h2",
+      "package": "react-router",
+      "severity": "high",
+      "added": "2026-08-06",
+      "review_by": "2026-11-06",
+      "reason": "React Router RSC Mode CSRF Bypass. Appen är en ren SPA (BrowserRouter, ingen RSC/server-rendering), så vektorn är inte nåbar här. Ingen patchad framåt-version finns: senaste stabila (7.18.2) ligger i det sårbara intervallet 7.12.0-8.2.0 och inga stabila 8.x är släppta. Enda npm-remediering är en brytande nedgradering till react-router-dom@7.11.0, vilket vi medvetet avstår från."
+    }
+  ]
+}

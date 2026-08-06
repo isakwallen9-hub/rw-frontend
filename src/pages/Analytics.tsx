@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState, useCallback, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
@@ -187,7 +186,6 @@ function computeDates(period: Period, customFrom: string, customTo: string) {
 }
 
 export default function Analytics() {
-  const navigate = useNavigate()
   const { formatAmount } = useCurrency()
   const today = toDateInput(new Date())
 
@@ -612,7 +610,7 @@ export default function Analytics() {
     <div className="font-sans">
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10">
 
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Analys</h1>
+        <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Analys</h1>
         <p className="text-sm text-gray-500 mb-6">Jämför och filtrera din ekonomidata.</p>
 
         {/* Saved charts */}
@@ -865,7 +863,7 @@ export default function Analytics() {
         {/* Trend analysis */}
         {trends.length > 0 && (
           <div className="glass rounded-xl px-5 py-4 shadow-sm mb-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Trender — jämfört med föregående period</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Trender: jämfört med föregående period</p>
             <div className="flex flex-col gap-2">
               {trends.map(t => (
                 <div key={t.label} className="flex items-center gap-2 text-sm">
@@ -889,9 +887,9 @@ export default function Analytics() {
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-gray-700">
               {catMode
-                ? `${selectedCats.join(', ')} — ${SHOW_LABEL[series[0]]}`
+                ? `${selectedCats.join(', ')}: ${SHOW_LABEL[series[0]]}`
                 : series.map(s => SHOW_LABEL[s]).join(' & ')
-              } — {PERIOD_OPTIONS.find(p => p.value === period)?.label}
+              }, {PERIOD_OPTIONS.find(p => p.value === period)?.label}
             </p>
             <div className="flex gap-2 flex-wrap">
               <button
@@ -947,7 +945,7 @@ export default function Analytics() {
               <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{compareError}</div>
             ) : compareRows.length === 0 ? (
               <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
-                Ingen data — välj datumintervall för Period A och Period B ovan.
+                Ingen data. Välj datumintervall för Period A och Period B ovan.
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
@@ -988,7 +986,7 @@ export default function Analytics() {
         {/* Category ranking */}
         <div className="glass rounded-2xl shadow-sm p-5 flex flex-col">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
-            Topp kategorier — {SHOW_LABEL[series[0]]}
+            Topp kategorier: {SHOW_LABEL[series[0]]}
           </p>
           {rankData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-gray-300 text-sm">Ingen data</div>
@@ -1027,18 +1025,18 @@ export default function Analytics() {
         {compareMode && !compareLoading && !compareError && compareRows.length > 0 && (
           <div className="glass rounded-2xl shadow-sm p-5 mb-4">
             <h3 className="text-sm font-bold text-gray-700 mb-4">
-              Sammanfattning — {SHOW_LABEL[series[0]]}
+              Sammanfattning: {SHOW_LABEL[series[0]]}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="text-center">
                 <p className="text-[11px] text-blue-500 font-semibold uppercase tracking-widest mb-1">Period A</p>
                 <p className="text-xl font-bold text-gray-900">{fmt(compareSummary.totalA)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{periodAFrom} – {periodATo}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{periodAFrom} till {periodATo}</p>
               </div>
               <div className="text-center">
                 <p className="text-[11px] text-purple-500 font-semibold uppercase tracking-widest mb-1">Period B</p>
                 <p className="text-xl font-bold text-gray-900">{fmt(compareSummary.totalB)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{periodBFrom} – {periodBTo}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{periodBFrom} till {periodBTo}</p>
               </div>
               <div className="text-center">
                 <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Förändring</p>
@@ -1124,7 +1122,7 @@ export default function Analytics() {
 
         {/* Seasonal analysis */}
         <div className="mt-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-1">Säsongsmönster</h2>
+          <h2 className="text-xl text-gray-900 mb-1">Säsongsmönster</h2>
           <p className="text-sm text-gray-500 mb-4">Genomsnittliga värden per månad baserat på din historiska data.</p>
 
           {/* Controls row: metric toggle + category dropdowns */}
@@ -1209,8 +1207,8 @@ export default function Analytics() {
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm font-semibold text-gray-700">
                     {hasSeasonalCompare
-                      ? `${seasonalCategory || 'Alla produkter'} vs ${seasonalCategoryB} — ${SHOW_LABEL[seasonalMetric]}`
-                      : `${seasonalCategory || 'Alla produkter'} — ${SHOW_LABEL[seasonalMetric]}`}
+                      ? `${seasonalCategory || 'Alla produkter'} vs ${seasonalCategoryB}: ${SHOW_LABEL[seasonalMetric]}`
+                      : `${seasonalCategory || 'Alla produkter'}: ${SHOW_LABEL[seasonalMetric]}`}
                   </p>
                   {seasonalLoadingB && (
                     <span className="text-xs text-gray-400 animate-pulse">Laddar Period B...</span>

@@ -140,9 +140,9 @@ const STEP_TITLES = [
 ]
 
 const STEP_HINTS = [
-  'Tips: Du hittar din bankfil i nätbankens exportfunktion. Välj CSV eller Excel-format och exportera de senaste 3–12 månaderna.',
+  'Tips: Du hittar din bankfil i nätbankens exportfunktion. Välj CSV eller Excel-format och exportera de senaste 3 till 12 månaderna.',
   'Tips: Exportera fakturalistan från ditt faktureringsprogram (t.ex. Fortnox eller Visma). Se till att filen visar förfallodatum och betald/obetald-status.',
-  'Ange ungefärliga månadsbelopp — det behöver inte vara exakt. Du kan alltid ändra detta senare.',
+  'Ange ungefärliga månadsbelopp. Det behöver inte vara exakt. Du kan alltid ändra detta senare.',
   'Dessa inställningar används för att beräkna hur snabbt pengar flödar in och ut ur ditt företag.',
 ]
 
@@ -319,7 +319,7 @@ export default function Onboarding() {
     const sId = await runImportFlow(bankFile, mapping)
     setBankSessionId(sId)
     markComplete(0)
-    advanceAfter(`Bankfilen importerad — ${bankTotalRows} rader uppladdade.`, 1)
+    advanceAfter(`Bankfilen importerad: ${bankTotalRows} rader uppladdade.`, 1)
   })
 
   const saveStep2 = () => run(async () => {
@@ -328,7 +328,7 @@ export default function Onboarding() {
     const mapping: Record<string, string> = { date: invoiceMappedDate, amount: invoiceMappedAmount }
     await runImportFlow(invoiceFile, mapping)
     markComplete(1)
-    advanceAfter(`Fakturor importerade — ${invoiceTotalRows} rader uppladdade.`, 2)
+    advanceAfter(`Fakturor importerade: ${invoiceTotalRows} rader uppladdade.`, 2)
   })
 
   const saveStep3 = () => run(async () => {
@@ -459,7 +459,7 @@ export default function Onboarding() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Allt är klart!</h1>
+            <h1 className="text-3xl text-gray-900 mb-2">Allt är klart!</h1>
             <p className="text-gray-500">Din data är uppladdad och redo att analyseras.</p>
           </div>
 
@@ -521,8 +521,8 @@ export default function Onboarding() {
 
         {/* Welcome heading */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Välkommen till RW Systems</h1>
-          <p className="text-gray-500 text-base">Kom igång på 4 enkla steg — det tar bara några minuter.</p>
+          <h1 className="text-4xl text-gray-900 mb-2">Välkommen till RW Systems</h1>
+          <p className="text-gray-500 text-base">Kom igång på 4 enkla steg. Det tar bara några minuter.</p>
         </div>
 
         {/* Step dots + labels */}
@@ -567,7 +567,7 @@ export default function Onboarding() {
 
         {/* Card */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">{STEP_TITLES[step]}</h2>
+          <h2 className="text-2xl text-gray-900 mb-1">{STEP_TITLES[step]}</h2>
 
           {/* Help text */}
           <div className="flex gap-2.5 items-start bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 mb-6 mt-3">
@@ -586,7 +586,7 @@ export default function Onboarding() {
                 <div className="mt-5 space-y-4">
                   <p className="text-sm font-semibold text-gray-700">
                     Ser detta rätt ut?{' '}
-                    <span className="font-normal text-gray-400">{bankTotalRows} rader hittade — visar 5 nedan</span>
+                    <span className="font-normal text-gray-400">{bankTotalRows} rader hittade, visar 5 nedan</span>
                   </p>
 
                   {/* Dynamic preview table */}
@@ -643,7 +643,7 @@ export default function Onboarding() {
                           </>
                         ) : (
                           <span className="text-sm text-gray-400">
-                            <span className="text-gray-300 mr-1">✗</span> Kategori — saknas (valfritt)
+                            <span className="text-gray-300 mr-1">✗</span> Kategori saknas (valfritt)
                           </span>
                         )}
                       </div>
@@ -663,7 +663,7 @@ export default function Onboarding() {
                 <div className="mt-5 space-y-4">
                   <p className="text-sm font-semibold text-gray-700">
                     Ser detta rätt ut?{' '}
-                    <span className="font-normal text-gray-400">{invoiceTotalRows} rader hittade — visar 5 nedan</span>
+                    <span className="font-normal text-gray-400">{invoiceTotalRows} rader hittade, visar 5 nedan</span>
                   </p>
 
                   {/* Dynamic preview table */}
@@ -878,7 +878,7 @@ function UploadZone({ file, inputRef, onFile }: {
             </svg>
           </div>
           <p className="text-sm font-semibold text-gray-900 mt-1">{file.name}</p>
-          <p className="text-xs text-gray-400">{formatBytes(file.size)} — klicka för att byta fil</p>
+          <p className="text-xs text-gray-400">{formatBytes(file.size)}, klicka för att byta fil</p>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3">
@@ -913,13 +913,13 @@ function ColumnRow({ label, detected, mapped, headers, onMap }: {
         <span className="text-sm text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-mono">{detected}</span>
       ) : (
         <div className="flex-1">
-          <p className="text-xs text-red-500 mb-1">{label} hittades inte — välj rätt kolumn:</p>
+          <p className="text-xs text-red-500 mb-1">{label} hittades inte. Välj rätt kolumn:</p>
           <select
             value={mapped}
             onChange={e => onMap(e.target.value)}
             className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
           >
-            <option value="">— Välj kolumn —</option>
+            <option value="">Välj kolumn</option>
             {headers.map(h => <option key={h} value={h}>{h}</option>)}
           </select>
         </div>

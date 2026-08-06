@@ -11,7 +11,8 @@ export default {
         accent:  '#2563eb',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['Instrument Serif', 'Georgia', 'serif'],
+        sans: ['Geist', 'system-ui', 'sans-serif'],
       },
       // Soft, layered, diffuse depth — Apple-style ambient shadows.
       // Overrides the default scale, so every existing `shadow-*` utility

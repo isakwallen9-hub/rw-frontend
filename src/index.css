@@ -21,8 +21,15 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Tighter optical tracking on display text */
-  h1, h2, h3, h4 {
+  /* Display headings — Instrument Serif (400 only). Section/page titles
+     opt into the serif here; body, KPIs, tables, nav stay on Geist sans.
+     Uppercase micro-labels that happen to be <h2> opt back out via font-sans. */
+  h1, h2 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  h3, h4 {
     letter-spacing: -0.022em;
   }
 

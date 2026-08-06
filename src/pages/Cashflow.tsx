@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   ResponsiveContainer, AreaChart, Area, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine,
@@ -85,7 +84,6 @@ const RANGE_PRESETS: { label: string; value: RangePreset }[] = [
 ]
 
 export default function Cashflow() {
-  const navigate = useNavigate()
   const today = toDateInput(new Date())
 
   const [tab, setTab]                   = useState<Tab>('now')
@@ -208,7 +206,7 @@ export default function Cashflow() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">Kassaflöde</h1>
+          <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Kassaflöde</h1>
           <p className="text-sm text-gray-500">Likviditetsöversikt, historik och 90-dagars prognos.</p>
         </div>
 

@@ -259,7 +259,7 @@ export default function Profile() {
 
         {/* Profile card */}
         <div>
-          <h1 className="text-2xl font-bold text-primary mb-4">Profil</h1>
+          <h1 className="text-3xl text-primary mb-4">Profil</h1>
           {loading ? (
             <div className="glass rounded-xl p-6 flex flex-col gap-4">
               {[...Array(5)].map((_, i) => (
@@ -292,7 +292,7 @@ export default function Profile() {
 
         {/* Industry picker */}
         <div>
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Bransch</h2>
+          <h2 className="text-xl text-gray-800 mb-4">Bransch</h2>
           <div className="glass rounded-xl p-4">
             {loading ? (
               <SkeletonCard className="h-40 w-full" />
@@ -322,7 +322,7 @@ export default function Profile() {
 
         {/* Currency picker */}
         <div>
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Valuta</h2>
+          <h2 className="text-xl text-gray-800 mb-4">Valuta</h2>
           <div className="glass rounded-xl p-4">
             {loading ? (
               <SkeletonCard className="h-16 w-full" />
@@ -352,7 +352,7 @@ export default function Profile() {
 
         {/* Notification settings */}
         <div>
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Notifikationer</h2>
+          <h2 className="text-xl text-gray-800 mb-4">Notifikationer</h2>
 
           {notifLoading ? (
             <div className="glass rounded-xl p-6 flex flex-col gap-4">
@@ -439,7 +439,7 @@ export default function Profile() {
 
         {/* AI-minne */}
         <div>
-          <h2 className="text-lg font-bold text-gray-800 mb-4">AI-minne</h2>
+          <h2 className="text-xl text-gray-800 mb-4">AI-minne</h2>
 
           {memoryLoading ? (
             <div className="glass rounded-xl p-6 flex flex-col gap-4">
@@ -454,7 +454,7 @@ export default function Profile() {
                   <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
                     När minnet är på kan AI-assistenten referera till tidigare frågor och ge mer träffsäkra svar över tid.
                     Dina samtal sparas krypterat och används aldrig för att träna AI-modeller.
-                    Du kan när som helst stänga av minnet — då raderas all sparad historik omedelbart.
+                    Du kan när som helst stänga av minnet. Då raderas all sparad historik omedelbart.
                   </p>
                 </div>
                 <Toggle

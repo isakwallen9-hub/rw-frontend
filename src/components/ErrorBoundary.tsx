@@ -38,9 +38,9 @@ export default class ErrorBoundary extends Component<Props, State> {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
           </div>
-          <h1 className="text-lg font-bold text-gray-900 tracking-tight mb-2">Något gick fel</h1>
+          <h1 className="text-2xl text-gray-900 tracking-tight mb-2">Något gick fel</h1>
           <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-            Ett oväntat fel uppstod. Försök igen — om problemet kvarstår, kontakta support.
+            Ett oväntat fel uppstod. Försök igen. Om problemet kvarstår, kontakta support.
           </p>
           {import.meta.env.DEV && this.state.error && (
             <pre className="text-left text-xs bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5 overflow-auto text-red-600 max-h-32">

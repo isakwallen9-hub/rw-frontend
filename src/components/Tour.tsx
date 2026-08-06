@@ -16,7 +16,7 @@ const STEPS: Step[] = [
   {
     target: 'kpi-cards',
     title: 'Din ekonomiska hälsa',
-    body: 'Här ser du de viktigaste nyckeltalen — likvida medel, förfallna fakturor, break-even, runway och bruttomarginal. Klicka på ett kort för att se mer detaljer.',
+    body: 'Här ser du de viktigaste nyckeltalen: likvida medel, förfallna fakturor, break-even, runway och bruttomarginal. Klicka på ett kort för att se mer detaljer.',
     preferredSide: 'bottom',
   },
   {
@@ -24,18 +24,6 @@ const STEPS: Step[] = [
     title: 'Din kassaflödeshistorik',
     body: 'Grafen visar ditt inflöde och utflöde dag för dag. Håll koll på trender och identifiera perioder med låg likviditet.',
     preferredSide: 'top',
-  },
-  {
-    target: 'coach-button',
-    title: 'Din personliga ekonomicoach',
-    body: 'Klicka här för att chatta med din AI-ekonomicoach. Ställ frågor om ditt kassaflöde, fakturor eller åtgärder och få personliga råd direkt.',
-    preferredSide: 'top',
-  },
-  {
-    target: 'import-link',
-    title: 'Importera din data',
-    body: 'Kom igång genom att importera din bankdata eller fakturor. Vi stöder Excel- och CSV-filer och hittar automatiskt rätt kolumner.',
-    preferredSide: 'bottom',
   },
 ]
 

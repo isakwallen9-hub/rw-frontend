@@ -25,10 +25,17 @@ jobs:
         run: npm ci
 
       - name: Type-check
-        run: npx tsc --noEmit
+        # Root tsconfig.json is solution-style (files: [] + references), so `tsc --noEmit`
+        # compiles zero files and always passes. `tsc -b` follows the project references and
+        # actually type-checks src (tsconfig.app.json) and vite.config (tsconfig.node.json).
+        run: npx tsc -b
 
       - name: Security audit
-        run: npm audit --audit-level=high
+        # Kör npm audit --audit-level=high --json och filtrerar bort dokumenterade
+        # undantag (audit-exceptions.json). Failar på alla andra high/critical-fynd.
+        # Skriptet skriver ut aktiva undantag vid varje körning. Ingen `|| true`,
+        # ingen sänkt tröskel — exit-koden från skriptet är gaten.
+        run: node scripts/audit-check.mjs
 
       - name: Build
         run: npm run build
