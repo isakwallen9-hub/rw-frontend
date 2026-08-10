@@ -448,40 +448,40 @@ export default function Onboarding() {
   if (completedAll) {
     return (
       <div className="min-h-screen font-sans">
-        <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
-          <span className="font-semibold text-gray-900 tracking-tight">RW Systems</span>
-          <span className="text-sm text-green-600 font-medium">Klar!</span>
+        <div className="bg-white border-b border-ink-200 px-8 py-4 flex items-center justify-between">
+          <span className="font-semibold text-ink-900 tracking-tight">RW Systems</span>
+          <span className="text-sm text-positive-600 font-medium">Klar!</span>
         </div>
         <div className="max-w-xl mx-auto px-4 py-16">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <div className="w-16 h-16 bg-positive-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-positive-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-3xl text-gray-900 mb-2">Allt är klart!</h1>
-            <p className="text-gray-500">Din data är uppladdad och redo att analyseras.</p>
+            <h1 className="text-3xl text-ink-900 mb-2">Allt är klart!</h1>
+            <p className="text-ink-500">Din data är uppladdad och redo att analyseras.</p>
           </div>
 
           {anomaliesLoading && (
             <div className="glass rounded-2xl px-6 py-5 mb-4 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
-              <p className="text-sm text-slate-500 italic">AI:n letar efter avvikelser i din data...</p>
+              <Sparkles className="w-5 h-5 text-brand-400 shrink-0 animate-pulse" aria-hidden="true" />
+              <p className="text-sm text-ink-500 italic">AI:n letar efter avvikelser i din data...</p>
             </div>
           )}
           {!anomaliesLoading && aiSummaryLoading && (
             <div className="glass rounded-2xl px-6 py-5 mb-4 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
-              <p className="text-sm text-slate-500 italic">AI:n tittar på din nya data...</p>
+              <Sparkles className="w-5 h-5 text-brand-400 shrink-0 animate-pulse" aria-hidden="true" />
+              <p className="text-sm text-ink-500 italic">AI:n tittar på din nya data...</p>
             </div>
           )}
           {!anomaliesLoading && !aiSummaryLoading && aiSummary && (
             <div className="glass rounded-2xl px-6 py-5 mb-4">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
-                <p className="text-sm font-semibold text-slate-700">AI:ns första intryck</p>
+                <Sparkles className="w-4 h-4 text-brand-500 shrink-0" aria-hidden="true" />
+                <p className="text-sm font-semibold text-ink-700">AI:ns första intryck</p>
               </div>
-              <p className="text-sm text-slate-600 leading-relaxed">{aiSummary}</p>
+              <p className="text-sm text-ink-600 leading-relaxed">{aiSummary}</p>
             </div>
           )}
           {anomalies.length > 0 && (
@@ -495,7 +495,7 @@ export default function Onboarding() {
           <div className="text-center">
             <button
               onClick={() => navigate('/dashboard')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors shadow-sm"
             >
               Fortsätt till dashboard →
             </button>
@@ -510,19 +510,19 @@ export default function Onboarding() {
     <div className="min-h-screen font-sans">
 
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
-        <span onClick={() => navigate('/dashboard')} className="font-semibold text-gray-900 cursor-pointer select-none tracking-tight">
+      <div className="bg-white border-b border-ink-200 px-8 py-4 flex items-center justify-between">
+        <span onClick={() => navigate('/dashboard')} className="font-semibold text-ink-900 cursor-pointer select-none tracking-tight">
           RW Systems
         </span>
-        <span className="text-sm text-gray-400">Steg {step + 1} av {STEP_LABELS.length}</span>
+        <span className="text-sm text-ink-400">Steg {step + 1} av {STEP_LABELS.length}</span>
       </div>
 
       <div className="max-w-xl mx-auto px-4 py-10">
 
         {/* Welcome heading */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl text-gray-900 mb-2">Välkommen till RW Systems</h1>
-          <p className="text-gray-500 text-base">Kom igång på 4 enkla steg. Det tar bara några minuter.</p>
+          <h1 className="text-4xl text-ink-900 mb-2">Välkommen till RW Systems</h1>
+          <p className="text-ink-500 text-base">Kom igång på 4 enkla steg. Det tar bara några minuter.</p>
         </div>
 
         {/* Step dots + labels */}
@@ -532,49 +532,49 @@ export default function Onboarding() {
               <div className="flex flex-col items-center gap-1.5">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all
                   ${completedSteps[i]
-                    ? 'bg-green-500 border-green-500'
+                    ? 'bg-positive-500 border-positive-500'
                     : i === step
-                    ? 'bg-[#1e3a5f] border-[#1e3a5f]'
-                    : 'bg-white border-gray-300'}`}>
+                    ? 'bg-[#152663] border-[#152663]'
+                    : 'bg-white border-ink-300'}`}>
                   {completedSteps[i] ? (
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    <span className={`text-xs font-semibold ${i === step ? 'text-white' : 'text-gray-400'}`}>{i + 1}</span>
+                    <span className={`text-xs font-semibold ${i === step ? 'text-white' : 'text-ink-400'}`}>{i + 1}</span>
                   )}
                 </div>
                 <span className={`text-[11px] font-medium whitespace-nowrap text-center leading-tight ${
-                  i === step ? 'text-gray-900' : completedSteps[i] ? 'text-green-600' : 'text-gray-400'
+                  i === step ? 'text-ink-900' : completedSteps[i] ? 'text-positive-600' : 'text-ink-400'
                 }`}>
                   {label}
                 </span>
               </div>
               {i < STEP_LABELS.length - 1 && (
-                <div className={`flex-1 h-px mx-2 mb-5 transition-colors ${completedSteps[i] ? 'bg-green-400' : 'bg-gray-200'}`} />
+                <div className={`flex-1 h-px mx-2 mb-5 transition-colors ${completedSteps[i] ? 'bg-positive-400' : 'bg-ink-200'}`} />
               )}
             </div>
           ))}
         </div>
 
         {/* Progress bar */}
-        <div className="w-full bg-gray-200 rounded-full h-1.5 mb-8">
+        <div className="w-full bg-ink-200 rounded-full h-1.5 mb-8">
           <div
-            className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
+            className="bg-brand-600 h-1.5 rounded-full transition-all duration-500"
             style={{ width: `${progressPct}%` }}
           />
         </div>
 
         {/* Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
-          <h2 className="text-2xl text-gray-900 mb-1">{STEP_TITLES[step]}</h2>
+        <div className="bg-white border border-ink-200 rounded-2xl shadow-sm p-8">
+          <h2 className="text-2xl text-ink-900 mb-1">{STEP_TITLES[step]}</h2>
 
           {/* Help text */}
-          <div className="flex gap-2.5 items-start bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 mb-6 mt-3">
-            <svg className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="flex gap-2.5 items-start bg-ink-50 border border-ink-100 rounded-xl px-4 py-3 mb-6 mt-3">
+            <svg className="w-4 h-4 text-ink-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm text-gray-500 leading-relaxed">{STEP_HINTS[step]}</p>
+            <p className="text-sm text-ink-500 leading-relaxed">{STEP_HINTS[step]}</p>
           </div>
 
           {/* ── Step 1: Bank file ──────────────────────────────────────── */}
@@ -584,9 +584,9 @@ export default function Onboarding() {
 
               {bankPreviewRows.length > 0 && (
                 <div className="mt-5 space-y-4">
-                  <p className="text-sm font-semibold text-gray-700">
+                  <p className="text-sm font-semibold text-ink-700">
                     Ser detta rätt ut?{' '}
-                    <span className="font-normal text-gray-400">{bankTotalRows} rader hittade, visar 5 nedan</span>
+                    <span className="font-normal text-ink-400">{bankTotalRows} rader hittade, visar 5 nedan</span>
                   </p>
 
                   {/* Dynamic preview table */}
@@ -594,17 +594,17 @@ export default function Onboarding() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-gray-100 bg-gray-50">
+                          <tr className="border-b border-ink-100 bg-ink-50">
                             {bankPreviewHeaders.map(h => (
-                              <th key={h} className="text-left px-3 py-2 font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                              <th key={h} className="text-left px-3 py-2 font-semibold text-ink-500 whitespace-nowrap">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {bankPreviewRows.map((row, i) => (
-                            <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-white/20' : ''}`}>
+                            <tr key={i} className={`${i !== 0 ? 'border-t border-ink-50' : ''} ${i % 2 === 1 ? 'bg-white/20' : ''}`}>
                               {bankPreviewHeaders.map(h => (
-                                <td key={h} className="px-3 py-2 text-gray-600 whitespace-nowrap max-w-[140px] truncate">
+                                <td key={h} className="px-3 py-2 text-ink-600 whitespace-nowrap max-w-[140px] truncate">
                                   {String(row[h] ?? '')}
                                 </td>
                               ))}
@@ -617,7 +617,7 @@ export default function Onboarding() {
 
                   {/* Column detection */}
                   <div className="glass rounded-xl p-4">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
+                    <p className="text-xs font-bold text-ink-500 uppercase tracking-widest mb-3">Vi hittade</p>
                     <div className="space-y-3">
                       <ColumnRow
                         label="Datum"
@@ -636,14 +636,14 @@ export default function Onboarding() {
                       <div className="flex items-center gap-3">
                         {bankDetectedCategory ? (
                           <>
-                            <span className="flex items-center gap-1.5 text-sm text-green-700 font-medium min-w-[80px]">
+                            <span className="flex items-center gap-1.5 text-sm text-positive-700 font-medium min-w-[80px]">
                               <span>✓</span> Kategori
                             </span>
-                            <span className="text-sm text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-mono">{bankDetectedCategory}</span>
+                            <span className="text-sm text-ink-400 bg-ink-50 px-2 py-0.5 rounded font-mono">{bankDetectedCategory}</span>
                           </>
                         ) : (
-                          <span className="text-sm text-gray-400">
-                            <span className="text-gray-300 mr-1">✗</span> Kategori saknas (valfritt)
+                          <span className="text-sm text-ink-400">
+                            <span className="text-ink-300 mr-1">✗</span> Kategori saknas (valfritt)
                           </span>
                         )}
                       </div>
@@ -661,9 +661,9 @@ export default function Onboarding() {
 
               {invoicePreviewRows.length > 0 && (
                 <div className="mt-5 space-y-4">
-                  <p className="text-sm font-semibold text-gray-700">
+                  <p className="text-sm font-semibold text-ink-700">
                     Ser detta rätt ut?{' '}
-                    <span className="font-normal text-gray-400">{invoiceTotalRows} rader hittade, visar 5 nedan</span>
+                    <span className="font-normal text-ink-400">{invoiceTotalRows} rader hittade, visar 5 nedan</span>
                   </p>
 
                   {/* Dynamic preview table */}
@@ -671,17 +671,17 @@ export default function Onboarding() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-gray-100 bg-gray-50">
+                          <tr className="border-b border-ink-100 bg-ink-50">
                             {invoicePreviewHeaders.map(h => (
-                              <th key={h} className="text-left px-3 py-2 font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                              <th key={h} className="text-left px-3 py-2 font-semibold text-ink-500 whitespace-nowrap">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {invoicePreviewRows.map((row, i) => (
-                            <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-white/20' : ''}`}>
+                            <tr key={i} className={`${i !== 0 ? 'border-t border-ink-50' : ''} ${i % 2 === 1 ? 'bg-white/20' : ''}`}>
                               {invoicePreviewHeaders.map(h => (
-                                <td key={h} className="px-3 py-2 text-gray-600 whitespace-nowrap max-w-[140px] truncate">
+                                <td key={h} className="px-3 py-2 text-ink-600 whitespace-nowrap max-w-[140px] truncate">
                                   {String(row[h] ?? '')}
                                 </td>
                               ))}
@@ -694,7 +694,7 @@ export default function Onboarding() {
 
                   {/* Column detection */}
                   <div className="glass rounded-xl p-4">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
+                    <p className="text-xs font-bold text-ink-500 uppercase tracking-widest mb-3">Vi hittade</p>
                     <div className="space-y-3">
                       <ColumnRow
                         label="Datum"
@@ -731,23 +731,23 @@ export default function Onboarding() {
           {step === 3 && (
             <div className="flex flex-col gap-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-ink-700 mb-1.5">
                   Hur många dagar brukar dina kunder ta på sig att betala?
-                  <span className="text-gray-400 font-normal ml-1 text-xs">(dagar)</span>
+                  <span className="text-ink-400 font-normal ml-1 text-xs">(dagar)</span>
                 </label>
                 <input
                   type="number"
                   value={paymentDays}
                   onChange={e => setPaymentDays(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition"
+                  className="w-full border border-ink-200 rounded-lg px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Hur fakturerar du?</label>
+                <label className="block text-sm font-medium text-ink-700 mb-1.5">Hur fakturerar du?</label>
                 <select
                   value={paymentType}
                   onChange={e => setPaymentType(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition bg-white cursor-pointer"
+                  className="w-full border border-ink-200 rounded-lg px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition bg-white cursor-pointer"
                 >
                   <option>Per projekt</option>
                   <option>Löpande</option>
@@ -759,36 +759,36 @@ export default function Onboarding() {
 
           {/* Success */}
           {stepSuccess && (
-            <div className="mt-6 flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-              <svg className="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <div className="mt-6 flex items-center gap-2.5 bg-positive-50 border border-positive-200 rounded-xl px-4 py-3">
+              <svg className="w-4 h-4 text-positive-600 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              <p className="text-sm text-green-700 font-medium">{stepSuccess}</p>
+              <p className="text-sm text-positive-700 font-medium">{stepSuccess}</p>
             </div>
           )}
 
           {/* Error */}
           {stepError && (
-            <div className="mt-6 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              <svg className="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <div className="mt-6 flex items-start gap-2.5 bg-negative-50 border border-negative-200 rounded-xl px-4 py-3">
+              <svg className="w-4 h-4 text-negative-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <p className="text-sm font-semibold text-red-700 mb-0.5">Något gick fel</p>
-                <p className="text-sm text-red-600">{stepError}</p>
+                <p className="text-sm font-semibold text-negative-700 mb-0.5">Något gick fel</p>
+                <p className="text-sm text-negative-600">{stepError}</p>
               </div>
             </div>
           )}
 
           {/* Footer actions */}
           <div className="mt-8 flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm text-gray-400">
+            <div className="flex items-center gap-4 text-sm text-ink-400">
               {step > 0 && (
-                <button onClick={goBack} className="hover:text-gray-700 transition-colors">
+                <button onClick={goBack} className="hover:text-ink-700 transition-colors">
                   Tillbaka
                 </button>
               )}
-              <button onClick={doReset} className="hover:text-gray-700 transition-colors">
+              <button onClick={doReset} className="hover:text-ink-700 transition-colors">
                 Börja om
               </button>
             </div>
@@ -796,7 +796,7 @@ export default function Onboarding() {
             <button
               onClick={handlers[step]}
               disabled={stepLoading}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50"
             >
               {stepLoading
                 ? <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />{progressLabel || 'Sparar…'}</>
@@ -806,7 +806,7 @@ export default function Onboarding() {
           </div>
         </div>
 
-        <p className="mt-4 text-center text-xs text-gray-400">
+        <p className="mt-4 text-center text-xs text-ink-400">
           Du kan alltid komma tillbaka och uppdatera detta senare.
         </p>
       </div>
@@ -816,9 +816,9 @@ export default function Onboarding() {
 
 // ── Anomaly card ────────────────────────────────────────────────────────────
 const ANOMALY_CONFIG = {
-  critical: { border: 'border-l-red-500',    iconBg: 'bg-red-50',    iconColor: 'text-red-500',    Icon: AlertTriangle },
-  warning:  { border: 'border-l-yellow-500', iconBg: 'bg-yellow-50', iconColor: 'text-yellow-600', Icon: AlertCircle   },
-  info:     { border: 'border-l-blue-500',   iconBg: 'bg-blue-50',   iconColor: 'text-blue-500',   Icon: Info          },
+  critical: { border: 'border-l-negative-500',    iconBg: 'bg-negative-50',    iconColor: 'text-negative-600',    Icon: AlertTriangle },
+  warning:  { border: 'border-l-caution-500', iconBg: 'bg-caution-50', iconColor: 'text-caution-600', Icon: AlertCircle   },
+  info:     { border: 'border-l-brand-500',   iconBg: 'bg-brand-50',   iconColor: 'text-brand-500',   Icon: Info          },
 } as const
 
 function AnomalyCard({ anomaly, fmt }: { anomaly: Anomaly; fmt: (n: number) => string }) {
@@ -829,10 +829,10 @@ function AnomalyCard({ anomaly, fmt }: { anomaly: Anomaly; fmt: (n: number) => s
         <c.Icon className={`w-3.5 h-3.5 ${c.iconColor}`} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-800">{anomaly.title}</p>
-        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{anomaly.description}</p>
+        <p className="text-sm font-semibold text-ink-800">{anomaly.title}</p>
+        <p className="text-xs text-ink-500 mt-0.5 leading-relaxed">{anomaly.description}</p>
         {anomaly.affectedAmount !== undefined && (
-          <p className="text-xs font-medium text-slate-600 mt-1">Belopp: {fmt(anomaly.affectedAmount)}</p>
+          <p className="text-xs font-medium text-ink-600 mt-1">Belopp: {fmt(anomaly.affectedAmount)}</p>
         )}
       </div>
     </div>
@@ -856,10 +856,10 @@ function UploadZone({ file, inputRef, onFile }: {
       onClick={() => inputRef.current?.click()}
       className={`rounded-2xl border-2 border-dashed py-12 px-8 text-center cursor-pointer transition-colors select-none
         ${dragging
-          ? 'border-blue-400 bg-blue-50'
+          ? 'border-brand-400 bg-brand-50'
           : file
-          ? 'border-blue-300 bg-blue-50 hover:border-blue-400'
-          : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50/50'
+          ? 'border-brand-300 bg-brand-50 hover:border-brand-400'
+          : 'border-ink-300 bg-white hover:border-brand-400 hover:bg-brand-50/50'
         }`}
     >
       <input
@@ -872,24 +872,24 @@ function UploadZone({ file, inputRef, onFile }: {
 
       {file ? (
         <div className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center">
+            <svg className="w-6 h-6 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-gray-900 mt-1">{file.name}</p>
-          <p className="text-xs text-gray-400">{formatBytes(file.size)}, klicka för att byta fil</p>
+          <p className="text-sm font-semibold text-ink-900 mt-1">{file.name}</p>
+          <p className="text-xs text-ink-400">{formatBytes(file.size)}, klicka för att byta fil</p>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center">
-            <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <div className="w-14 h-14 bg-ink-100 rounded-2xl flex items-center justify-center">
+            <svg className="w-7 h-7 text-ink-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
           </div>
           <div>
-            <p className="text-base font-semibold text-gray-700">Dra hit din fil eller klicka för att välja</p>
-            <p className="text-sm text-gray-400 mt-0.5">Excel (.xlsx) eller CSV</p>
+            <p className="text-base font-semibold text-ink-700">Dra hit din fil eller klicka för att välja</p>
+            <p className="text-sm text-ink-400 mt-0.5">Excel (.xlsx) eller CSV</p>
           </div>
         </div>
       )}
@@ -906,18 +906,18 @@ function ColumnRow({ label, detected, mapped, headers, onMap }: {
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className={`flex items-center gap-1.5 text-sm font-medium min-w-[80px] shrink-0 ${detected ? 'text-green-700' : 'text-red-600'}`}>
+      <span className={`flex items-center gap-1.5 text-sm font-medium min-w-[80px] shrink-0 ${detected ? 'text-positive-700' : 'text-negative-600'}`}>
         <span>{detected ? '✓' : '✗'}</span> {label}
       </span>
       {detected ? (
-        <span className="text-sm text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-mono">{detected}</span>
+        <span className="text-sm text-ink-400 bg-ink-50 px-2 py-0.5 rounded font-mono">{detected}</span>
       ) : (
         <div className="flex-1">
-          <p className="text-xs text-red-500 mb-1">{label} hittades inte. Välj rätt kolumn:</p>
+          <p className="text-xs text-negative-600 mb-1">{label} hittades inte. Välj rätt kolumn:</p>
           <select
             value={mapped}
             onChange={e => onMap(e.target.value)}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+            className="w-full text-sm border border-ink-200 rounded-lg px-3 py-1.5 text-ink-700 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white"
           >
             <option value="">Välj kolumn</option>
             {headers.map(h => <option key={h} value={h}>{h}</option>)}
@@ -935,15 +935,15 @@ function CostField({ label, value, onChange }: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-        {label} <span className="text-gray-400 font-normal text-xs">kr / månad</span>
+      <label className="block text-sm font-medium text-ink-700 mb-1.5">
+        {label} <span className="text-ink-400 font-normal text-xs">kr / månad</span>
       </label>
       <input
         type="number"
         placeholder="0"
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition"
+        className="w-full border border-ink-200 rounded-lg px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition"
       />
     </div>
   )

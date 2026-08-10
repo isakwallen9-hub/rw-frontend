@@ -55,18 +55,18 @@ interface AiDiagnosisCache {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function scoreConfig(score: number) {
-  if (score >= 80) return { grade: 'A', stroke: '#16a34a', textColor: 'text-green-600', label: 'Utmärkt',  bg: 'bg-green-50'  }
-  if (score >= 65) return { grade: 'B', stroke: '#65a30d', textColor: 'text-lime-600',  label: 'Bra',       bg: 'bg-lime-50'   }
-  if (score >= 50) return { grade: 'C', stroke: '#ca8a04', textColor: 'text-yellow-600',label: 'Godkänt',  bg: 'bg-yellow-50' }
-  if (score >= 35) return { grade: 'D', stroke: '#ea580c', textColor: 'text-orange-600',label: 'Svagt',    bg: 'bg-orange-50' }
-  return               { grade: 'F', stroke: '#dc2626', textColor: 'text-red-600',    label: 'Kritiskt', bg: 'bg-red-50'    }
+  if (score >= 80) return { grade: 'A', stroke: '#0A7D55', textColor: 'text-positive-600', label: 'Utmärkt',  bg: 'bg-positive-50'  }
+  if (score >= 65) return { grade: 'B', stroke: '#0E9C6B', textColor: 'text-lime-600',  label: 'Bra',       bg: 'bg-lime-50'   }
+  if (score >= 50) return { grade: 'C', stroke: '#A66916', textColor: 'text-caution-600',label: 'Godkänt',  bg: 'bg-caution-50' }
+  if (score >= 35) return { grade: 'D', stroke: '#C9821F', textColor: 'text-caution-600',label: 'Svagt',    bg: 'bg-caution-50' }
+  return               { grade: 'F', stroke: '#AE3838', textColor: 'text-negative-600',    label: 'Kritiskt', bg: 'bg-negative-50'    }
 }
 
 function barColor(score: number, max: number): string {
   const pct = max > 0 ? score / max : 0
-  if (pct >= 0.7) return 'bg-green-500'
-  if (pct >= 0.4) return 'bg-yellow-400'
-  return 'bg-red-500'
+  if (pct >= 0.7) return 'bg-positive-500'
+  if (pct >= 0.4) return 'bg-caution-400'
+  return 'bg-negative-500'
 }
 
 function loadHistory(): HistoryEntry[] {
@@ -156,9 +156,9 @@ const COMPONENT_META: Record<string, { label: string; icon: React.ReactNode }> =
 }
 
 const SEVERITY_CONFIG = {
-  high:   { label: 'Hög',    bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-700',    iconBg: 'bg-red-100'    },
-  medium: { label: 'Medium', bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', iconBg: 'bg-yellow-100' },
-  low:    { label: 'Låg',    bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700',   iconBg: 'bg-blue-100'   },
+  high:   { label: 'Hög',    bg: 'bg-negative-50',    border: 'border-negative-200',    text: 'text-negative-700',    iconBg: 'bg-negative-100'    },
+  medium: { label: 'Medium', bg: 'bg-caution-50', border: 'border-caution-200', text: 'text-caution-700', iconBg: 'bg-caution-100' },
+  low:    { label: 'Låg',    bg: 'bg-brand-50',   border: 'border-brand-200',   text: 'text-brand-700',   iconBg: 'bg-brand-100'   },
 }
 
 const MOCK_DIAGNOSIS: DiagnosisData = {
@@ -340,8 +340,8 @@ export default function Diagnosis() {
 
         {/* Header */}
         <div>
-          <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Finansiell hälsodiagnos</h1>
-          <p className="text-sm text-gray-500">En samlad bedömning av ditt företags ekonomiska hälsa.</p>
+          <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Finansiell hälsodiagnos</h1>
+          <p className="text-sm text-ink-500">En samlad bedömning av ditt företags ekonomiska hälsa.</p>
         </div>
 
         {/* ── AI main card ──────────────────────────────────────────────── */}
@@ -350,20 +350,20 @@ export default function Diagnosis() {
           {/* Card header */}
           <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-base font-semibold text-slate-800">Låt AI:n undersöka ditt företags hälsa</p>
+                <p className="text-base font-semibold text-ink-800">Låt AI:n undersöka ditt företags hälsa</p>
                 {lastRunTime && (
-                  <p className="text-xs text-slate-400 mt-0.5">Senast körd: {formatRunTime(lastRunTime)}</p>
+                  <p className="text-xs text-ink-400 mt-0.5">Senast körd: {formatRunTime(lastRunTime)}</p>
                 )}
               </div>
             </div>
             {(aiDiagnosis !== null) && !aiLoading && (
               <button
                 onClick={() => void runAiDiagnosis()}
-                className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 border border-slate-200 hover:border-blue-300 rounded-xl px-3 py-2 transition-colors shrink-0 min-h-[44px]"
+                className="flex items-center gap-1.5 text-sm text-ink-500 hover:text-brand-600 border border-ink-200 hover:border-brand-300 rounded-xl px-3 py-2 transition-colors shrink-0 min-h-[44px]"
               >
                 <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
                 Kör igen
@@ -374,18 +374,18 @@ export default function Diagnosis() {
           {/* Loading animation */}
           {aiLoading && (
             <div className="flex flex-col items-center gap-5 py-10">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center">
                 <Activity className="w-8 h-8 text-white animate-pulse" aria-hidden="true" />
               </div>
               <div className="text-center">
-                <p className="text-base font-semibold text-slate-800">AI:n undersöker ditt företag...</p>
-                <p className="text-sm text-slate-500 mt-1">Analyserar kassaflöde, marginaler och risker</p>
+                <p className="text-base font-semibold text-ink-800">AI:n undersöker ditt företag...</p>
+                <p className="text-sm text-ink-500 mt-1">Analyserar kassaflöde, marginaler och risker</p>
               </div>
               <div className="flex gap-1.5">
                 {[0, 1, 2, 3].map(i => (
                   <div
                     key={i}
-                    className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                    className="w-2 h-2 bg-brand-400 rounded-full animate-bounce"
                     style={{ animationDelay: `${i * 150}ms` }}
                   />
                 ))}
@@ -396,12 +396,12 @@ export default function Diagnosis() {
           {/* Empty state — no diagnosis yet */}
           {!aiLoading && !aiDiagnosis && (
             <div className="flex flex-col items-center gap-4 py-8 text-center">
-              <p className="text-sm text-slate-500 max-w-sm">
+              <p className="text-sm text-ink-500 max-w-sm">
                 AI:n analyserar ditt kassaflöde, marginaler, kostnader och risker, och ger dig en tydlig bild av ditt företags hälsa.
               </p>
               <button
                 onClick={() => void runAiDiagnosis()}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors min-h-[44px]"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors min-h-[44px]"
               >
                 <Sparkles className="w-4 h-4" aria-hidden="true" />
                 Kör AI-diagnos →
@@ -414,7 +414,7 @@ export default function Diagnosis() {
             <div className="flex flex-col gap-5">
 
               {/* Assessment */}
-              <p className="text-lg font-medium text-slate-800 leading-relaxed">
+              <p className="text-lg font-medium text-ink-800 leading-relaxed">
                 {aiDiagnosis.assessment}
               </p>
 
@@ -422,24 +422,24 @@ export default function Diagnosis() {
               {(aiDiagnosis.strengths.length > 0 || aiDiagnosis.problems.length > 0) && (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {aiDiagnosis.strengths.length > 0 && (
-                    <div className="bg-green-50/70 border border-green-200/70 rounded-xl p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-green-700 mb-3 flex items-center gap-1.5">
+                    <div className="bg-positive-50/70 border border-positive-200/70 rounded-xl p-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-positive-700 mb-3 flex items-center gap-1.5">
                         <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
                         Styrkor
                       </p>
                       <div className="flex flex-col gap-2.5">
                         {aiDiagnosis.strengths.map((s, i) => (
                           <div key={i} className="flex items-start gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" aria-hidden="true" />
-                            <p className="text-sm text-slate-700 leading-relaxed">{s}</p>
+                            <CheckCircle className="w-4 h-4 text-positive-500 shrink-0 mt-0.5" aria-hidden="true" />
+                            <p className="text-sm text-ink-700 leading-relaxed">{s}</p>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
                   {aiDiagnosis.problems.length > 0 && (
-                    <div className="bg-red-50/70 border border-red-200/70 rounded-xl p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-red-700 mb-3 flex items-center gap-1.5">
+                    <div className="bg-negative-50/70 border border-negative-200/70 rounded-xl p-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-negative-700 mb-3 flex items-center gap-1.5">
                         <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
                         Problem
                       </p>
@@ -447,10 +447,10 @@ export default function Diagnosis() {
                         {aiDiagnosis.problems.map((p, i) => (
                           <div key={i} className="flex items-start gap-2">
                             <XCircle
-                              className={`w-4 h-4 shrink-0 mt-0.5 ${i === 0 ? 'text-red-500' : 'text-amber-500'}`}
+                              className={`w-4 h-4 shrink-0 mt-0.5 ${i === 0 ? 'text-negative-600' : 'text-caution-500'}`}
                               aria-hidden="true"
                             />
-                            <p className="text-sm text-slate-700 leading-relaxed">{p}</p>
+                            <p className="text-sm text-ink-700 leading-relaxed">{p}</p>
                           </div>
                         ))}
                       </div>
@@ -461,20 +461,20 @@ export default function Diagnosis() {
 
               {/* Weekly action */}
               {aiDiagnosis.action && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <Lightbulb className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 flex gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-brand-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <Lightbulb className="w-4 h-4 text-brand-600" aria-hidden="true" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">Veckans viktigaste åtgärd</p>
-                    <p className="text-sm text-slate-700 leading-relaxed">{aiDiagnosis.action}</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">Veckans viktigaste åtgärd</p>
+                    <p className="text-sm text-ink-700 leading-relaxed">{aiDiagnosis.action}</p>
                   </div>
                 </div>
               )}
 
               {/* Follow-up chips */}
-              <div className="pt-4 border-t border-slate-100">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Fråga AI mer</p>
+              <div className="pt-4 border-t border-ink-100">
+                <p className="text-xs font-semibold text-ink-400 uppercase tracking-wider mb-2.5">Fråga AI mer</p>
                 <div className="flex flex-wrap gap-2">
                   {[
                     'Varför är min marginal låg?',
@@ -484,9 +484,9 @@ export default function Diagnosis() {
                     <button
                       key={q}
                       onClick={() => openAiWith(q)}
-                      className="bg-white border border-slate-200 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-slate-600 hover:bg-white/80 hover:border-blue-300 hover:text-blue-700 transition-all min-h-[44px]"
+                      className="bg-white border border-ink-200 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-ink-600 hover:bg-white/80 hover:border-brand-300 hover:text-brand-700 transition-all min-h-[44px]"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" aria-hidden="true" />
+                      <Sparkles className="w-3.5 h-3.5 text-brand-400 shrink-0" aria-hidden="true" />
                       {q}
                     </button>
                   ))}
@@ -499,7 +499,7 @@ export default function Diagnosis() {
         {/* ── Technical section toggle ───────────────────────────────────── */}
         <button
           onClick={handleOpenTech}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors self-start"
+          className="flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-700 transition-colors self-start"
         >
           <span className={`transition-transform inline-block ${techOpen ? 'rotate-90' : ''}`}>›</span>
           {techOpen ? 'Dölj teknisk diagnos' : 'Eller se den tekniska diagnosen →'}
@@ -511,11 +511,11 @@ export default function Diagnosis() {
 
             {/* Technical header with refresh */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h2 className="text-xl text-slate-700">Teknisk diagnos</h2>
+              <h2 className="text-2xl text-ink-700">Teknisk diagnos</h2>
               <button
                 onClick={() => fetchData(true)}
                 disabled={refreshing || loading}
-                className="flex items-center gap-2 text-sm font-medium text-accent border border-accent/30 px-4 py-2.5 rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 text-sm font-medium text-accent border border-accent/30 px-4 py-2.5 rounded-xl hover:bg-brand-50 transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 Uppdatera
@@ -524,12 +524,12 @@ export default function Diagnosis() {
 
             {loading ? (
               <div className="flex flex-col gap-6">
-                <div className="h-72 bg-gray-100 rounded-2xl animate-pulse" />
-                <div className="h-52 bg-gray-100 rounded-2xl animate-pulse" />
-                <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />
+                <div className="h-72 bg-ink-100 rounded-2xl animate-pulse" />
+                <div className="h-52 bg-ink-100 rounded-2xl animate-pulse" />
+                <div className="h-40 bg-ink-100 rounded-2xl animate-pulse" />
               </div>
             ) : !diagnosis || !cfg ? (
-              <div className="text-center text-gray-400 text-sm py-16">Ingen diagnosdata tillgänglig.</div>
+              <div className="text-center text-ink-400 text-sm py-16">Ingen diagnosdata tillgänglig.</div>
             ) : (
               <>
                 {/* Score + Component breakdown */}
@@ -537,13 +537,13 @@ export default function Diagnosis() {
                   <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
 
                     {/* Circular score */}
-                    <div className="flex flex-col items-center gap-3 md:border-r md:border-gray-100 md:pr-8">
+                    <div className="flex flex-col items-center gap-3 md:border-r md:border-ink-100 md:pr-8">
                       <CircularScore score={diagnosis.score} />
                       <span className={`text-xs font-semibold px-3 py-1 rounded-full ${cfg.bg} ${cfg.textColor}`}>
                         {cfg.label}
                       </span>
                       {diagnosis.summary && (
-                        <p className="text-xs text-gray-500 text-center leading-relaxed max-w-[190px]">
+                        <p className="text-xs text-ink-500 text-center leading-relaxed max-w-[190px]">
                           {diagnosis.summary}
                         </p>
                       )}
@@ -551,7 +551,7 @@ export default function Diagnosis() {
 
                     {/* Component bars */}
                     <div className="flex flex-col gap-5">
-                      <h2 className="text-lg text-gray-700">Komponent-breakdown</h2>
+                      <h2 className="text-lg text-ink-700">Komponent-breakdown</h2>
                       {components.map(c => {
                         const meta = COMPONENT_META[c.name] ?? { label: c.label ?? c.name, icon: <Activity className="w-4 h-4" /> }
                         const label = c.label ?? meta.label
@@ -560,23 +560,23 @@ export default function Diagnosis() {
                         return (
                           <div key={c.name}>
                             <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                                <span className="text-gray-400">{meta.icon}</span>
+                              <div className="flex items-center gap-2 text-sm font-medium text-ink-700">
+                                <span className="text-ink-400">{meta.icon}</span>
                                 {label}
                               </div>
-                              <span className="text-sm font-bold text-gray-900 tabular-nums">
+                              <span className="text-sm font-bold text-ink-900 tabular-nums">
                                 {c.score}
-                                <span className="text-gray-400 font-normal text-xs"> / {c.maxScore}</span>
+                                <span className="text-ink-400 font-normal text-xs"> / {c.maxScore}</span>
                               </span>
                             </div>
-                            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-3 bg-ink-100 rounded-full overflow-hidden">
                               <div
                                 className={`h-full ${color} rounded-full transition-all duration-700`}
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
                             {c.description && (
-                              <p className="text-xs text-gray-400 mt-1.5">{c.description}</p>
+                              <p className="text-xs text-ink-400 mt-1.5">{c.description}</p>
                             )}
                           </div>
                         )
@@ -587,15 +587,15 @@ export default function Diagnosis() {
 
                 {/* Root causes */}
                 <div>
-                  <h2 className="text-xl text-gray-800 mb-4">Rotorsaker</h2>
+                  <h2 className="text-2xl text-ink-800 mb-4">Rotorsaker</h2>
                   {loadingRC ? (
                     <div className="grid sm:grid-cols-2 gap-4">
                       {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
+                        <div key={i} className="h-32 bg-ink-100 rounded-2xl animate-pulse" />
                       ))}
                     </div>
                   ) : rootCauses.length === 0 ? (
-                    <div className="glass rounded-2xl p-8 text-center text-gray-400 text-sm">
+                    <div className="glass rounded-2xl p-8 text-center text-ink-400 text-sm">
                       Inga rotorsaker identifierade. Din ekonomi ser bra ut!
                     </div>
                   ) : (
@@ -611,25 +611,25 @@ export default function Diagnosis() {
                 {historyChartData.length >= 2 && (
                   <div className="glass rounded-2xl shadow-sm p-6">
                     <div className="flex items-center justify-between mb-5">
-                      <h2 className="text-xl text-gray-800">Hälsoscorehistorik</h2>
-                      <span className="text-xs text-gray-400">{historyChartData.length} mätpunkter</span>
+                      <h2 className="text-2xl text-ink-800">Hälsoscorehistorik</h2>
+                      <span className="text-xs text-ink-400">{historyChartData.length} mätpunkter</span>
                     </div>
                     <ResponsiveContainer width="100%" height={160}>
                       <AreaChart data={historyChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%"  stopColor="#2563eb" stopOpacity={0.18} />
-                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                            <stop offset="5%"  stopColor="#3A5CD8" stopOpacity={0.18} />
+                            <stop offset="95%" stopColor="#3A5CD8" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={26} />
+                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={26} />
                         <Tooltip
                           content={({ active, payload, label }) =>
                             active && payload?.length ? (
                               <div className="glass rounded-xl shadow px-3 py-2 text-xs">
-                                <p className="text-gray-500 mb-0.5">{label}</p>
-                                <p className="font-bold text-gray-900">Score: {payload[0].value}</p>
+                                <p className="text-ink-500 mb-0.5">{label}</p>
+                                <p className="font-bold text-ink-900">Score: {payload[0].value}</p>
                               </div>
                             ) : null
                           }
@@ -637,10 +637,10 @@ export default function Diagnosis() {
                         <Area
                           type="monotone"
                           dataKey="score"
-                          stroke="#2563eb"
+                          stroke="#3A5CD8"
                           strokeWidth={2}
                           fill="url(#scoreGrad)"
-                          dot={{ r: 3.5, fill: '#2563eb', strokeWidth: 0 }}
+                          dot={{ r: 3.5, fill: '#3A5CD8', strokeWidth: 0 }}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -649,8 +649,8 @@ export default function Diagnosis() {
 
                 {historyChartData.length === 1 && (
                   <div className="glass rounded-2xl shadow-sm px-6 py-5">
-                    <h2 className="text-xl text-gray-800 mb-1">Hälsoscorehistorik</h2>
-                    <p className="text-xs text-gray-400">
+                    <h2 className="text-2xl text-ink-800 mb-1">Hälsoscorehistorik</h2>
+                    <p className="text-xs text-ink-400">
                       Historiken byggs upp automatiskt varje dag du besöker sidan. Kom tillbaka imorgon för att se din trend.
                     </p>
                   </div>
@@ -675,7 +675,7 @@ function CircularScore({ score }: { score: number }) {
 
   return (
     <svg width="180" height="180" viewBox="0 0 180 180">
-      <circle cx="90" cy="90" r={r} fill="none" stroke="#e5e7eb" strokeWidth="13" />
+      <circle cx="90" cy="90" r={r} fill="none" stroke="#DEDCDC" strokeWidth="13" />
       <circle
         cx="90" cy="90" r={r}
         fill="none"
@@ -687,13 +687,13 @@ function CircularScore({ score }: { score: number }) {
         transform="rotate(-90 90 90)"
         style={{ transition: 'stroke-dashoffset 1.2s ease' }}
       />
-      <text x="90" y="82" textAnchor="middle" fontSize="38" fontWeight="700" fill="#111827" fontFamily="system-ui,sans-serif">
+      <text x="90" y="82" textAnchor="middle" fontSize="38" fontWeight="700" fill="#1A1920" fontFamily="system-ui,sans-serif">
         {score}
       </text>
       <text x="90" y="112" textAnchor="middle" fontSize="20" fontWeight="700" fill={cfg.stroke} fontFamily="system-ui,sans-serif">
         {cfg.grade}
       </text>
-      <text x="90" y="130" textAnchor="middle" fontSize="11" fill="#9ca3af" fontFamily="system-ui,sans-serif">
+      <text x="90" y="130" textAnchor="middle" fontSize="11" fill="#8B8A93" fontFamily="system-ui,sans-serif">
         av 100
       </text>
     </svg>
@@ -718,12 +718,12 @@ function RootCauseCard({ rc }: { rc: RootCause }) {
         </div>
       </div>
       {rc.description && (
-        <p className="text-xs text-gray-600 leading-relaxed">{rc.description}</p>
+        <p className="text-xs text-ink-600 leading-relaxed">{rc.description}</p>
       )}
       {rc.action && (
         <div className="bg-white/70 rounded-xl px-3 py-2.5 border border-white/80">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-0.5">Rekommenderad åtgärd</p>
-          <p className="text-xs text-gray-700 font-medium leading-snug">{rc.action}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400 mb-0.5">Rekommenderad åtgärd</p>
+          <p className="text-xs text-ink-700 font-medium leading-snug">{rc.action}</p>
         </div>
       )}
     </div>

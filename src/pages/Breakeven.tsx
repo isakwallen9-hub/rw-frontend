@@ -44,8 +44,8 @@ export default function Breakeven() {
 
   const chartData = summary
     ? [
-        { name: 'Inflöde', value: summary.totalInflow, fill: '#2563eb' },
-        { name: 'Utflöde', value: summary.totalOutflow, fill: '#ef4444' },
+        { name: 'Inflöde', value: summary.totalInflow, fill: '#3A5CD8' },
+        { name: 'Utflöde', value: summary.totalOutflow, fill: '#CE4646' },
       ]
     : []
 
@@ -55,27 +55,27 @@ export default function Breakeven() {
     <div className="font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
 
-        <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Break-even</h1>
-        <p className="text-sm text-gray-500 mb-8">
+        <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Break-even</h1>
+        <p className="text-sm text-ink-500 mb-8">
           Jämförelse mellan totalt inflöde och utflöde.
         </p>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-ink-100 p-6">
           {loading ? (
-            <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
+            <div className="h-[300px] bg-ink-100 rounded-xl animate-pulse" />
           ) : error ? (
-            <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">
+            <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">
               {error}
             </div>
           ) : !summary ? (
-            <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+            <div className="h-[300px] flex items-center justify-center text-ink-400 text-sm">
               Ingen data tillgänglig.
             </div>
           ) : (
             <>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
                   <XAxis dataKey="name" tick={{ fontSize: 13 }} />
                   <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} width={90} />
                   <Tooltip formatter={(value: unknown) => fmt(Number(value ?? 0))} />
@@ -88,11 +88,11 @@ export default function Breakeven() {
                 </BarChart>
               </ResponsiveContainer>
 
-              <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-sm text-gray-500 font-medium">Nettokassaflöde</span>
+              <div className="mt-6 pt-5 border-t border-ink-100 flex items-center justify-between">
+                <span className="text-sm text-ink-500 font-medium">Nettokassaflöde</span>
                 <span
                   className={`text-lg font-bold ${
-                    isPositive ? 'text-green-600' : 'text-red-600'
+                    isPositive ? 'text-positive-600' : 'text-negative-600'
                   }`}
                 >
                   {fmt(summary.netCashflow)}
@@ -102,7 +102,7 @@ export default function Breakeven() {
           )}
         </div>
 
-        <div className="mt-8 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-8 text-center text-gray-400 text-sm">
+        <div className="mt-8 bg-ink-50 border border-dashed border-ink-200 rounded-2xl p-8 text-center text-ink-400 text-sm">
           Egna grafer: kommer snart
         </div>
       </div>

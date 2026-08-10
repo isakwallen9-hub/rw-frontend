@@ -206,8 +206,8 @@ export default function Cashflow() {
 
         {/* Header */}
         <div>
-          <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Kassaflöde</h1>
-          <p className="text-sm text-gray-500">Likviditetsöversikt, historik och 90-dagars prognos.</p>
+          <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Kassaflöde</h1>
+          <p className="text-sm text-ink-500">Likviditetsöversikt, historik och 90-dagars prognos.</p>
         </div>
 
         {/* Alerts */}
@@ -216,24 +216,24 @@ export default function Cashflow() {
             {alerts.map((a, i) => (
               <div key={i} className={`flex items-start gap-3 px-4 py-3.5 rounded-xl border ${
                 a.severity === 'high'
-                  ? 'bg-red-50 border-red-200'
-                  : 'bg-yellow-50 border-yellow-200'
+                  ? 'bg-negative-50 border-negative-200'
+                  : 'bg-caution-50 border-caution-200'
               }`}>
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                  a.severity === 'high' ? 'bg-red-100' : 'bg-yellow-100'
+                  a.severity === 'high' ? 'bg-negative-100' : 'bg-caution-100'
                 }`}>
                   {a.severity === 'high'
-                    ? <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-                    : <AlertCircle className="w-3.5 h-3.5 text-yellow-600" />}
+                    ? <AlertTriangle className="w-3.5 h-3.5 text-negative-600" />
+                    : <AlertCircle className="w-3.5 h-3.5 text-caution-600" />}
                 </div>
                 <div>
-                  <p className={`text-sm font-semibold mb-0.5 ${a.severity === 'high' ? 'text-red-700' : 'text-yellow-700'}`}>
+                  <p className={`text-sm font-semibold mb-0.5 ${a.severity === 'high' ? 'text-negative-700' : 'text-caution-700'}`}>
                     {a.title}
                   </p>
-                  <p className={`text-xs mb-1 ${a.severity === 'high' ? 'text-red-600' : 'text-yellow-700'}`}>
+                  <p className={`text-xs mb-1 ${a.severity === 'high' ? 'text-negative-600' : 'text-caution-700'}`}>
                     {a.message}
                   </p>
-                  <p className={`text-xs font-medium ${a.severity === 'high' ? 'text-red-700' : 'text-yellow-800'}`}>
+                  <p className={`text-xs font-medium ${a.severity === 'high' ? 'text-negative-700' : 'text-caution-800'}`}>
                     → {a.action}
                   </p>
                 </div>
@@ -243,13 +243,13 @@ export default function Cashflow() {
         )}
 
         {/* Tab bar */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 bg-ink-100 p-1 rounded-xl w-fit">
           {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-                tab === t.key ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                tab === t.key ? 'bg-white shadow-sm text-ink-900' : 'text-ink-500 hover:text-ink-700'
               }`}
             >
               {t.label}
@@ -262,40 +262,40 @@ export default function Cashflow() {
           <>
             {loadingRunway || loadingSeries ? (
               <div className="grid sm:grid-cols-3 gap-4">
-                {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />)}
+                {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-ink-100 rounded-2xl animate-pulse" />)}
               </div>
             ) : (
               <>
                 {/* 3 main KPI cards */}
                 <div className="grid sm:grid-cols-3 gap-4">
                   {/* Current balance */}
-                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(37,99,235,0.12)]">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
-                      <Banknote className="w-5 h-5 text-blue-600" />
+                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(58,92,216,0.12)]">
+                    <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-4">
+                      <Banknote className="w-5 h-5 text-brand-600" />
                     </div>
-                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Aktuellt saldo</p>
-                    <p className="text-2xl font-bold text-gray-900">{fmt(runwayData?.currentBalance ?? 0)}</p>
-                    <p className="text-xs text-gray-400 mt-2">{runwayData?.runwayDays ?? 0} dagar runway</p>
+                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-widest mb-1">Aktuellt saldo</p>
+                    <p className="text-3xl font-bold tabular text-ink-900">{fmt(runwayData?.currentBalance ?? 0)}</p>
+                    <p className="text-xs text-ink-400 mt-2">{runwayData?.runwayDays ?? 0} dagar runway</p>
                   </div>
 
                   {/* Monthly inflow */}
-                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(22,163,74,0.12)]">
-                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center mb-4">
-                      <ArrowUpRight className="w-5 h-5 text-green-600" />
+                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(14,156,107,0.12)]">
+                    <div className="w-10 h-10 rounded-xl bg-positive-50 flex items-center justify-center mb-4">
+                      <ArrowUpRight className="w-5 h-5 text-positive-600" />
                     </div>
-                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Månadsintäkter</p>
-                    <p className="text-2xl font-bold text-green-600">{fmt(monthlyInflow)}</p>
-                    <p className="text-xs text-gray-400 mt-2">Senaste 30 dagarna</p>
+                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-widest mb-1">Månadsintäkter</p>
+                    <p className="text-3xl font-bold tabular text-positive-600">{fmt(monthlyInflow)}</p>
+                    <p className="text-xs text-ink-400 mt-2">Senaste 30 dagarna</p>
                   </div>
 
                   {/* Monthly outflow */}
-                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(239,68,68,0.12)]">
-                    <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-4">
-                      <ArrowDownRight className="w-5 h-5 text-red-500" />
+                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(206,70,70,0.12)]">
+                    <div className="w-10 h-10 rounded-xl bg-negative-50 flex items-center justify-center mb-4">
+                      <ArrowDownRight className="w-5 h-5 text-negative-600" />
                     </div>
-                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Månadsutgifter</p>
-                    <p className="text-2xl font-bold text-red-500">{fmt(monthlyOutflow)}</p>
-                    <p className="text-xs text-gray-400 mt-2">Burn rate {fmt(runwayData?.monthlyBurnRate ?? monthlyOutflow)}/mån</p>
+                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-widest mb-1">Månadsutgifter</p>
+                    <p className="text-3xl font-bold tabular text-negative-600">{fmt(monthlyOutflow)}</p>
+                    <p className="text-xs text-ink-400 mt-2">Burn rate {fmt(runwayData?.monthlyBurnRate ?? monthlyOutflow)}/mån</p>
                   </div>
                 </div>
 
@@ -303,29 +303,29 @@ export default function Cashflow() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="glass rounded-2xl shadow-sm px-6 py-5 flex items-center gap-4">
                     {monthlyNet >= 0
-                      ? <TrendingUp className="w-8 h-8 text-green-500 shrink-0" />
-                      : <TrendingDown className="w-8 h-8 text-red-500 shrink-0" />}
+                      ? <TrendingUp className="w-8 h-8 text-positive-500 shrink-0" />
+                      : <TrendingDown className="w-8 h-8 text-negative-600 shrink-0" />}
                     <div>
-                      <p className="text-xs text-gray-400 mb-0.5">Nettokassaflöde (30 dagar)</p>
-                      <p className={`text-xl font-bold ${monthlyNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      <p className="text-xs text-ink-400 mb-0.5">Nettokassaflöde (30 dagar)</p>
+                      <p className={`text-2xl font-bold ${monthlyNet >= 0 ? 'text-positive-600' : 'text-negative-600'}`}>
                         {monthlyNet >= 0 ? '+' : ''}{fmt(monthlyNet)}
                       </p>
                     </div>
                   </div>
 
                   <div className="glass rounded-2xl shadow-sm px-6 py-5">
-                    <p className="text-xs text-gray-400 mb-2">Kostnadskvot (utgifter / intäkter)</p>
+                    <p className="text-xs text-ink-400 mb-2">Kostnadskvot (utgifter / intäkter)</p>
                     <div className="flex items-end gap-3">
-                      <p className={`text-xl font-bold ${burnRatio > 90 ? 'text-red-600' : burnRatio > 70 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      <p className={`text-2xl font-bold ${burnRatio > 90 ? 'text-negative-600' : burnRatio > 70 ? 'text-caution-600' : 'text-positive-600'}`}>
                         {burnRatio.toLocaleString('sv-SE', { maximumFractionDigits: 1 })}%
                       </p>
-                      <span className={`text-xs font-medium mb-0.5 ${burnRatio > 90 ? 'text-red-500' : burnRatio > 70 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      <span className={`text-xs font-medium mb-0.5 ${burnRatio > 90 ? 'text-negative-600' : burnRatio > 70 ? 'text-caution-600' : 'text-positive-600'}`}>
                         {burnRatio > 90 ? 'Kritisk' : burnRatio > 70 ? 'Bevaka' : 'Bra'}
                       </span>
                     </div>
-                    <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="mt-2 h-2 bg-ink-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-700 ${burnRatio > 90 ? 'bg-red-500' : burnRatio > 70 ? 'bg-yellow-400' : 'bg-green-500'}`}
+                        className={`h-full rounded-full transition-all duration-700 ${burnRatio > 90 ? 'bg-negative-500' : burnRatio > 70 ? 'bg-caution-400' : 'bg-positive-500'}`}
                         style={{ width: `${Math.min(burnRatio, 100)}%` }}
                       />
                     </div>
@@ -348,7 +348,7 @@ export default function Cashflow() {
                   className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                     preset === p.value
                       ? 'bg-accent text-white border-accent'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                      : 'bg-white text-ink-600 border-ink-200 hover:border-ink-300'
                   }`}
                 >
                   {p.label}
@@ -358,11 +358,11 @@ export default function Cashflow() {
                 <div className="flex items-center gap-2 ml-1">
                   <input type="date" value={customFrom} max={customTo}
                     onChange={e => setCustomFrom(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-accent" />
-                  <span className="text-gray-400 text-sm">—</span>
+                    className="border border-ink-200 rounded-lg px-3 py-1.5 text-sm text-ink-700 outline-none focus:border-accent" />
+                  <span className="text-ink-400 text-sm">—</span>
                   <input type="date" value={customTo} min={customFrom} max={today}
                     onChange={e => setCustomTo(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-accent" />
+                    className="border border-ink-200 rounded-lg px-3 py-1.5 text-sm text-ink-700 outline-none focus:border-accent" />
                 </div>
               )}
             </div>
@@ -371,21 +371,21 @@ export default function Cashflow() {
             {!loadingSeries && (
               <div className="flex flex-wrap gap-3">
                 <div className="flex items-center gap-2 glass rounded-xl px-4 py-2.5 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span className="text-xs text-gray-500">Inflöde</span>
-                  <span className="text-sm font-bold text-blue-600">{fmt(periodSummary.totalInflow)}</span>
+                  <span className="w-2 h-2 rounded-full bg-brand-500" />
+                  <span className="text-xs text-ink-500">Inflöde</span>
+                  <span className="text-sm font-bold text-brand-600">{fmt(periodSummary.totalInflow)}</span>
                 </div>
                 <div className="flex items-center gap-2 glass rounded-xl px-4 py-2.5 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-red-500" />
-                  <span className="text-xs text-gray-500">Utflöde</span>
-                  <span className="text-sm font-bold text-red-500">{fmt(periodSummary.totalOutflow)}</span>
+                  <span className="w-2 h-2 rounded-full bg-negative-500" />
+                  <span className="text-xs text-ink-500">Utflöde</span>
+                  <span className="text-sm font-bold text-negative-600">{fmt(periodSummary.totalOutflow)}</span>
                 </div>
                 <div className={`flex items-center gap-2 bg-white border rounded-xl px-4 py-2.5 shadow-sm ${
-                  periodSummary.net >= 0 ? 'border-green-100' : 'border-red-100'
+                  periodSummary.net >= 0 ? 'border-positive-100' : 'border-negative-100'
                 }`}>
-                  <span className={`w-2 h-2 rounded-full ${periodSummary.net >= 0 ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-xs text-gray-500">Netto</span>
-                  <span className={`text-sm font-bold ${periodSummary.net >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  <span className={`w-2 h-2 rounded-full ${periodSummary.net >= 0 ? 'bg-positive-500' : 'bg-negative-500'}`} />
+                  <span className="text-xs text-ink-500">Netto</span>
+                  <span className={`text-sm font-bold ${periodSummary.net >= 0 ? 'text-positive-600' : 'text-negative-600'}`}>
                     {periodSummary.net >= 0 ? '+' : ''}{fmt(periodSummary.net)}
                   </span>
                 </div>
@@ -395,9 +395,9 @@ export default function Cashflow() {
             {/* Area chart */}
             <div className="glass rounded-2xl shadow-sm p-6">
               {loadingSeries ? (
-                <div className="h-72 bg-gray-100 rounded-xl animate-pulse" />
+                <div className="h-72 bg-ink-100 rounded-xl animate-pulse" />
               ) : historyChartData.length === 0 ? (
-                <div className="h-72 flex items-center justify-center text-gray-400 text-sm">
+                <div className="h-72 flex items-center justify-center text-ink-400 text-sm">
                   Ingen data tillgänglig för vald period.
                 </div>
               ) : (
@@ -405,22 +405,22 @@ export default function Cashflow() {
                   <AreaChart data={historyChartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="inflowGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#2563eb" stopOpacity={0.18} />
-                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                        <stop offset="5%"  stopColor="#3A5CD8" stopOpacity={0.18} />
+                        <stop offset="95%" stopColor="#3A5CD8" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="outflowGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.13} />
-                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                        <stop offset="5%"  stopColor="#CE4646" stopOpacity={0.13} />
+                        <stop offset="95%" stopColor="#CE4646" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={42} />
-                    <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1.5} strokeDasharray="4 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={42} />
+                    <ReferenceLine y={0} stroke="#DEDCDC" strokeWidth={1.5} strokeDasharray="4 3" />
                     <Tooltip content={<CashflowTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-                    <Area type="monotone" dataKey="inflow"  name="Inflöde"  stroke="#2563eb" strokeWidth={2} fill="url(#inflowGrad)"  dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                    <Area type="monotone" dataKey="outflow" name="Utflöde"  stroke="#ef4444" strokeWidth={2} fill="url(#outflowGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                    <Area type="monotone" dataKey="inflow"  name="Inflöde"  stroke="#3A5CD8" strokeWidth={2} fill="url(#inflowGrad)"  dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                    <Area type="monotone" dataKey="outflow" name="Utflöde"  stroke="#CE4646" strokeWidth={2} fill="url(#outflowGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
@@ -434,33 +434,33 @@ export default function Cashflow() {
             {/* Forecast KPIs */}
             {loadingRunway ? (
               <div className="grid sm:grid-cols-3 gap-4">
-                {[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />)}
+                {[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-ink-100 rounded-2xl animate-pulse" />)}
               </div>
             ) : runwayData && (
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="glass rounded-2xl shadow-sm px-5 py-4">
-                  <p className="text-xs text-gray-400 mb-1">Runway</p>
-                  <p className={`text-xl font-bold ${runwayData.runwayDays < 30 ? 'text-red-600' : runwayData.runwayDays < 60 ? 'text-yellow-600' : 'text-green-600'}`}>
+                  <p className="text-xs text-ink-400 mb-1">Runway</p>
+                  <p className={`text-2xl font-bold ${runwayData.runwayDays < 30 ? 'text-negative-600' : runwayData.runwayDays < 60 ? 'text-caution-600' : 'text-positive-600'}`}>
                     {runwayData.runwayDays} dagar
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">{runwayData.runwayDays < 30 ? 'Kritiskt lågt' : runwayData.runwayDays < 60 ? 'Bevaka noggrant' : 'Bra likviditet'}</p>
+                  <p className="text-xs text-ink-400 mt-1">{runwayData.runwayDays < 30 ? 'Kritiskt lågt' : runwayData.runwayDays < 60 ? 'Bevaka noggrant' : 'Bra likviditet'}</p>
                 </div>
                 <div className="glass rounded-2xl shadow-sm px-5 py-4">
-                  <p className="text-xs text-gray-400 mb-1">Burn rate</p>
-                  <p className="text-xl font-bold text-red-500">{fmt(runwayData.monthlyBurnRate)}<span className="text-sm font-normal text-gray-400">/mån</span></p>
-                  <p className="text-xs text-gray-400 mt-1">Aktuell kostnadstakt</p>
+                  <p className="text-xs text-ink-400 mb-1">Burn rate</p>
+                  <p className="text-3xl font-bold tabular text-negative-600">{fmt(runwayData.monthlyBurnRate)}<span className="text-sm font-normal text-ink-400">/mån</span></p>
+                  <p className="text-xs text-ink-400 mt-1">Aktuell kostnadstakt</p>
                 </div>
-                <div className={`border rounded-2xl shadow-sm px-5 py-4 ${zeroCrossing ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-                  <p className="text-xs text-gray-400 mb-1">Saldo når noll</p>
+                <div className={`border rounded-2xl shadow-sm px-5 py-4 ${zeroCrossing ? 'bg-negative-50 border-negative-200' : 'bg-positive-50 border-positive-200'}`}>
+                  <p className="text-xs text-ink-400 mb-1">Saldo når noll</p>
                   {zeroCrossing ? (
                     <>
-                      <p className="text-xl font-bold text-red-600">{fmtDateFull(zeroCrossing)}</p>
-                      <p className="text-xs text-red-500 mt-1">Åtgärd krävs inom 90 dagar</p>
+                      <p className="text-3xl font-bold tabular text-negative-600">{fmtDateFull(zeroCrossing)}</p>
+                      <p className="text-xs text-negative-600 mt-1">Åtgärd krävs inom 90 dagar</p>
                     </>
                   ) : (
                     <>
-                      <p className="text-xl font-bold text-green-600">Ej inom 90 dagar</p>
-                      <p className="text-xs text-green-600 mt-1">Prognosen ser stabil ut</p>
+                      <p className="text-3xl font-bold tabular text-positive-600">Ej inom 90 dagar</p>
+                      <p className="text-xs text-positive-600 mt-1">Prognosen ser stabil ut</p>
                     </>
                   )}
                 </div>
@@ -469,53 +469,53 @@ export default function Cashflow() {
 
             {/* Zero-crossing alert */}
             {zeroCrossing && (
-              <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border bg-red-50 border-red-200">
-                <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+              <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border bg-negative-50 border-negative-200">
+                <div className="w-7 h-7 rounded-full bg-negative-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-negative-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-red-700 mb-0.5">Saldot beräknas nå noll {fmtDateFull(zeroCrossing)}</p>
-                  <p className="text-xs text-red-600 mb-1">Med nuvarande burn rate kommer likvida medel ta slut inom prognoshorisonten.</p>
-                  <p className="text-xs font-medium text-red-700">→ Kontakta bank för kreditlina, påskynda fakturering och se över möjligheter att sänka fasta kostnader.</p>
+                  <p className="text-sm font-semibold text-negative-700 mb-0.5">Saldot beräknas nå noll {fmtDateFull(zeroCrossing)}</p>
+                  <p className="text-xs text-negative-600 mb-1">Med nuvarande burn rate kommer likvida medel ta slut inom prognoshorisonten.</p>
+                  <p className="text-xs font-medium text-negative-700">→ Kontakta bank för kreditlina, påskynda fakturering och se över möjligheter att sänka fasta kostnader.</p>
                 </div>
               </div>
             )}
 
             {/* Forecast line chart */}
             <div className="glass rounded-2xl shadow-sm p-6">
-              <h3 className="text-sm font-bold text-gray-700 mb-5">90-dagars saldoprognos</h3>
+              <h3 className="text-sm font-bold text-ink-700 mb-5">90-dagars saldoprognos</h3>
               {loadingRunway ? (
-                <div className="h-72 bg-gray-100 rounded-xl animate-pulse" />
+                <div className="h-72 bg-ink-100 rounded-xl animate-pulse" />
               ) : forecastData.length === 0 ? (
-                <div className="h-72 flex items-center justify-center text-gray-400 text-sm">
+                <div className="h-72 flex items-center justify-center text-ink-400 text-sm">
                   Ingen prognosdata tillgänglig.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={288}>
                   <LineChart data={forecastData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={42} />
-                    <ReferenceLine y={0} stroke="#ef4444" strokeWidth={1.5} strokeDasharray="4 3" label={{ value: 'Nollpunkt', fill: '#ef4444', fontSize: 11, position: 'insideTopLeft' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={42} />
+                    <ReferenceLine y={0} stroke="#CE4646" strokeWidth={1.5} strokeDasharray="4 3" label={{ value: 'Nollpunkt', fill: '#CE4646', fontSize: 11, position: 'insideTopLeft' }} />
                     {zeroCrossing && (
                       <ReferenceLine
                         x={fmtDate(zeroCrossing)}
-                        stroke="#ef4444"
+                        stroke="#CE4646"
                         strokeDasharray="4 3"
-                        label={{ value: 'Saldo = 0', fill: '#ef4444', fontSize: 11, position: 'top' }}
+                        label={{ value: 'Saldo = 0', fill: '#CE4646', fontSize: 11, position: 'top' }}
                       />
                     )}
                     <Tooltip
                       content={({ active, payload, label }) =>
                         active && payload?.length ? (
                           <div className="glass rounded-xl shadow px-3 py-2 text-xs">
-                            <p className="text-gray-500 mb-0.5">{label}</p>
-                            <p className="font-bold text-gray-900">{fmt(Number(payload[0].value ?? 0))}</p>
+                            <p className="text-ink-500 mb-0.5">{label}</p>
+                            <p className="font-bold text-ink-900">{fmt(Number(payload[0].value ?? 0))}</p>
                           </div>
                         ) : null
                       }
                     />
-                    <Line type="monotone" dataKey="balance" name="Saldo" stroke="#2563eb" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                    <Line type="monotone" dataKey="balance" name="Saldo" stroke="#3A5CD8" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -536,11 +536,11 @@ function CashflowTooltip({ active, payload, label }: {
   if (!active || !payload?.length) return null
   return (
     <div className="glass rounded-xl shadow-lg px-4 py-3 text-sm">
-      <p className="font-semibold text-gray-700 mb-2">{label}</p>
+      <p className="font-semibold text-ink-700 mb-2">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-          <span className="text-gray-500 w-14">{p.name}:</span>
+          <span className="text-ink-500 w-14">{p.name}:</span>
           <span className="font-semibold" style={{ color: p.color }}>
             {p.value.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </span>

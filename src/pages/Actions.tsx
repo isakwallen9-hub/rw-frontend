@@ -64,9 +64,9 @@ function extractCompletedIds(json: unknown): string[] {
 const PRIORITY_CONFIG: Record<Priority, {
   label: string; badge: string; bar: string; urgencyPct: number; symbol: string; icon: React.ReactNode
 }> = {
-  high:   { label: 'Hög prioritet', badge: 'bg-red-100 text-red-700 border-red-200',         bar: 'bg-red-500',    urgencyPct: 100, symbol: '!', icon: <AlertTriangle className="w-3 h-3" /> },
-  medium: { label: 'Medium',         badge: 'bg-yellow-100 text-yellow-700 border-yellow-200', bar: 'bg-yellow-400', urgencyPct: 60,  symbol: '~', icon: <AlertCircle className="w-3 h-3" /> },
-  low:    { label: 'Låg',            badge: 'bg-green-100 text-green-700 border-green-200',    bar: 'bg-green-400',  urgencyPct: 25,  symbol: '✓', icon: <Info className="w-3 h-3" /> },
+  high:   { label: 'Hög prioritet', badge: 'bg-negative-100 text-negative-700 border-negative-200',         bar: 'bg-negative-500',    urgencyPct: 100, symbol: '!', icon: <AlertTriangle className="w-3 h-3" /> },
+  medium: { label: 'Medium',         badge: 'bg-caution-100 text-caution-700 border-caution-200', bar: 'bg-caution-400', urgencyPct: 60,  symbol: '~', icon: <AlertCircle className="w-3 h-3" /> },
+  low:    { label: 'Låg',            badge: 'bg-positive-100 text-positive-700 border-positive-200',    bar: 'bg-positive-400',  urgencyPct: 25,  symbol: '✓', icon: <Info className="w-3 h-3" /> },
 }
 
 const MOCK_ACTIONS: Action[] = [
@@ -200,49 +200,49 @@ export default function Actions() {
 
         {/* Header */}
         <div>
-          <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Åtgärder</h1>
-          <p className="text-sm text-gray-500">Konkreta steg för att förbättra din ekonomiska hälsa.</p>
+          <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Åtgärder</h1>
+          <p className="text-sm text-ink-500">Konkreta steg för att förbättra din ekonomiska hälsa.</p>
         </div>
 
         {/* Summary bar */}
         {!loading && actions.length > 0 && (
           <div className="grid grid-cols-3 gap-4">
             <div className="glass rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-2xl font-bold text-gray-900">{actions.length}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Åtgärder totalt</p>
+              <p className="text-3xl font-bold tabular text-ink-900">{actions.length}</p>
+              <p className="text-xs text-ink-400 mt-0.5">Åtgärder totalt</p>
             </div>
             <div className="glass rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-2xl font-bold text-green-600">{doneCount}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Slutförda</p>
-              <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <p className="text-3xl font-bold tabular text-positive-600">{doneCount}</p>
+              <p className="text-xs text-ink-400 mt-0.5">Slutförda</p>
+              <div className="mt-2 h-1.5 bg-ink-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-green-400 rounded-full transition-all duration-500"
+                  className="h-full bg-positive-400 rounded-full transition-all duration-500"
                   style={{ width: `${actions.length > 0 ? (doneCount / actions.length) * 100 : 0}%` }}
                 />
               </div>
             </div>
             <div className="glass rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-lg font-bold text-blue-600">{fmt(totalValue)}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Potentiellt värde</p>
+              <p className="text-lg font-bold text-brand-600">{fmt(totalValue)}</p>
+              <p className="text-xs text-ink-400 mt-0.5">Potentiellt värde</p>
             </div>
           </div>
         )}
 
         {/* Tab bar */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 bg-ink-100 p-1 rounded-xl w-fit">
           {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
                 tab === t.key
-                  ? 'bg-white shadow-sm text-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white shadow-sm text-ink-900'
+                  : 'text-ink-500 hover:text-ink-700'
               }`}
             >
               {t.label}
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                tab === t.key ? 'bg-accent/10 text-accent' : 'bg-gray-200 text-gray-500'
+                tab === t.key ? 'bg-accent/10 text-accent' : 'bg-ink-200 text-ink-500'
               }`}>
                 {t.count}
               </span>
@@ -254,11 +254,11 @@ export default function Actions() {
         {loading ? (
           <div className="flex flex-col gap-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-36 bg-gray-100 rounded-2xl animate-pulse" />
+              <div key={i} className="h-36 bg-ink-100 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="glass rounded-2xl p-10 text-center text-gray-400 text-sm">
+          <div className="glass rounded-2xl p-10 text-center text-ink-400 text-sm">
             {tab === 'done' ? 'Inga slutförda åtgärder ännu.' : 'Inga pågående åtgärder. Bra jobbat!'}
           </div>
         ) : (
@@ -277,22 +277,22 @@ export default function Actions() {
         {/* Late invoices */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <FileText className="w-4 h-4 text-gray-400" />
-            <h2 className="text-xl text-gray-800">Förfallna fakturor</h2>
+            <FileText className="w-4 h-4 text-ink-400" />
+            <h2 className="text-2xl text-ink-800">Förfallna fakturor</h2>
             {invoices.length > 0 && (
-              <span className="text-xs bg-red-100 text-red-600 font-semibold px-2 py-0.5 rounded-full">{invoices.length} st</span>
+              <span className="text-xs bg-negative-100 text-negative-600 font-semibold px-2 py-0.5 rounded-full">{invoices.length} st</span>
             )}
           </div>
 
           {loading ? (
-            <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
+            <div className="h-32 bg-ink-100 rounded-2xl animate-pulse" />
           ) : invoices.length === 0 ? (
-            <div className="glass rounded-2xl p-8 text-center text-gray-400 text-sm">
+            <div className="glass rounded-2xl p-8 text-center text-ink-400 text-sm">
               Inga förfallna fakturor. Allt är i ordning!
             </div>
           ) : (
             <div className="glass rounded-2xl overflow-hidden shadow-sm">
-              <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-50">
+              <div className="grid grid-cols-[1fr_auto_auto_auto] text-xs font-semibold text-ink-400 uppercase tracking-widest px-5 py-4 border-b border-ink-50">
                 <span>Kund</span>
                 <span className="text-right pr-6">Fakturanr</span>
                 <span className="text-right pr-6">Belopp</span>
@@ -301,9 +301,9 @@ export default function Actions() {
               {invoices.map((inv, i) => (
                 <InvoiceRow key={i} inv={inv} isLast={i === invoices.length - 1} />
               ))}
-              <div className="border-t border-gray-100 px-5 py-3 flex items-center justify-between">
-                <span className="text-xs text-gray-400">Totalt utestående</span>
-                <span className="text-sm font-bold text-red-600">
+              <div className="border-t border-ink-100 px-5 py-4 flex items-center justify-between">
+                <span className="text-xs text-ink-400">Totalt utestående</span>
+                <span className="text-sm font-bold text-negative-600">
                   {fmt(invoices.reduce((s, inv) => s + inv.amount, 0))}
                 </span>
               </div>
@@ -326,8 +326,8 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
   return (
     <div className={`glass rounded-2xl overflow-hidden shadow-sm transition-all duration-300 ${done ? 'opacity-70' : 'hover:shadow-md'}`}>
       {/* Urgency strip */}
-      <div className="h-1 w-full bg-gray-100">
-        <div className={`h-full ${done ? 'bg-green-400' : p.bar} transition-all duration-500`} style={{ width: `${done ? 100 : p.urgencyPct}%` }} />
+      <div className="h-1 w-full bg-ink-100">
+        <div className={`h-full ${done ? 'bg-positive-400' : p.bar} transition-all duration-500`} style={{ width: `${done ? 100 : p.urgencyPct}%` }} />
       </div>
 
       <div className="p-5">
@@ -335,11 +335,11 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${done ? 'bg-green-100 text-green-700 border-green-200' : p.badge}`}>
+              <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${done ? 'bg-positive-100 text-positive-700 border-positive-200' : p.badge}`}>
                 {done ? <CheckCircle className="w-3 h-3" /> : p.icon} {done ? 'Slutförd' : p.label}
               </span>
             </div>
-            <h3 className={`font-semibold text-sm leading-snug ${done ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+            <h3 className={`font-semibold text-sm leading-snug ${done ? 'line-through text-ink-400' : 'text-ink-900'}`}>
               {action.title}
             </h3>
           </div>
@@ -347,8 +347,8 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
             onClick={onToggle}
             className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-all duration-200 ${
               done
-                ? 'border-green-200 bg-green-50 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600'
-                : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-green-300 hover:bg-green-50 hover:text-green-700'
+                ? 'border-positive-200 bg-positive-50 text-positive-700 hover:bg-negative-50 hover:border-negative-200 hover:text-negative-600'
+                : 'border-ink-200 bg-ink-50 text-ink-600 hover:border-positive-300 hover:bg-positive-50 hover:text-positive-700'
             }`}
             title={done ? 'Ångra' : 'Markera som klar'}
           >
@@ -360,30 +360,30 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
         </div>
 
         {/* Description */}
-        <p className="text-gray-500 text-sm leading-relaxed mb-4">{action.description}</p>
+        <p className="text-ink-500 text-sm leading-relaxed mb-4">{action.description}</p>
 
         {/* Potential value */}
         {action.estimatedValue > 0 && (
-          <div className="flex items-center gap-3 bg-green-50 border border-green-100 rounded-xl px-3 py-2.5 mb-4">
-            <TrendingUp className="w-4 h-4 text-green-500 shrink-0" />
+          <div className="flex items-center gap-3 bg-positive-50 border border-positive-100 rounded-xl px-3 py-2.5 mb-4">
+            <TrendingUp className="w-4 h-4 text-positive-500 shrink-0" />
             <div>
-              <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Potentiell förbättring</p>
-              <p className="text-base font-bold text-green-700 leading-tight">{fmt(action.estimatedValue)}</p>
+              <p className="text-[10px] font-bold text-positive-600 uppercase tracking-widest">Potentiell förbättring</p>
+              <p className="text-base font-bold text-positive-700 leading-tight">{fmt(action.estimatedValue)}</p>
             </div>
           </div>
         )}
 
         {/* Targets */}
         {action.targets && action.targets.length > 0 && (
-          <div className="mb-4 border border-gray-100 rounded-xl overflow-hidden">
-            <div className="grid grid-cols-[1fr_auto] text-[10px] font-bold uppercase tracking-widest text-gray-400 px-3 py-2 border-b border-gray-50 bg-gray-50/60">
+          <div className="mb-4 border border-ink-100 rounded-xl overflow-hidden">
+            <div className="grid grid-cols-[1fr_auto] text-[10px] font-bold uppercase tracking-widest text-ink-400 px-3 py-2 border-b border-ink-50 bg-ink-50/60">
               <span>Berör</span>
               <span className="text-right">Värde</span>
             </div>
             {action.targets.map((t, i) => (
-              <div key={t.id ?? i} className={`grid grid-cols-[1fr_auto] items-center px-3 py-2.5 text-xs ${i !== 0 ? 'border-t border-gray-50' : ''}`}>
-                <span className="text-gray-700 font-medium truncate mr-3">{t.label}</span>
-                <span className="font-semibold text-gray-800 whitespace-nowrap">{fmt(t.value)}</span>
+              <div key={t.id ?? i} className={`grid grid-cols-[1fr_auto] items-center px-3 py-2.5 text-xs ${i !== 0 ? 'border-t border-ink-50' : ''}`}>
+                <span className="text-ink-700 font-medium truncate mr-3">{t.label}</span>
+                <span className="font-semibold text-ink-800 whitespace-nowrap">{fmt(t.value)}</span>
               </div>
             ))}
           </div>
@@ -408,7 +408,7 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
                       <span className="shrink-0 w-5 h-5 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mt-0.5">
                         {i + 1}
                       </span>
-                      <span className="text-sm text-gray-600 leading-snug">{text}</span>
+                      <span className="text-sm text-ink-600 leading-snug">{text}</span>
                     </li>
                   )
                 })}
@@ -424,24 +424,24 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
 function InvoiceRow({ inv, isLast }: { inv: LateInvoice; isLast: boolean }) {
   const urgent = inv.daysOverdue > 30
   const daysColor = inv.daysOverdue > 60
-    ? 'text-red-600 bg-red-100'
+    ? 'text-negative-600 bg-negative-100'
     : inv.daysOverdue > 30
-    ? 'text-orange-600 bg-orange-100'
-    : 'text-yellow-700 bg-yellow-100'
+    ? 'text-caution-600 bg-caution-100'
+    : 'text-caution-700 bg-caution-100'
 
   return (
-    <div className={`grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 gap-2 ${!isLast ? 'border-b border-gray-50' : ''} ${urgent ? 'bg-red-50/40' : ''}`}>
+    <div className={`grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 gap-2 ${!isLast ? 'border-b border-ink-50' : ''} ${urgent ? 'bg-negative-50/40' : ''}`}>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-gray-800 truncate">{inv.customerName}</p>
+        <p className="text-sm font-semibold text-ink-800 truncate">{inv.customerName}</p>
         {urgent && (
           <div className="flex items-center gap-1 mt-0.5">
-            <AlertTriangle className="w-3 h-3 text-red-500" />
-            <span className="text-[10px] text-red-500 font-medium">Kräver omedelbar åtgärd</span>
+            <AlertTriangle className="w-3 h-3 text-negative-600" />
+            <span className="text-[10px] text-negative-600 font-medium">Kräver omedelbar åtgärd</span>
           </div>
         )}
       </div>
-      <span className="text-xs text-gray-400 text-right pr-6 whitespace-nowrap">{inv.invoiceNumber ?? '—'}</span>
-      <span className="text-sm font-semibold text-gray-900 text-right pr-6 whitespace-nowrap">{fmt(inv.amount)}</span>
+      <span className="text-xs text-ink-400 text-right pr-6 whitespace-nowrap">{inv.invoiceNumber ?? '—'}</span>
+      <span className="text-sm font-semibold text-ink-900 text-right pr-6 whitespace-nowrap">{fmt(inv.amount)}</span>
       <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${daysColor}`}>
         <Clock className="w-3 h-3" /> {inv.daysOverdue} dagar
       </span>

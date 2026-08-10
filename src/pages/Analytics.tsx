@@ -14,13 +14,14 @@ import {
 const API_URL = import.meta.env.VITE_API_URL as string
 const LS_KEY = 'rw_saved_charts'
 const MAX_CATS = 5
-const CAT_COLORS = ['#2563eb', '#7c3aed', '#f59e0b', '#10b981', '#ef4444']
+// Shared categorical order — same index maps to the same colour on every page.
+const CAT_COLORS = ['#3A5CD8', '#0E9C6B', '#C9821F', '#7C5BD9', '#CE4646']
 const CHIP_PALETTE = [
-  { light: 'bg-blue-50 text-blue-700 border-blue-200',    full: '#2563eb' },
-  { light: 'bg-purple-50 text-purple-700 border-purple-200', full: '#7c3aed' },
-  { light: 'bg-amber-50 text-amber-800 border-amber-200',  full: '#f59e0b' },
-  { light: 'bg-emerald-50 text-emerald-700 border-emerald-200', full: '#10b981' },
-  { light: 'bg-red-50 text-red-700 border-red-200',       full: '#ef4444' },
+  { light: 'bg-brand-50 text-brand-700 border-brand-200',          full: '#3A5CD8' },
+  { light: 'bg-positive-50 text-positive-700 border-positive-200', full: '#0E9C6B' },
+  { light: 'bg-caution-50 text-caution-800 border-caution-200',    full: '#C9821F' },
+  { light: 'bg-purple-50 text-purple-700 border-purple-200',       full: '#7C5BD9' },
+  { light: 'bg-negative-50 text-negative-700 border-negative-200', full: '#CE4646' },
 ]
 const CATS_COLLAPSED = 8
 const MONTH_NAMES = ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December']
@@ -116,9 +117,9 @@ const PERIOD_OPTIONS: { label: string; value: Period }[] = [
 ]
 
 const SERIES_COLOR: Record<ShowType, string> = {
-  inflow: '#2563eb',
-  outflow: '#ef4444',
-  net: '#10b981',
+  inflow: '#3A5CD8',
+  outflow: '#CE4646',
+  net: '#0E9C6B',
 }
 
 const SHOW_LABEL: Record<ShowType, string> = {
@@ -538,7 +539,7 @@ export default function Analytics() {
   }
 
   const commonAxisProps = {
-    tick: { fontSize: 11, fill: '#9ca3af' },
+    tick: { fontSize: 11, fill: '#8B8A93' },
     axisLine: false as const,
     tickLine: false as const,
   }
@@ -580,7 +581,7 @@ export default function Analytics() {
     <ResponsiveContainer width="100%" height={300}>
       {chartType === 'bar' ? (
         <BarChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
           <XAxis dataKey="label" {...commonAxisProps} />
           <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
           <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
@@ -592,7 +593,7 @@ export default function Analytics() {
         </BarChart>
       ) : (
         <LineChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
           <XAxis dataKey="label" {...commonAxisProps} />
           <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
           <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
@@ -610,20 +611,20 @@ export default function Analytics() {
     <div className="font-sans">
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10">
 
-        <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Analys</h1>
-        <p className="text-sm text-gray-500 mb-6">Jämför och filtrera din ekonomidata.</p>
+        <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Analys</h1>
+        <p className="text-sm text-ink-500 mb-6">Jämför och filtrera din ekonomidata.</p>
 
         {/* Saved charts */}
         {savedCharts.length > 0 && (
           <div className="mb-6">
-            <p className="text-xs font-medium text-gray-500 mb-2">Sparade grafer</p>
+            <p className="text-xs font-medium text-ink-500 mb-2">Sparade grafer</p>
             <div className="flex flex-wrap gap-2">
               {savedCharts.map(c => (
-                <div key={c.id} className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm">
-                  <button onClick={() => handleLoad(c)} className="text-gray-700 hover:text-blue-600 font-medium">
+                <div key={c.id} className="flex items-center gap-1 bg-white border border-ink-200 rounded-lg px-3 py-1.5 text-sm">
+                  <button onClick={() => handleLoad(c)} className="text-ink-700 hover:text-brand-600 font-medium">
                     {c.name}
                   </button>
-                  <button onClick={() => handleDelete(c.id)} className="text-gray-300 hover:text-red-400 ml-1 leading-none">×</button>
+                  <button onClick={() => handleDelete(c.id)} className="text-ink-300 hover:text-negative-400 ml-1 leading-none">×</button>
                 </div>
               ))}
             </div>
@@ -633,7 +634,7 @@ export default function Analytics() {
         {/* AI-föreslagna jämförelser */}
         {aiChips.length > 0 && (
           <div className="mb-5">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">AI föreslår</p>
+            <p className="text-xs font-semibold text-ink-400 uppercase tracking-wider mb-2.5">AI föreslår</p>
             <div className="flex flex-wrap gap-2">
               {aiChips.map(chip => (
                 <button
@@ -661,9 +662,9 @@ export default function Analytics() {
                       window.dispatchEvent(new CustomEvent('rw:ai:open', { detail: { question: 'Jämför min bästa och sämsta intäktskategori.' } }))
                     }
                   }}
-                  className="bg-white/40 backdrop-blur border border-slate-200/60 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-slate-700 hover:bg-white/60 hover:border-blue-300 hover:text-blue-700 transition-all cursor-pointer min-h-[44px]"
+                  className="bg-white/40 backdrop-blur border border-ink-200/60 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-ink-700 hover:bg-white/60 hover:border-brand-300 hover:text-brand-700 transition-all cursor-pointer min-h-[44px]"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" aria-hidden="true" />
+                  <Sparkles className="w-3.5 h-3.5 text-brand-500 shrink-0" aria-hidden="true" />
                   {chip.label}
                 </button>
               ))}
@@ -675,15 +676,15 @@ export default function Analytics() {
         <div className="glass rounded-2xl shadow-sm p-5 mb-4">
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-5 items-end">
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Gruppera efter</label>
+              <label className="block text-xs font-medium text-ink-500 mb-1.5">Gruppera efter</label>
               <select value={groupBy} onChange={e => setGroupBy(e.target.value as GroupBy)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
+                className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white min-h-[44px]">
                 {GROUP_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
 
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">
+              <label className="block text-xs font-medium text-ink-500 mb-1.5">
                 {catMode ? 'Visa metric' : 'Visa'}
               </label>
               <div className="flex gap-1">
@@ -693,7 +694,7 @@ export default function Analytics() {
                     className={`flex-1 sm:flex-none px-3 py-2.5 rounded-lg text-sm font-medium border transition-colors min-h-[44px] ${
                       (catMode ? series[0] === o.value : series.includes(o.value))
                         ? 'text-white border-transparent'
-                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                        : 'bg-white text-ink-500 border-ink-200 hover:border-ink-300'
                     }`}
                     style={(catMode ? series[0] === o.value : series.includes(o.value))
                       ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] }
@@ -705,20 +706,20 @@ export default function Analytics() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Period</label>
+              <label className="block text-xs font-medium text-ink-500 mb-1.5">Period</label>
               <select value={period} onChange={e => setPeriod(e.target.value as Period)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
+                className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white min-h-[44px]">
                 {PERIOD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Graftyp</label>
+              <label className="block text-xs font-medium text-ink-500 mb-1.5">Graftyp</label>
               <div className="flex gap-1">
                 {(['bar', 'line'] as ChartType[]).map(t => (
                   <button key={t} onClick={() => setChartType(t)}
                     className={`flex-1 sm:flex-none px-3 py-2.5 rounded-lg text-sm font-medium border transition-colors min-h-[44px] ${
-                      chartType === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                      chartType === t ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-ink-500 border-ink-200 hover:border-ink-300'
                     }`}>
                     {t === 'bar' ? 'Stapel' : 'Linje'}
                   </button>
@@ -729,16 +730,16 @@ export default function Analytics() {
             {period === 'custom' && (
               <div className="col-span-2 sm:col-span-1 flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <div className="w-full sm:w-auto">
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Från</label>
+                  <label className="block text-xs font-medium text-ink-500 mb-1.5">Från</label>
                   <input type="date" value={customFrom} max={customTo}
                     onChange={e => setCustomFrom(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                    className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
                 </div>
                 <div className="w-full sm:w-auto">
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Till</label>
+                  <label className="block text-xs font-medium text-ink-500 mb-1.5">Till</label>
                   <input type="date" value={customTo} min={customFrom} max={today}
                     onChange={e => setCustomTo(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                    className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
                 </div>
               </div>
             )}
@@ -746,17 +747,17 @@ export default function Analytics() {
 
           {/* Period comparison date pickers */}
           {compareMode && (
-            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6">
+            <div className="mt-4 pt-4 border-t border-ink-100 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6">
               <div>
-                <p className="text-xs font-semibold text-blue-600 mb-1.5">Period A</p>
+                <p className="text-xs font-semibold text-brand-600 mb-1.5">Period A</p>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                   <input type="date" value={periodAFrom} max={periodATo}
                     onChange={e => setPeriodAFrom(e.target.value)}
-                    className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 min-h-[44px]" />
-                  <span className="text-xs text-gray-400 hidden sm:inline">till</span>
+                    className="w-full sm:w-auto border border-ink-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-500 min-h-[44px]" />
+                  <span className="text-xs text-ink-400 hidden sm:inline">till</span>
                   <input type="date" value={periodATo} min={periodAFrom} max={today}
                     onChange={e => setPeriodATo(e.target.value)}
-                    className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 min-h-[44px]" />
+                    className="w-full sm:w-auto border border-ink-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-500 min-h-[44px]" />
                 </div>
               </div>
               <div>
@@ -764,11 +765,11 @@ export default function Analytics() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                   <input type="date" value={periodBFrom} max={periodBTo}
                     onChange={e => setPeriodBFrom(e.target.value)}
-                    className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 min-h-[44px]" />
-                  <span className="text-xs text-gray-400 hidden sm:inline">till</span>
+                    className="w-full sm:w-auto border border-ink-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-500 min-h-[44px]" />
+                  <span className="text-xs text-ink-400 hidden sm:inline">till</span>
                   <input type="date" value={periodBTo} min={periodBFrom} max={today}
                     onChange={e => setPeriodBTo(e.target.value)}
-                    className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 min-h-[44px]" />
+                    className="w-full sm:w-auto border border-ink-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-500 min-h-[44px]" />
                 </div>
               </div>
             </div>
@@ -776,23 +777,23 @@ export default function Analytics() {
 
           {/* Category multi-select chips */}
           {categories.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="mt-4 pt-4 border-t border-ink-100">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-700">Välj kategorier</span>
+                  <span className="text-sm font-semibold text-ink-700">Välj kategorier</span>
                   {selectedCats.length > 0 && (
-                    <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">
+                    <span className="text-xs bg-brand-100 text-brand-700 font-semibold px-2 py-0.5 rounded-full">
                       {selectedCats.length} valda
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
                   {selectedCats.length >= MAX_CATS && (
-                    <span className="text-xs text-amber-600 font-medium">Max {MAX_CATS} valda</span>
+                    <span className="text-xs text-caution-600 font-medium">Max {MAX_CATS} valda</span>
                   )}
                   {selectedCats.length > 0 && (
                     <button onClick={() => setSelectedCats([])}
-                      className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors">
+                      className="text-xs text-ink-400 hover:text-ink-600 font-medium transition-colors">
                       Rensa val
                     </button>
                   )}
@@ -826,7 +827,7 @@ export default function Analytics() {
                 {categories.length > CATS_COLLAPSED && (
                   <button
                     onClick={() => setShowAllCats(v => !v)}
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold border border-dashed border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors"
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold border border-dashed border-ink-300 text-ink-500 hover:border-ink-400 hover:text-ink-700 transition-colors"
                   >
                     {showAllCats ? 'Visa färre' : `+${categories.length - CATS_COLLAPSED} fler`}
                   </button>
@@ -843,16 +844,16 @@ export default function Analytics() {
           return (
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="glass rounded-xl px-4 py-4 shadow-sm">
-                <p className="text-xs text-gray-400 mb-1">Totalt inflöde</p>
-                <p className="text-lg font-bold text-green-600">{formatAmount(inflow)}</p>
+                <p className="text-xs text-ink-400 mb-1">Totalt inflöde</p>
+                <p className="text-lg font-bold text-positive-600">{formatAmount(inflow)}</p>
               </div>
               <div className="glass rounded-xl px-4 py-4 shadow-sm">
-                <p className="text-xs text-gray-400 mb-1">Totalt utflöde</p>
-                <p className="text-lg font-bold text-red-500">{formatAmount(outflow)}</p>
+                <p className="text-xs text-ink-400 mb-1">Totalt utflöde</p>
+                <p className="text-lg font-bold text-negative-600">{formatAmount(outflow)}</p>
               </div>
               <div className="glass rounded-xl px-4 py-4 shadow-sm">
-                <p className="text-xs text-gray-400 mb-1">Netto</p>
-                <p className={`text-lg font-bold ${net >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                <p className="text-xs text-ink-400 mb-1">Netto</p>
+                <p className={`text-lg font-bold ${net >= 0 ? 'text-positive-600' : 'text-negative-600'}`}>
                   {net >= 0 ? '+' : ''}{formatAmount(net)}
                 </p>
               </div>
@@ -863,18 +864,18 @@ export default function Analytics() {
         {/* Trend analysis */}
         {trends.length > 0 && (
           <div className="glass rounded-xl px-5 py-4 shadow-sm mb-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Trender: jämfört med föregående period</p>
+            <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide mb-3">Trender: jämfört med föregående period</p>
             <div className="flex flex-col gap-2">
               {trends.map(t => (
                 <div key={t.label} className="flex items-center gap-2 text-sm">
-                  <span className={`text-lg leading-none ${t.pct >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <span className={`text-lg leading-none ${t.pct >= 0 ? 'text-positive-500' : 'text-negative-600'}`}>
                     {t.pct >= 0 ? '↑' : '↓'}
                   </span>
-                  <span className="font-semibold text-gray-800">{t.label}</span>
-                  <span className={`font-bold ${t.pct >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  <span className="font-semibold text-ink-800">{t.label}</span>
+                  <span className={`font-bold ${t.pct >= 0 ? 'text-positive-600' : 'text-negative-600'}`}>
                     {t.pct >= 0 ? '+' : ''}{t.pct.toFixed(1)}%
                   </span>
-                  <span className="text-gray-400 text-xs">jämfört med förra perioden</span>
+                  <span className="text-ink-400 text-xs">jämfört med förra perioden</span>
                 </div>
               ))}
             </div>
@@ -885,7 +886,7 @@ export default function Analytics() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4 mb-4">
         <div className="glass rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-semibold text-gray-700">
+            <p className="text-sm font-semibold text-ink-700">
               {catMode
                 ? `${selectedCats.join(', ')}: ${SHOW_LABEL[series[0]]}`
                 : series.map(s => SHOW_LABEL[s]).join(' & ')
@@ -896,21 +897,21 @@ export default function Analytics() {
                 onClick={() => setCompareMode(v => !v)}
                 className={`text-xs font-medium border px-3 py-1.5 rounded-lg transition-colors ${
                   compareMode
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'bg-brand-600 text-white border-brand-600'
+                    : 'border-ink-200 text-ink-600 hover:border-ink-300'
                 }`}
               >
                 {compareMode ? '× Stäng jämförelse' : 'Jämför perioder'}
               </button>
               {!saveOpen && !compareMode && (
                 <button onClick={() => setSaveOpen(true)}
-                  className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors">
+                  className="text-xs font-medium border border-ink-200 text-ink-600 px-3 py-1.5 rounded-lg hover:border-ink-300 transition-colors">
                   Spara graf
                 </button>
               )}
               {!compareMode && rows.length > 0 && (
                 <button onClick={() => exportCsv(rows, exportColumns)}
-                  className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors">
+                  className="text-xs font-medium border border-ink-200 text-ink-600 px-3 py-1.5 rounded-lg hover:border-ink-300 transition-colors">
                   Exportera CSV
                 </button>
               )}
@@ -925,14 +926,14 @@ export default function Analytics() {
                 onChange={e => setSaveName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setSaveOpen(false) }}
                 placeholder="Namn på grafen..."
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500"
+                className="flex-1 border border-ink-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-brand-500"
               />
               <button onClick={handleSave}
-                className="text-xs font-semibold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+                className="text-xs font-semibold bg-brand-600 text-white px-3 py-1.5 rounded-lg hover:bg-brand-700 transition-colors">
                 Spara
               </button>
               <button onClick={() => { setSaveOpen(false); setSaveName('') }}
-                className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1.5">
+                className="text-xs text-ink-400 hover:text-ink-600 px-2 py-1.5">
                 Avbryt
               </button>
             </div>
@@ -940,44 +941,44 @@ export default function Analytics() {
 
           {compareMode ? (
             compareLoading ? (
-              <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-[300px] bg-ink-100 rounded-xl animate-pulse" />
             ) : compareError ? (
-              <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{compareError}</div>
+              <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">{compareError}</div>
             ) : compareRows.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+              <div className="h-[300px] flex items-center justify-center text-ink-400 text-sm">
                 Ingen data. Välj datumintervall för Period A och Period B ovan.
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 {chartType === 'bar' ? (
                   <BarChart data={compareRows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
                     <XAxis dataKey="label" {...commonAxisProps} />
                     <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
                     <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="a" name="Period A" fill="#2563eb" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="b" name="Period B" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="a" name="Period A" fill="#3A5CD8" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="b" name="Period B" fill="#7C5BD9" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 ) : (
                   <LineChart data={compareRows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
                     <XAxis dataKey="label" {...commonAxisProps} />
                     <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
                     <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line type="monotone" dataKey="a" name="Period A" stroke="#2563eb" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="b" name="Period B" stroke="#7c3aed" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="a" name="Period A" stroke="#3A5CD8" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="b" name="Period B" stroke="#7C5BD9" strokeWidth={2} dot={false} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
             )
           ) : loading ? (
-            <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse" />
+            <div className="h-[300px] bg-ink-100 rounded-xl animate-pulse" />
           ) : error ? (
-            <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{error}</div>
+            <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">{error}</div>
           ) : rows.length === 0 ? (
-            <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+            <div className="h-[300px] flex items-center justify-center text-ink-400 text-sm">
               Ingen data tillgänglig för valda filter.
             </div>
           ) : renderChart()}
@@ -985,11 +986,11 @@ export default function Analytics() {
 
         {/* Category ranking */}
         <div className="glass rounded-2xl shadow-sm p-5 flex flex-col">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+          <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide mb-4">
             Topp kategorier: {SHOW_LABEL[series[0]]}
           </p>
           {rankData.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-gray-300 text-sm">Ingen data</div>
+            <div className="flex-1 flex items-center justify-center text-ink-300 text-sm">Ingen data</div>
           ) : (
             <div className="flex flex-col gap-4">
               {rankData.map((item, i) => {
@@ -1001,13 +1002,13 @@ export default function Analytics() {
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-sm shrink-0">
-                          {i < 3 ? medals[i] : <span className="text-xs font-bold text-gray-400 w-5 inline-block text-center">#{i + 1}</span>}
+                          {i < 3 ? medals[i] : <span className="text-xs font-bold text-ink-400 w-5 inline-block text-center">#{i + 1}</span>}
                         </span>
-                        <span className="text-sm text-gray-700 font-medium truncate">{item.label}</span>
+                        <span className="text-sm text-ink-700 font-medium truncate">{item.label}</span>
                       </div>
-                      <span className="text-xs font-semibold text-gray-600 ml-2 shrink-0 whitespace-nowrap">{formatAmount(item.value)}</span>
+                      <span className="text-xs font-semibold text-ink-600 ml-2 shrink-0 whitespace-nowrap">{formatAmount(item.value)}</span>
                     </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-ink-100 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{ width: `${pct}%`, backgroundColor: CAT_COLORS[i % CAT_COLORS.length] }}
@@ -1024,29 +1025,29 @@ export default function Analytics() {
         {/* Period comparison summary */}
         {compareMode && !compareLoading && !compareError && compareRows.length > 0 && (
           <div className="glass rounded-2xl shadow-sm p-5 mb-4">
-            <h3 className="text-sm font-bold text-gray-700 mb-4">
+            <h3 className="text-sm font-bold text-ink-700 mb-4">
               Sammanfattning: {SHOW_LABEL[series[0]]}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-[11px] text-blue-500 font-semibold uppercase tracking-widest mb-1">Period A</p>
-                <p className="text-xl font-bold text-gray-900">{fmt(compareSummary.totalA)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{periodAFrom} till {periodATo}</p>
+                <p className="text-[11px] text-brand-500 font-semibold uppercase tracking-widest mb-1">Period A</p>
+                <p className="text-3xl font-bold tabular text-ink-900">{fmt(compareSummary.totalA)}</p>
+                <p className="text-xs text-ink-400 mt-0.5">{periodAFrom} till {periodATo}</p>
               </div>
               <div className="text-center">
                 <p className="text-[11px] text-purple-500 font-semibold uppercase tracking-widest mb-1">Period B</p>
-                <p className="text-xl font-bold text-gray-900">{fmt(compareSummary.totalB)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{periodBFrom} till {periodBTo}</p>
+                <p className="text-3xl font-bold tabular text-ink-900">{fmt(compareSummary.totalB)}</p>
+                <p className="text-xs text-ink-400 mt-0.5">{periodBFrom} till {periodBTo}</p>
               </div>
               <div className="text-center">
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Förändring</p>
-                <p className={`text-xl font-bold ${compareSummary.diff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                <p className="text-[11px] text-ink-400 font-semibold uppercase tracking-widest mb-1">Förändring</p>
+                <p className={`text-2xl font-bold ${compareSummary.diff >= 0 ? 'text-positive-600' : 'text-negative-600'}`}>
                   {compareSummary.diff >= 0 ? '+' : ''}{fmt(compareSummary.diff)}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-widest mb-1">Förändring %</p>
-                <p className={`text-xl font-bold ${(compareSummary.pct ?? 0) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                <p className="text-[11px] text-ink-400 font-semibold uppercase tracking-widest mb-1">Förändring %</p>
+                <p className={`text-2xl font-bold ${(compareSummary.pct ?? 0) >= 0 ? 'text-positive-600' : 'text-negative-600'}`}>
                   {compareSummary.pct !== null
                     ? `${compareSummary.pct >= 0 ? '+' : ''}${compareSummary.pct.toFixed(1)}%`
                     : '—'}
@@ -1059,36 +1060,36 @@ export default function Analytics() {
         {/* Table */}
         {!loading && !error && rows.length > 0 && (
           <div className="glass rounded-2xl shadow-sm overflow-hidden mb-8">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <p className="text-sm font-semibold text-gray-700">Datatabell</p>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-ink-100">
+              <p className="text-sm font-semibold text-ink-700">Datatabell</p>
               <button
                 onClick={() => exportCsv(rows, exportColumns)}
-                className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors"
+                className="text-xs font-medium border border-ink-200 text-ink-600 px-3 py-1.5 rounded-lg hover:border-ink-300 transition-colors"
               >
                 Exportera CSV
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[360px]">
+              <table className="w-full text-base min-w-[360px]">
                 <thead>
-                  <tr className="border-b border-white/40 text-xs text-gray-400 bg-white/30">
-                    <th className="text-left px-5 py-3 font-medium">Period / Kategori</th>
+                  <tr className="border-b border-white/40 text-xs text-ink-400 bg-white/30">
+                    <th className="text-left px-5 py-4 font-medium">Period / Kategori</th>
                     {exportColumns.map(col => (
-                      <th key={col.key} className="text-right px-5 py-3 font-medium">{col.label}</th>
+                      <th key={col.key} className="text-right px-5 py-4 font-medium">{col.label}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row, i) => (
                     <tr key={i} className={i !== 0 ? 'border-t border-white/40' : ''}>
-                      <td className="px-5 py-3 text-gray-700">{row.label}</td>
+                      <td className="px-5 py-4 text-ink-700">{row.label}</td>
                       {exportColumns.map(col => (
-                        <td key={col.key} className={`px-5 py-3 text-right font-medium ${
+                        <td key={col.key} className={`px-5 py-4 text-right font-medium ${
                           catMode
-                            ? 'text-gray-800'
+                            ? 'text-ink-800'
                             : col.key === 'net'
-                            ? Number(row[col.key] ?? 0) >= 0 ? 'text-green-600' : 'text-red-500'
-                            : col.key === 'outflow' ? 'text-red-500' : 'text-blue-600'
+                            ? Number(row[col.key] ?? 0) >= 0 ? 'text-positive-600' : 'text-negative-600'
+                            : col.key === 'outflow' ? 'text-negative-600' : 'text-brand-600'
                         }`}>
                           {fmt(Number(row[col.key] ?? 0))}
                         </td>
@@ -1097,17 +1098,17 @@ export default function Analytics() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t-2 border-gray-200 bg-gray-50/80">
-                    <td className="px-5 py-3 text-sm font-bold text-gray-900">Totalt</td>
+                  <tr className="border-t-2 border-ink-200 bg-ink-50/80">
+                    <td className="px-5 py-4 text-sm font-bold text-ink-900">Totalt</td>
                     {exportColumns.map(col => {
                       const total = rows.reduce((s, r) => s + Number(r[col.key] ?? 0), 0)
                       return (
-                        <td key={col.key} className={`px-5 py-3 text-right text-sm font-bold ${
+                        <td key={col.key} className={`px-5 py-4 text-right text-sm font-bold ${
                           catMode
-                            ? 'text-gray-900'
+                            ? 'text-ink-900'
                             : col.key === 'net'
-                            ? total >= 0 ? 'text-green-700' : 'text-red-600'
-                            : col.key === 'outflow' ? 'text-red-600' : 'text-blue-700'
+                            ? total >= 0 ? 'text-positive-700' : 'text-negative-600'
+                            : col.key === 'outflow' ? 'text-negative-600' : 'text-brand-700'
                         }`}>
                           {fmt(total)}
                         </td>
@@ -1122,18 +1123,18 @@ export default function Analytics() {
 
         {/* Seasonal analysis */}
         <div className="mt-8">
-          <h2 className="text-xl text-gray-900 mb-1">Säsongsmönster</h2>
-          <p className="text-sm text-gray-500 mb-4">Genomsnittliga värden per månad baserat på din historiska data.</p>
+          <h2 className="text-2xl text-ink-900 mb-1">Säsongsmönster</h2>
+          <p className="text-sm text-ink-500 mb-4">Genomsnittliga värden per månad baserat på din historiska data.</p>
 
           {/* Controls row: metric toggle + category dropdowns */}
           <div className="flex flex-wrap items-end gap-4 mb-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Metric</label>
+              <label className="block text-xs font-medium text-ink-500 mb-1.5">Metric</label>
               <div className="flex gap-1">
                 {SHOW_OPTIONS.map(o => (
                   <button key={o.value} onClick={() => setSeasonalMetric(o.value)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                      seasonalMetric === o.value ? 'text-white border-transparent' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                      seasonalMetric === o.value ? 'text-white border-transparent' : 'bg-white text-ink-500 border-ink-200 hover:border-ink-300'
                     }`}
                     style={seasonalMetric === o.value ? { backgroundColor: SERIES_COLOR[o.value], borderColor: SERIES_COLOR[o.value] } : {}}>
                     {o.label}
@@ -1143,11 +1144,11 @@ export default function Analytics() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori A</label>
+              <label className="block text-xs font-medium text-ink-500 mb-1.5">Kategori A</label>
               <select
                 value={seasonalCategory}
                 onChange={e => { setSeasonalCategory(e.target.value); setSeasonalCategoryB('') }}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white"
+                className="border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white"
               >
                 <option value="">Alla produkter</option>
                 {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -1155,11 +1156,11 @@ export default function Analytics() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Jämför med (B)</label>
+              <label className="block text-xs font-medium text-ink-500 mb-1.5">Jämför med (B)</label>
               <select
                 value={seasonalCategoryB}
                 onChange={e => setSeasonalCategoryB(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white"
+                className="border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white"
               >
                 <option value="">Ingen jämförelse</option>
                 {categories.filter(c => c !== seasonalCategory).map(cat => (
@@ -1170,11 +1171,11 @@ export default function Analytics() {
           </div>
 
           {seasonalLoading ? (
-            <div className="h-[260px] bg-gray-100 rounded-2xl animate-pulse" />
+            <div className="h-[260px] bg-ink-100 rounded-2xl animate-pulse" />
           ) : seasonalError ? (
-            <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">{seasonalError}</div>
+            <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">{seasonalError}</div>
           ) : seasonalData.length === 0 ? (
-            <div className="glass rounded-2xl shadow-sm h-[260px] flex items-center justify-center text-gray-400 text-sm">
+            <div className="glass rounded-2xl shadow-sm h-[260px] flex items-center justify-center text-ink-400 text-sm">
               Ingen säsongsdata tillgänglig.
             </div>
           ) : (
@@ -1182,22 +1183,22 @@ export default function Analytics() {
               {/* Summary cards — only for single category view */}
               {!hasSeasonalCompare && (
                 <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-                    <p className="text-xs text-gray-400 mb-1">Bästa månaden</p>
-                    <p className="text-base font-bold text-green-600">{bestMonth?.fullLabel ?? '—'}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{bestMonth ? fmt(bestMonth.avgNet) + ' i snitt' : ''}</p>
+                  <div className="bg-white rounded-2xl border border-ink-100 shadow-sm px-5 py-4">
+                    <p className="text-xs text-ink-400 mb-1">Bästa månaden</p>
+                    <p className="text-base font-bold text-positive-600">{bestMonth?.fullLabel ?? '—'}</p>
+                    <p className="text-xs text-ink-400 mt-0.5">{bestMonth ? fmt(bestMonth.avgNet) + ' i snitt' : ''}</p>
                   </div>
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-                    <p className="text-xs text-gray-400 mb-1">Sämsta månaden</p>
-                    <p className="text-base font-bold text-red-500">{worstMonth?.fullLabel ?? '—'}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{worstMonth ? fmt(worstMonth.avgNet) + ' i snitt' : ''}</p>
+                  <div className="bg-white rounded-2xl border border-ink-100 shadow-sm px-5 py-4">
+                    <p className="text-xs text-ink-400 mb-1">Sämsta månaden</p>
+                    <p className="text-base font-bold text-negative-600">{worstMonth?.fullLabel ?? '—'}</p>
+                    <p className="text-xs text-ink-400 mt-0.5">{worstMonth ? fmt(worstMonth.avgNet) + ' i snitt' : ''}</p>
                   </div>
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-                    <p className="text-xs text-gray-400 mb-1">Genomsnittligt netto</p>
-                    <p className={`text-base font-bold ${overallAvgNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  <div className="bg-white rounded-2xl border border-ink-100 shadow-sm px-5 py-4">
+                    <p className="text-xs text-ink-400 mb-1">Genomsnittligt netto</p>
+                    <p className={`text-base font-bold ${overallAvgNet >= 0 ? 'text-positive-600' : 'text-negative-600'}`}>
                       {fmt(overallAvgNet)}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">per månad</p>
+                    <p className="text-xs text-ink-400 mt-0.5">per månad</p>
                   </div>
                 </div>
               )}
@@ -1205,20 +1206,20 @@ export default function Analytics() {
               {/* Bar chart */}
               <div className="glass rounded-2xl shadow-sm p-6 mb-4">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-semibold text-gray-700">
+                  <p className="text-sm font-semibold text-ink-700">
                     {hasSeasonalCompare
                       ? `${seasonalCategory || 'Alla produkter'} vs ${seasonalCategoryB}: ${SHOW_LABEL[seasonalMetric]}`
                       : `${seasonalCategory || 'Alla produkter'}: ${SHOW_LABEL[seasonalMetric]}`}
                   </p>
                   {seasonalLoadingB && (
-                    <span className="text-xs text-gray-400 animate-pulse">Laddar Period B...</span>
+                    <span className="text-xs text-ink-400 animate-pulse">Laddar Period B...</span>
                   )}
                 </div>
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={seasonalChartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={50} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={50} />
                     <Tooltip
                       formatter={(v: unknown) => fmt(Number(v ?? 0))}
                       labelFormatter={(label: unknown) => {
@@ -1229,20 +1230,20 @@ export default function Analytics() {
                     {hasSeasonalCompare ? (
                       <>
                         <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey="value" name={seasonalCategory || 'Alla produkter'} fill="#2563eb" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="valueB" name={seasonalCategoryB} fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="value" name={seasonalCategory || 'Alla produkter'} fill="#3A5CD8" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="valueB" name={seasonalCategoryB} fill="#7C5BD9" radius={[4, 4, 0, 0]} />
                       </>
                     ) : (
                       <Bar dataKey="value" name={SHOW_LABEL[seasonalMetric]} radius={[4, 4, 0, 0]}>
                         {seasonalChartData.map((entry, idx) => (
-                          <Cell key={idx} fill={entry.value >= seasonalAvg ? '#10b981' : '#ef4444'} />
+                          <Cell key={idx} fill={entry.value >= seasonalAvg ? '#0E9C6B' : '#CE4646'} />
                         ))}
                       </Bar>
                     )}
                   </BarChart>
                 </ResponsiveContainer>
                 {!hasSeasonalCompare && (
-                  <p className="text-xs text-gray-400 mt-3 text-center">
+                  <p className="text-xs text-ink-400 mt-3 text-center">
                     Grönt = över genomsnittet ({fmt(Math.round(seasonalAvg))}) · Rött = under genomsnittet
                   </p>
                 )}
@@ -1250,7 +1251,7 @@ export default function Analytics() {
 
               {/* Insight text */}
               {!hasSeasonalCompare && bestMonth && (
-                <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-3 text-sm text-blue-700">
+                <div className="bg-brand-50 border border-brand-100 rounded-xl px-5 py-4 text-sm text-brand-700">
                   Baserat på din historiska data brukar <strong>{bestMonth.fullLabel}</strong> vara din starkaste månad
                   {seasonalCategory ? ` för ${seasonalCategory}` : ''} med ett genomsnittligt netto på {fmt(bestMonth.avgNet)}.
                 </div>

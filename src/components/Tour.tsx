@@ -173,7 +173,7 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
             height: rect.height + HIGHLIGHT_PAD * 2,
             borderRadius: 10,
             boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
-            outline: '2px solid #2563eb',
+            outline: '2px solid #3A5CD8',
             outlineOffset: 0,
             pointerEvents: 'none',
             zIndex: 9997,
@@ -196,21 +196,21 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
                   ? 'w-6 bg-accent'
                   : i < step
                   ? 'w-3 bg-accent/30'
-                  : 'w-3 bg-gray-200'
+                  : 'w-3 bg-ink-200'
               }`}
             />
           ))}
         </div>
 
-        <h3 className="text-base font-bold text-gray-900 mb-2 leading-snug">{current.title}</h3>
-        <p className="text-sm text-gray-500 leading-relaxed mb-5">{current.body}</p>
+        <h3 className="text-base font-bold text-ink-900 mb-2 leading-snug">{current.title}</h3>
+        <p className="text-sm text-ink-500 leading-relaxed mb-5">{current.body}</p>
 
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {step > 0 && (
               <button
                 onClick={prev}
-                className="px-3 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors min-h-[36px]"
+                className="px-3 py-2 text-sm text-ink-500 border border-ink-200 rounded-lg hover:border-ink-300 transition-colors min-h-[36px]"
               >
                 ← Föregående
               </button>
@@ -218,7 +218,7 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
             {step === 0 && (
               <button
                 onClick={onComplete}
-                className="text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 min-h-[36px]"
+                className="text-sm text-ink-400 hover:text-ink-600 transition-colors py-2 min-h-[36px]"
               >
                 Hoppa över
               </button>

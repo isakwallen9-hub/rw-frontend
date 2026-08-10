@@ -126,11 +126,11 @@ const SCENARIO_LABELS: Record<ScenarioType, string> = {
 }
 
 const SCENARIO_CONFIG: Record<ScenarioType, { icon: string; bg: string; border: string; iconBg: string; labelColor: string }> = {
-  remove_category:         { icon: '✕', bg: 'bg-red-50',     border: 'border-red-200',    iconBg: 'bg-red-100 text-red-600',     labelColor: 'text-red-600' },
-  change_amount:           { icon: '%', bg: 'bg-blue-50',    border: 'border-blue-200',   iconBg: 'bg-blue-100 text-blue-600',   labelColor: 'text-blue-600' },
-  add_revenue:             { icon: '+', bg: 'bg-green-50',   border: 'border-green-200',  iconBg: 'bg-green-100 text-green-600', labelColor: 'text-green-600' },
-  change_revenue_percent:  { icon: '↑', bg: 'bg-emerald-50', border: 'border-emerald-200', iconBg: 'bg-emerald-100 text-emerald-600', labelColor: 'text-emerald-600' },
-  change_expenses_percent: { icon: '↓', bg: 'bg-orange-50',  border: 'border-orange-200', iconBg: 'bg-orange-100 text-orange-600', labelColor: 'text-orange-600' },
+  remove_category:         { icon: '✕', bg: 'bg-negative-50',     border: 'border-negative-200',    iconBg: 'bg-negative-100 text-negative-600',     labelColor: 'text-negative-600' },
+  change_amount:           { icon: '%', bg: 'bg-brand-50',    border: 'border-brand-200',   iconBg: 'bg-brand-100 text-brand-600',   labelColor: 'text-brand-600' },
+  add_revenue:             { icon: '+', bg: 'bg-positive-50',   border: 'border-positive-200',  iconBg: 'bg-positive-100 text-positive-600', labelColor: 'text-positive-600' },
+  change_revenue_percent:  { icon: '↑', bg: 'bg-positive-50', border: 'border-positive-200', iconBg: 'bg-positive-100 text-positive-600', labelColor: 'text-positive-600' },
+  change_expenses_percent: { icon: '↓', bg: 'bg-caution-50',  border: 'border-caution-200', iconBg: 'bg-caution-100 text-caution-600', labelColor: 'text-caution-600' },
   one_time_expense:        { icon: '−', bg: 'bg-purple-50',  border: 'border-purple-200', iconBg: 'bg-purple-100 text-purple-600', labelColor: 'text-purple-600' },
 }
 
@@ -617,16 +617,16 @@ export default function Simulate() {
     <div className="font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
 
-        <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Vad händer om...?</h1>
-        <p className="text-sm text-gray-500 mb-6">Beskriv ett scenario och se hur det påverkar ditt saldo de nästa 90 dagarna.</p>
+        <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Vad händer om...?</h1>
+        <p className="text-sm text-ink-500 mb-6">Beskriv ett scenario och se hur det påverkar ditt saldo de nästa 90 dagarna.</p>
 
         {/* ── AI main card ─────────────────────────────────────────── */}
         <div className="glass rounded-2xl p-6 mb-4">
           <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
-            <p className="text-base font-semibold text-slate-800">Beskriv vad du funderar på. AI:n simulerar åt dig</p>
+            <p className="text-base font-semibold text-ink-800">Beskriv vad du funderar på. AI:n simulerar åt dig</p>
           </div>
 
           <textarea
@@ -635,7 +635,7 @@ export default function Simulate() {
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void handleAiAsk() }}
             placeholder="T.ex. Vad händer om jag anställer en person för 25 000 kr i månaden?"
             rows={3}
-            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition resize-none bg-white/60"
+            className="w-full border border-ink-200 rounded-xl px-4 py-3 text-sm text-ink-800 placeholder-ink-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition resize-none bg-white/60"
           />
 
           <div className="flex flex-wrap gap-2 mt-3 mb-4">
@@ -647,7 +647,7 @@ export default function Simulate() {
               <button
                 key={q}
                 onClick={() => setAiQuestion(q)}
-                className="text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                className="text-xs font-medium text-ink-600 bg-white border border-ink-200 rounded-lg px-3 py-1.5 hover:border-brand-300 hover:text-brand-700 transition-colors"
               >
                 {q}
               </button>
@@ -657,7 +657,7 @@ export default function Simulate() {
           <button
             onClick={() => void handleAiAsk()}
             disabled={!aiQuestion.trim() || aiLoading || loading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 min-h-[44px]"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 min-h-[44px]"
           >
             {aiLoading ? (
               <>
@@ -673,19 +673,19 @@ export default function Simulate() {
           </button>
 
           {aiAnswer && !aiLoading && (
-            <div className="mt-5 pt-5 border-t border-slate-100">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">AI:ns förklaring</p>
-              <p className="text-sm text-slate-700 leading-relaxed">{aiAnswer}</p>
+            <div className="mt-5 pt-5 border-t border-ink-100">
+              <p className="text-xs font-semibold text-ink-400 uppercase tracking-wider mb-2">AI:ns förklaring</p>
+              <p className="text-sm text-ink-700 leading-relaxed">{aiAnswer}</p>
             </div>
           )}
 
           {aiSimFailed && !result && !aiLoading && (
-            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-              <p className="text-sm text-amber-800">
+            <div className="mt-4 p-4 bg-caution-50 border border-caution-200 rounded-xl">
+              <p className="text-sm text-caution-800">
                 Kunde inte bygga ett scenario automatiskt.{' '}
                 <button
                   onClick={() => setManualOpen(true)}
-                  className="font-semibold underline hover:text-amber-900 transition-colors"
+                  className="font-semibold underline hover:text-caution-900 transition-colors"
                 >
                   Prova det manuella läget
                 </button>
@@ -698,7 +698,7 @@ export default function Simulate() {
         {/* ── Manual mode toggle ───────────────────────────────────── */}
         <button
           onClick={() => setManualOpen(o => !o)}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-6"
+          className="flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-700 transition-colors mb-6"
         >
           <span className={`transition-transform inline-block ${manualOpen ? 'rotate-90' : ''}`}>›</span>
           {manualOpen ? 'Stäng manuellt läge' : 'Eller bygg scenariot själv →'}
@@ -723,7 +723,7 @@ export default function Simulate() {
                     >
                       <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5 group-hover:text-purple-600 transition-colors" aria-hidden="true" />
                       <div>
-                        <p className="text-sm font-semibold text-slate-800 leading-snug group-hover:text-purple-800 transition-colors">{s.label}</p>
+                        <p className="text-sm font-semibold text-ink-800 leading-snug group-hover:text-purple-800 transition-colors">{s.label}</p>
                         <p className="text-xs text-purple-500/80 mt-0.5">{s.subLabel}</p>
                       </div>
                     </button>
@@ -734,14 +734,14 @@ export default function Simulate() {
 
             {savedSims.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-2">Sparade simuleringar</p>
+                <p className="text-xs font-medium text-ink-500 mb-2">Sparade simuleringar</p>
                 <div className="flex flex-wrap gap-2">
                   {savedSims.map(sim => (
-                    <div key={sim.id} className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm shadow-sm">
-                      <button onClick={() => handleLoadSim(sim)} className="text-gray-700 hover:text-blue-600 font-medium">
+                    <div key={sim.id} className="flex items-center gap-1 bg-white border border-ink-200 rounded-lg px-3 py-1.5 text-sm shadow-sm">
+                      <button onClick={() => handleLoadSim(sim)} className="text-ink-700 hover:text-brand-600 font-medium">
                         {sim.name}
                       </button>
-                      <button onClick={() => handleDeleteSim(sim.id)} className="text-gray-300 hover:text-red-400 ml-1 leading-none">×</button>
+                      <button onClick={() => handleDeleteSim(sim.id)} className="text-ink-300 hover:text-negative-400 ml-1 leading-none">×</button>
                     </div>
                   ))}
                 </div>
@@ -751,29 +751,29 @@ export default function Simulate() {
             <div className="glass rounded-2xl p-6">
 
               <div className="mb-5">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Snabb-scenarion</p>
+                <p className="text-xs font-semibold text-ink-400 uppercase tracking-widest mb-3">Snabb-scenarion</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {([
-                    { key: 'remove_worst',    icon: '✕', label: 'Ta bort sämsta produkten', color: 'border-red-200 hover:border-red-400 hover:bg-red-50' },
-                    { key: 'increase_prices', icon: '↑', label: 'Öka alla priser 10%',       color: 'border-green-200 hover:border-green-400 hover:bg-green-50' },
-                    { key: 'cut_costs',       icon: '↓', label: 'Minska kostnader 15%',      color: 'border-orange-200 hover:border-orange-400 hover:bg-orange-50' },
+                    { key: 'remove_worst',    icon: '✕', label: 'Ta bort sämsta produkten', color: 'border-negative-200 hover:border-negative-400 hover:bg-negative-50' },
+                    { key: 'increase_prices', icon: '↑', label: 'Öka alla priser 10%',       color: 'border-positive-200 hover:border-positive-400 hover:bg-positive-50' },
+                    { key: 'cut_costs',       icon: '↓', label: 'Minska kostnader 15%',      color: 'border-caution-200 hover:border-caution-400 hover:bg-caution-50' },
                   ] as const).map(t => (
                     <button key={t.key} onClick={() => applyTemplate(t.key)}
                       className={`flex sm:flex-col items-center gap-2 sm:gap-1.5 px-4 sm:px-3 py-3 bg-white border rounded-xl sm:text-center transition-colors min-h-[44px] ${t.color}`}>
-                      <span className="text-lg font-bold text-gray-600">{t.icon}</span>
-                      <span className="text-xs font-medium text-gray-600 leading-tight">{t.label}</span>
+                      <span className="text-lg font-bold text-ink-600">{t.icon}</span>
+                      <span className="text-xs font-medium text-ink-600 leading-tight">{t.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="border-t border-gray-100 pt-5">
-                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3 font-sans">Anpassat scenario</h2>
+              <div className="border-t border-ink-100 pt-5">
+                <h2 className="text-xs font-semibold text-ink-400 uppercase tracking-widest mb-3 font-sans">Anpassat scenario</h2>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-end">
                   <div className="w-full sm:w-auto">
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Typ</label>
+                    <label className="block text-xs font-medium text-ink-500 mb-1.5">Typ</label>
                     <select value={addType} onChange={e => setAddType(e.target.value as ScenarioType)}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
+                      className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white min-h-[44px]">
                       {(Object.entries(SCENARIO_LABELS) as [ScenarioType, string][]).map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
                       ))}
@@ -782,9 +782,9 @@ export default function Simulate() {
 
                   {NEEDS_CATEGORY.includes(addType) && (
                     <div className="w-full sm:w-auto">
-                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Kategori</label>
+                      <label className="block text-xs font-medium text-ink-500 mb-1.5">Kategori</label>
                       <select value={addCategory} onChange={e => setAddCategory(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
+                        className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white min-h-[44px]">
                         {categories.length === 0
                           ? <option value="">Laddar...</option>
                           : categories.map(cat => <option key={cat} value={cat}>{cat}</option>)
@@ -795,25 +795,25 @@ export default function Simulate() {
 
                   {NEEDS_PERCENT.includes(addType) && (
                     <div className="w-full sm:w-auto">
-                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Förändring (%)</label>
+                      <label className="block text-xs font-medium text-ink-500 mb-1.5">Förändring (%)</label>
                       <input type="number" value={addPercent} onChange={e => setAddPercent(e.target.value)}
                         placeholder="t.ex. -20"
-                        className="w-full sm:w-28 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                        className="w-full sm:w-28 border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
                     </div>
                   )}
 
                   {NEEDS_AMOUNT_FREQ.includes(addType) && (
                     <>
                       <div className="w-full sm:w-auto">
-                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
+                        <label className="block text-xs font-medium text-ink-500 mb-1.5">Belopp (SEK)</label>
                         <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
                           placeholder="t.ex. 10000"
-                          className="w-full sm:w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                          className="w-full sm:w-32 border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
                       </div>
                       <div className="w-full sm:w-auto">
-                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Frekvens</label>
+                        <label className="block text-xs font-medium text-ink-500 mb-1.5">Frekvens</label>
                         <select value={addFrequency} onChange={e => setAddFrequency(e.target.value as Frequency)}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 bg-white min-h-[44px]">
+                          className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white min-h-[44px]">
                           <option value="daily">Dagligen</option>
                           <option value="weekly">Veckovis</option>
                           <option value="monthly">Månadsvis</option>
@@ -825,29 +825,29 @@ export default function Simulate() {
                   {NEEDS_AMOUNT_DATE.includes(addType) && (
                     <>
                       <div className="w-full sm:w-auto">
-                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Belopp (SEK)</label>
+                        <label className="block text-xs font-medium text-ink-500 mb-1.5">Belopp (SEK)</label>
                         <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
                           placeholder="t.ex. 5000"
-                          className="w-full sm:w-32 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                          className="w-full sm:w-32 border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
                       </div>
                       <div className="w-full sm:w-auto">
-                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Datum</label>
+                        <label className="block text-xs font-medium text-ink-500 mb-1.5">Datum</label>
                         <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-500 min-h-[44px]" />
+                          className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
                       </div>
                     </>
                   )}
 
                   <button onClick={handleAdd}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]">
+                    className="w-full sm:w-auto px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors min-h-[44px]">
                     + Lägg till
                   </button>
                 </div>
               </div>
 
               {scenarios.length > 0 && (
-                <div className="mt-5 pt-4 border-t border-gray-100">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Aktiva scenarion</p>
+                <div className="mt-5 pt-4 border-t border-ink-100">
+                  <p className="text-xs font-semibold text-ink-400 uppercase tracking-widest mb-3">Aktiva scenarion</p>
                   <div className="grid sm:grid-cols-2 gap-3 mb-4">
                     {scenarios.map(s => {
                       const cfg = SCENARIO_CONFIG[s.type]
@@ -860,17 +860,17 @@ export default function Simulate() {
                             <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${cfg.labelColor}`}>
                               {SCENARIO_LABELS[s.type]}
                             </p>
-                            <p className="text-sm font-medium text-gray-800 leading-snug">{scenarioChip(s)}</p>
+                            <p className="text-sm font-medium text-ink-800 leading-snug">{scenarioChip(s)}</p>
                           </div>
                           <button onClick={() => handleRemove(s.id)}
-                            className="text-gray-300 hover:text-red-400 text-lg leading-none shrink-0 mt-0.5"
+                            className="text-ink-300 hover:text-negative-400 text-lg leading-none shrink-0 mt-0.5"
                             title="Ta bort">×</button>
                         </div>
                       )
                     })}
                   </div>
                   <button onClick={handleSimulate} disabled={loading}
-                    className="w-full py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50">
+                    className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50">
                     {loading ? 'Simulerar...' : 'Kör simulering →'}
                   </button>
                 </div>
@@ -880,7 +880,7 @@ export default function Simulate() {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm mb-6">
+          <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm mb-6">
             {error}
           </div>
         )}
@@ -890,19 +890,19 @@ export default function Simulate() {
           <>
             {/* Narrative sentence */}
             <div className="glass rounded-2xl px-6 py-5 mb-4">
-              <p className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+              <p className="text-2xl sm:text-3xl font-bold tabular text-ink-900 leading-snug">
                 {cleanedLabel
-                  ? <>Om du <span className="text-blue-700">{cleanedLabel}</span> förväntas</>
+                  ? <>Om du <span className="text-brand-700">{cleanedLabel}</span> förväntas</>
                   : <>Med ditt scenario förväntas</>
                 }{' '}
                 ditt saldo bli{' '}
-                <span className={result.simulatedEndBalance >= 0 ? 'text-green-600' : 'text-red-500'}>
+                <span className={result.simulatedEndBalance >= 0 ? 'text-positive-600' : 'text-negative-600'}>
                   {fmt(result.simulatedEndBalance)}
                 </span>
                 {' '}om 90 dagar
                 {balanceDiff !== 0 && (
                   <>, det är{' '}
-                    <span className={balanceDiff >= 0 ? 'text-green-600' : 'text-red-500'}>
+                    <span className={balanceDiff >= 0 ? 'text-positive-600' : 'text-negative-600'}>
                       {fmt(Math.abs(balanceDiff))} {balanceDiff >= 0 ? 'mer' : 'mindre'}
                     </span>
                     {' '}än om du inte gör något
@@ -914,12 +914,12 @@ export default function Simulate() {
             {/* Chart */}
             <div className="glass rounded-2xl p-6 mb-2">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold text-gray-700">Prognos: nästa 90 dagar</p>
+                <p className="text-sm font-semibold text-ink-700">Prognos: nästa 90 dagar</p>
                 <div className="flex gap-1">
                   {(['day', 'week', 'month'] as Granularity[]).map(g => (
                     <button key={g} onClick={() => setGranularity(g)}
                       className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
-                        granularity === g ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                        granularity === g ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-ink-500 border-ink-200 hover:border-ink-300'
                       }`}>
                       {g === 'day' ? 'Dag' : g === 'week' ? 'Vecka' : 'Månad'}
                     </button>
@@ -928,31 +928,31 @@ export default function Simulate() {
               </div>
 
               {displayData.length === 0 ? (
-                <div className="h-[280px] flex items-center justify-center text-gray-400 text-sm">
+                <div className="h-[280px] flex items-center justify-center text-ink-400 text-sm">
                   Ingen prognosdata returnerades.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={displayData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={55} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={55} />
                     <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <ReferenceLine y={0} stroke="#ef4444" strokeWidth={1} strokeDasharray="4 3"
-                      label={{ value: 'Saldo noll', position: 'insideTopRight', fontSize: 10, fill: '#ef4444' }} />
-                    <Line type="monotone" dataKey="baseline" name="Utan ändring" stroke="#9ca3af" strokeWidth={2} dot={false} strokeDasharray="5 3" />
-                    <Line type="monotone" dataKey="simulated" name="Med scenario" stroke="#2563eb" strokeWidth={2.5} dot={false} />
+                    <ReferenceLine y={0} stroke="#CE4646" strokeWidth={1} strokeDasharray="4 3"
+                      label={{ value: 'Saldo noll', position: 'insideTopRight', fontSize: 10, fill: '#CE4646' }} />
+                    <Line type="monotone" dataKey="baseline" name="Utan ändring" stroke="#8B8A93" strokeWidth={2} dot={false} strokeDasharray="5 3" />
+                    <Line type="monotone" dataKey="simulated" name="Med scenario" stroke="#3A5CD8" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
 
               {breakEvenPoint && (
-                <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                  <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="mt-4 flex items-start gap-2.5 bg-negative-50 border border-negative-100 rounded-xl px-4 py-3">
+                  <svg className="w-4 h-4 text-negative-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-sm text-red-700">
+                  <p className="text-sm text-negative-700">
                     Med detta scenario tar kassan slut omkring{' '}
                     <strong>{new Date(breakEvenPoint.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' })}</strong>.
                   </p>
@@ -961,7 +961,7 @@ export default function Simulate() {
             </div>
 
             {/* Detail line */}
-            <p className="text-xs text-slate-400 text-center mb-5">
+            <p className="text-xs text-ink-400 text-center mb-5">
               Idag: {fmt(currentBalance)} · Utan ändring om 90 dagar: {fmt(result.baselineEndBalance)}
             </p>
 
@@ -970,7 +970,7 @@ export default function Simulate() {
               <div className="flex justify-center">
                 {!saveSimOpen ? (
                   <button onClick={() => setSaveSimOpen(true)}
-                    className="text-sm text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl px-4 py-2 hover:border-slate-300 transition-colors min-h-[44px]">
+                    className="text-sm text-ink-500 hover:text-ink-700 border border-ink-200 rounded-xl px-4 py-2 hover:border-ink-300 transition-colors min-h-[44px]">
                     Spara simulering
                   </button>
                 ) : (
@@ -978,13 +978,13 @@ export default function Simulate() {
                     <input autoFocus value={saveSimName} onChange={e => setSaveSimName(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleSaveSim(); if (e.key === 'Escape') { setSaveSimOpen(false); setSaveSimName('') } }}
                       placeholder="Namn på simuleringen..."
-                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500" />
+                      className="flex-1 border border-ink-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-brand-500" />
                     <button onClick={handleSaveSim}
-                      className="px-3 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                      className="px-3 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
                       Spara
                     </button>
                     <button onClick={() => { setSaveSimOpen(false); setSaveSimName('') }}
-                      className="text-gray-400 hover:text-gray-600 px-2 text-sm">
+                      className="text-ink-400 hover:text-ink-600 px-2 text-sm">
                       Avbryt
                     </button>
                   </div>
@@ -996,7 +996,7 @@ export default function Simulate() {
 
         {/* Empty state */}
         {!result && !aiLoading && !aiAnswer && (
-          <div className="bg-white border border-dashed border-gray-200 rounded-2xl p-10 text-center text-gray-400 text-sm">
+          <div className="bg-white border border-dashed border-ink-200 rounded-2xl p-10 text-center text-ink-400 text-sm">
             Skriv in din fråga ovan och låt AI:n simulera, eller expandera det manuella läget.
           </div>
         )}

@@ -184,6 +184,24 @@ För att grönmarkera gaten utan att nedgradera infördes ett dokumenterat undan
 
 > **Ompröva undantaget** för GHSA-qwww-vcr4-c8h2 när react-router släpper en patchad version (7.18.x+/8.2.1+ utanför det sårbara intervallet 7.12.0-8.2.0). Ta då bort posten ur `audit-exceptions.json`, uppgradera `react-router-dom` och verifiera att gaten passerar utan undantag. Senast vid `review_by` (2026-11-06) ska undantaget omprövas oavsett.
 
+### Uppdatering 2026-08-11: react-router-undantaget borttaget
+
+`npm audit` flaggar **inte längre** GHSA-qwww-vcr4-c8h2 för `react-router-dom@7.18.2` (advisory-databasen har reviderats). Undantaget matchade inget aktuellt fynd och har därför **tagits bort** ur `audit-exceptions.json`. Ingen åtgärd på `react-router-dom` behövdes.
+
+### Dokumenterat CI-undantag: js-yaml (2026-08-11)
+
+En ny hög advisory tillkom: **GHSA-5p4m-2wfm-xmqj** (`js-yaml`, Quadratic CPU consumption i `!!omap`, CVE-2026-59870).
+
+**Försök att lösa via uppgradering:** Instruktionen var att först försöka uppgradera `eslint` till senaste. Det **löser inte** advisoryn:
+- `js-yaml@4.3.0` kommer transitivt via `eslint` → `@eslint/eslintrc` → `js-yaml`.
+- `@eslint/eslintrc@latest` pinnar fortfarande **`js-yaml ^4.3.0`**, så även senaste eslint drar in en sårbar 4.x.
+- Fixen är **inte backportad** till js-yaml 4.x (finns bara i 5.x).
+- Slutsats: en eslint-uppgradering byter inte ut js-yaml → advisoryn kvarstår. (`npx eslint .` körs för övrigt inte i CI-gaten; gaten är `tsc -b`, audit-check och build.)
+
+**Beslut:** dokumenterat undantag enligt samma process. Skäl: **rent dev-/byggtidsberoende som inte ingår i produktionsbundlen** (Vite bundlar endast `src/`). `review_by` = **2026-11-11** (3 mån framåt). Omprövas när `@eslint/eslintrc` släpper en version på js-yaml 5.x.
+
+**Gate-status (2026-08-11):** `node scripts/audit-check.mjs` → **PASSERAR** (js-yaml ursäktat; inga andra high/critical utanför undantag). `tsc -b` och `npm run build` gröna.
+
 ---
 
 ## 10. Tankstrecksstädning i UI-text 2026-08-05

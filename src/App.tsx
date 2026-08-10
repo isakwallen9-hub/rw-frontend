@@ -57,13 +57,13 @@ export default function App() {
   return (
     <>
       {/* ── Global animated background ──────────────────────────────── */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/30" aria-hidden="true">
-        <div className="absolute top-[-12%] left-[8%] w-[680px] h-[680px] bg-blue-100/60 rounded-full blur-[150px] animate-orb-1" />
-        <div className="absolute bottom-[2%] right-[4%] w-[540px] h-[540px] bg-slate-200/50 rounded-full blur-[140px] animate-orb-2" />
-        <div className="absolute top-[30%] left-[52%] w-[440px] h-[440px] bg-indigo-100/40 rounded-full blur-[130px] animate-orb-3" />
-        <div className="absolute top-[58%] left-[15%] w-[300px] h-[300px] bg-sky-100/30 rounded-full blur-[110px] animate-orb-4" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-ink-100 via-ink-50 to-brand-50/30" aria-hidden="true">
+        <div className="absolute top-[-12%] left-[8%] w-[680px] h-[680px] bg-brand-100/60 rounded-full blur-[150px] animate-orb-1" />
+        <div className="absolute bottom-[2%] right-[4%] w-[540px] h-[540px] bg-stone-200/50 rounded-full blur-[140px] animate-orb-2" />
+        <div className="absolute top-[30%] left-[52%] w-[440px] h-[440px] bg-brand-100/40 rounded-full blur-[130px] animate-orb-3" />
+        <div className="absolute top-[58%] left-[15%] w-[300px] h-[300px] bg-stone-200/40 rounded-full blur-[110px] animate-orb-4" />
         {/* Edge vignette — brightens center, grounds edges */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 90% 80% at 62% 40%, transparent 35%, rgba(15,23,42,0.04) 100%)' }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 90% 80% at 62% 40%, transparent 35%, rgba(26,25,32,0.04) 100%)' }} />
       </div>
 
       <ErrorBoundary>

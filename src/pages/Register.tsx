@@ -60,8 +60,8 @@ export default function Register() {
             'Se din ekonomiska status direkt',
             'Få prioriterade åtgärder med estimerat värde',
           ].map((point) => (
-            <li key={point} className="flex items-start gap-3 text-blue-100 text-sm">
-              <svg className="w-4 h-4 mt-0.5 text-blue-300 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <li key={point} className="flex items-start gap-3 text-brand-100 text-sm">
+              <svg className="w-4 h-4 mt-0.5 text-brand-300 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
               {point}
             </li>
           ))}
@@ -72,50 +72,50 @@ export default function Register() {
       <div className="flex flex-col justify-center items-center w-full lg:w-1/2 px-6 sm:px-8 bg-white">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-8">
-            <span className="font-bold text-xl text-primary tracking-tight">RW Systems</span>
+            <span className="font-bold text-2xl text-primary tracking-tight">RW Systems</span>
           </div>
 
           {step === 1 ? (
             <>
-              <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Skapa konto</h1>
-              <p className="text-gray-500 text-sm mb-8">Gratis att komma igång</p>
+              <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Skapa konto</h1>
+              <p className="text-ink-500 text-sm mb-8">Gratis att komma igång</p>
 
               <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Förnamn</label>
+                    <label className="block text-xs font-medium text-ink-600 mb-1">Förnamn</label>
                     <input type="text" placeholder="Anna" value={form.firstName} onChange={set('firstName')}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                      className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Efternamn</label>
+                    <label className="block text-xs font-medium text-ink-600 mb-1">Efternamn</label>
                     <input type="text" placeholder="Svensson" value={form.lastName} onChange={set('lastName')}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                      className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">E-post</label>
+                  <label className="block text-xs font-medium text-ink-600 mb-1">E-post</label>
                   <input type="email" placeholder="du@foretaget.se" value={form.email} onChange={set('email')}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                    className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Lösenord</label>
+                  <label className="block text-xs font-medium text-ink-600 mb-1">Lösenord</label>
                   <input type="password" placeholder="••••••••" value={form.password} onChange={set('password')}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                    className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Organisationsnamn</label>
+                  <label className="block text-xs font-medium text-ink-600 mb-1">Organisationsnamn</label>
                   <input type="text" placeholder="Acme AB" value={form.organisationName} onChange={set('organisationName')}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                    className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Workspace (slug)</label>
+                  <label className="block text-xs font-medium text-ink-600 mb-1">Workspace (slug)</label>
                   <input type="text" placeholder="acme-ab" value={form.organisationSlug} onChange={set('organisationSlug')}
                     onKeyDown={(e) => e.key === 'Enter' && setStep(2)}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                    className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
                 </div>
 
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {error && <p className="text-negative-600 text-sm">{error}</p>}
 
                 <button onClick={() => {
                     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.password || !form.organisationName.trim() || !form.organisationSlug.trim()) {
@@ -137,7 +137,7 @@ export default function Register() {
                   Nästa steg →
                 </button>
 
-                <p className="text-center text-sm text-gray-500">
+                <p className="text-center text-sm text-ink-500">
                   Har du redan ett konto?{' '}
                   <span onClick={() => navigate('/login')} className="text-accent font-medium cursor-pointer hover:underline">
                     Logga in
@@ -147,15 +147,15 @@ export default function Register() {
             </>
           ) : (
             <>
-              <button onClick={() => setStep(1)} className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-6 -ml-1 transition-colors">
+              <button onClick={() => setStep(1)} className="flex items-center gap-1 text-sm text-ink-400 hover:text-ink-600 mb-6 -ml-1 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                 Tillbaka
               </button>
 
-              <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Välj din bransch</h1>
-              <p className="text-gray-500 text-sm mb-6">Vi anpassar upplevelsen efter din verksamhet</p>
+              <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Välj din bransch</h1>
+              <p className="text-ink-500 text-sm mb-6">Vi anpassar upplevelsen efter din verksamhet</p>
 
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              {error && <p className="text-negative-600 text-sm mb-4">{error}</p>}
 
               <div className="grid grid-cols-2 gap-3">
                 {INDUSTRIES.map((ind) => (
@@ -163,17 +163,17 @@ export default function Register() {
                     key={ind.value}
                     onClick={() => handleRegister(ind.value)}
                     disabled={loading}
-                    className="flex flex-col items-center justify-center gap-2 border-2 border-gray-100 rounded-xl py-5 px-3 hover:border-accent hover:bg-accent/5 transition-all disabled:opacity-50 group"
+                    className="flex flex-col items-center justify-center gap-2 border-2 border-ink-100 rounded-xl py-5 px-3 hover:border-accent hover:bg-accent/5 transition-all disabled:opacity-50 group"
                   >
                     <span className="text-3xl">{ind.icon}</span>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-accent text-center leading-tight">{ind.label}</span>
+                    <span className="text-sm font-medium text-ink-700 group-hover:text-accent text-center leading-tight">{ind.label}</span>
                   </button>
                 ))}
               </div>
 
               {loading && (
-                <div className="flex items-center justify-center gap-2 mt-5 text-sm text-gray-400">
-                  <span className="w-4 h-4 border-2 border-gray-300 border-t-accent rounded-full animate-spin" />
+                <div className="flex items-center justify-center gap-2 mt-5 text-sm text-ink-400">
+                  <span className="w-4 h-4 border-2 border-ink-300 border-t-accent rounded-full animate-spin" />
                   Skapar konto...
                 </div>
               )}

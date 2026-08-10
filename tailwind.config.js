@@ -7,23 +7,92 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#1e3a5f',
-        accent:  '#2563eb',
+        // ── Brand (blue) — anchors 50/100/500/600/700/900 given; gaps interpolated ──
+        brand: {
+          50:  '#F0F4FF',
+          100: '#DDE5FC',
+          200: '#C2CEF7',
+          300: '#95A9EF',
+          400: '#5E79E4',
+          500: '#3A5CD8',
+          600: '#2A47C0',
+          700: '#1F369B',
+          800: '#1A2D80',
+          900: '#152663',
+          950: '#0E1A45',
+        },
+        // ── Ink — warm neutrals (not cool gray). Anchors 400/500/600/800/900 given ──
+        ink: {
+          50:  '#F7F6F5',
+          100: '#EEEDEC',
+          200: '#DEDCDC',
+          300: '#BEBCBF',
+          400: '#72717C', // darkened from #8B8A93 to clear WCAG 4.5:1 as muted text on glass
+          500: '#6B6A73',
+          600: '#4E4D56',
+          700: '#3A3940',
+          800: '#2A2930',
+          900: '#1A1920',
+          950: '#100F14',
+        },
+        // ── Positive (green). Anchors 50/500/600 given ──
+        positive: {
+          50:  '#ECFAF3',
+          100: '#CFF3E1',
+          200: '#A2E6C6',
+          300: '#63D3A3',
+          400: '#23B37F',
+          500: '#0E9C6B',
+          600: '#0A7D55',
+          700: '#096344',
+          800: '#084F37',
+          900: '#06412D',
+        },
+        // ── Negative (red). Anchors 50/500/600 given ──
+        negative: {
+          50:  '#FDF0F0',
+          100: '#FADCDC',
+          200: '#F4BEBE',
+          300: '#EA9494',
+          400: '#DC6A6A',
+          500: '#CE4646',
+          600: '#AE3838',
+          700: '#8F2D2D',
+          800: '#742626',
+          900: '#602222',
+        },
+        // ── Caution (amber/yellow). Anchors 50/500 given ──
+        caution: {
+          50:  '#FEF6EC',
+          100: '#FBE8CC',
+          200: '#F6D399',
+          300: '#EEB85F',
+          400: '#DE9E37',
+          500: '#C9821F',
+          600: '#A66916',
+          700: '#855314',
+          800: '#6D4416',
+          900: '#5C3A16',
+        },
+        // Legacy semantic tokens, repointed onto the brand ramp so existing
+        // `text-primary` / `bg-accent` utilities pick up the new palette.
+        primary: '#1F369B',
+        accent:  '#3A5CD8',
       },
       fontFamily: {
         serif: ['Instrument Serif', 'Georgia', 'serif'],
-        sans: ['Geist', 'system-ui', 'sans-serif'],
+        sans: ['General Sans', 'system-ui', 'sans-serif'],
       },
       // Soft, layered, diffuse depth — Apple-style ambient shadows.
       // Overrides the default scale, so every existing `shadow-*` utility
       // across the app is upgraded without touching a single component.
       boxShadow: {
-        sm:      '0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05)',
-        DEFAULT: '0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.06)',
-        md:      '0 2px 4px rgba(15, 23, 42, 0.04), 0 8px 20px -4px rgba(15, 23, 42, 0.08)',
-        lg:      '0 4px 8px rgba(15, 23, 42, 0.04), 0 16px 32px -8px rgba(15, 23, 42, 0.10)',
-        xl:      '0 8px 16px rgba(15, 23, 42, 0.05), 0 24px 48px -12px rgba(15, 23, 42, 0.12)',
-        '2xl':   '0 16px 32px rgba(15, 23, 42, 0.08), 0 40px 72px -16px rgba(15, 23, 42, 0.16)',
+        sm:      '0 1px 2px rgba(26, 25, 32, 0.04), 0 1px 3px rgba(26, 25, 32, 0.05)',
+        DEFAULT: '0 1px 2px rgba(26, 25, 32, 0.04), 0 4px 12px -2px rgba(26, 25, 32, 0.06)',
+        md:      '0 2px 4px rgba(26, 25, 32, 0.04), 0 8px 20px -4px rgba(26, 25, 32, 0.08)',
+        lg:      '0 4px 8px rgba(26, 25, 32, 0.04), 0 16px 32px -8px rgba(26, 25, 32, 0.10)',
+        xl:      '0 8px 16px rgba(26, 25, 32, 0.05), 0 24px 48px -12px rgba(26, 25, 32, 0.12)',
+        '2xl':   '0 16px 32px rgba(26, 25, 32, 0.08), 0 40px 72px -16px rgba(26, 25, 32, 0.16)',
       },
       transitionTimingFunction: {
         apple: 'cubic-bezier(0.22, 1, 0.36, 1)',

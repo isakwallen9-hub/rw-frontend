@@ -186,9 +186,9 @@ const STEPS = [
 
 // ── Anomaly card ────────────────────────────────────────────────────────────
 const ANOMALY_CONFIG = {
-  critical: { border: 'border-l-red-500',    iconBg: 'bg-red-50',    iconColor: 'text-red-500',    Icon: AlertTriangle },
-  warning:  { border: 'border-l-yellow-500', iconBg: 'bg-yellow-50', iconColor: 'text-yellow-600', Icon: AlertCircle   },
-  info:     { border: 'border-l-blue-500',   iconBg: 'bg-blue-50',   iconColor: 'text-blue-500',   Icon: Info          },
+  critical: { border: 'border-l-negative-500',    iconBg: 'bg-negative-50',    iconColor: 'text-negative-600',    Icon: AlertTriangle },
+  warning:  { border: 'border-l-caution-500', iconBg: 'bg-caution-50', iconColor: 'text-caution-600', Icon: AlertCircle   },
+  info:     { border: 'border-l-brand-500',   iconBg: 'bg-brand-50',   iconColor: 'text-brand-500',   Icon: Info          },
 } as const
 
 function AnomalyCard({ anomaly, fmt }: { anomaly: Anomaly; fmt: (n: number) => string }) {
@@ -199,10 +199,10 @@ function AnomalyCard({ anomaly, fmt }: { anomaly: Anomaly; fmt: (n: number) => s
         <c.Icon className={`w-3.5 h-3.5 ${c.iconColor}`} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-800">{anomaly.title}</p>
-        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{anomaly.description}</p>
+        <p className="text-sm font-semibold text-ink-800">{anomaly.title}</p>
+        <p className="text-xs text-ink-500 mt-0.5 leading-relaxed">{anomaly.description}</p>
         {anomaly.affectedAmount !== undefined && (
-          <p className="text-xs font-medium text-slate-600 mt-1">Belopp: {fmt(anomaly.affectedAmount)}</p>
+          <p className="text-xs font-medium text-ink-600 mt-1">Belopp: {fmt(anomaly.affectedAmount)}</p>
         )}
       </div>
     </div>
@@ -446,27 +446,27 @@ export default function Import() {
         {/* ── Success banner ─────────────────────────────────────────────── */}
         {isDone && (
           <>
-            <div className="bg-green-50 border-2 border-green-200 rounded-2xl px-6 py-8 mb-4 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <div className="bg-positive-50 border-2 border-positive-200 rounded-2xl px-6 py-8 mb-4 text-center">
+              <div className="w-16 h-16 bg-positive-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-positive-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-3xl text-green-800 mb-1">Klart!</h2>
-              <p className="text-green-700 text-base mb-6">
+              <h2 className="text-3xl text-positive-800 mb-1">Klart!</h2>
+              <p className="text-positive-700 text-base mb-6">
                 {rowCount !== null ? `${rowCount} rader importerade.` : 'Datan importerades.'}{' '}
                 Din dashboard uppdateras nu.
               </p>
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-3 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-sm"
+                  className="px-6 py-3 bg-positive-600 text-white text-sm font-semibold rounded-xl hover:bg-positive-700 transition-colors shadow-sm"
                 >
                   Gå till dashboard →
                 </button>
                 <button
                   onClick={reset}
-                  className="px-6 py-3 border border-green-200 text-green-700 text-sm font-medium rounded-xl hover:bg-green-100 transition-colors"
+                  className="px-6 py-3 border border-positive-200 text-positive-700 text-sm font-medium rounded-xl hover:bg-positive-100 transition-colors"
                 >
                   Importera igen
                 </button>
@@ -476,23 +476,23 @@ export default function Import() {
             {/* AI first impression + anomalies */}
             {anomaliesLoading && (
               <div className="glass rounded-2xl px-6 py-5 mb-4 flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
-                <p className="text-sm text-slate-500 italic">AI:n letar efter avvikelser i din data...</p>
+                <Sparkles className="w-5 h-5 text-brand-400 shrink-0 animate-pulse" aria-hidden="true" />
+                <p className="text-sm text-ink-500 italic">AI:n letar efter avvikelser i din data...</p>
               </div>
             )}
             {!anomaliesLoading && aiSummaryLoading && (
               <div className="glass rounded-2xl px-6 py-5 mb-4 flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-blue-400 shrink-0 animate-pulse" aria-hidden="true" />
-                <p className="text-sm text-slate-500 italic">AI:n tittar på din nya data...</p>
+                <Sparkles className="w-5 h-5 text-brand-400 shrink-0 animate-pulse" aria-hidden="true" />
+                <p className="text-sm text-ink-500 italic">AI:n tittar på din nya data...</p>
               </div>
             )}
             {!anomaliesLoading && !aiSummaryLoading && aiSummary && (
               <div className="glass rounded-2xl px-6 py-5 mb-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-4 h-4 text-blue-500 shrink-0" aria-hidden="true" />
-                  <p className="text-sm font-semibold text-slate-700">AI:ns första intryck</p>
+                  <Sparkles className="w-4 h-4 text-brand-500 shrink-0" aria-hidden="true" />
+                  <p className="text-sm font-semibold text-ink-700">AI:ns första intryck</p>
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed">{aiSummary}</p>
+                <p className="text-sm text-ink-600 leading-relaxed">{aiSummary}</p>
               </div>
             )}
             {anomalies.length > 0 && (
@@ -510,8 +510,8 @@ export default function Import() {
           <>
             {/* Welcome heading */}
             <div className="text-center mb-10">
-              <h1 className="text-4xl text-gray-900 mb-2">Ladda upp din ekonomifil</h1>
-              <p className="text-gray-500 text-base">Vi tar hand om resten automatiskt.</p>
+              <h1 className="text-4xl text-ink-900 mb-2">Ladda upp din ekonomifil</h1>
+              <p className="text-ink-500 text-base">Vi tar hand om resten automatiskt.</p>
             </div>
 
             {/* Step guide */}
@@ -519,24 +519,24 @@ export default function Import() {
               {STEPS.map((s, i) => (
                 <div key={s.num} className="flex flex-col items-center text-center gap-2">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    i === 0 ? 'bg-blue-100 text-blue-600' :
+                    i === 0 ? 'bg-brand-100 text-brand-600' :
                     i === 1 ? 'bg-purple-100 text-purple-600' :
-                    'bg-green-100 text-green-600'
+                    'bg-positive-100 text-positive-600'
                   }`}>
                     {s.icon}
                   </div>
-                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{s.num}</span>
-                  <p className="text-sm font-medium text-gray-700 leading-tight">{s.label}</p>
+                  <span className="text-[11px] font-bold text-ink-400 uppercase tracking-widest">{s.num}</span>
+                  <p className="text-sm font-medium text-ink-700 leading-tight">{s.label}</p>
                 </div>
               ))}
             </div>
 
             {/* File requirements */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-6 flex gap-3 items-start">
-              <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-6 flex gap-3 items-start">
+              <svg className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-sm text-blue-700 leading-relaxed">
+              <p className="text-sm text-brand-700 leading-relaxed">
                 Din fil kan vara en <strong>Excel-fil (.xlsx)</strong> eller <strong>CSV-fil</strong>.
                 Den behöver ha kolumner för datum och belopp. Det spelar ingen roll vad de heter, vi hittar dem automatiskt!
               </p>
@@ -549,10 +549,10 @@ export default function Import() {
               onClick={() => !isRunning && fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-2xl flex flex-col items-center justify-center py-10 sm:py-16 px-6 sm:px-8 text-center transition-colors mb-6 ${
                 isRunning
-                  ? 'border-gray-200 bg-gray-50 cursor-default'
+                  ? 'border-ink-200 bg-ink-50 cursor-default'
                   : file
-                  ? 'border-blue-300 bg-blue-50 cursor-pointer hover:border-blue-400'
-                  : 'border-gray-300 bg-white cursor-pointer hover:border-blue-400 hover:bg-blue-50'
+                  ? 'border-brand-300 bg-brand-50 cursor-pointer hover:border-brand-400'
+                  : 'border-ink-300 bg-white cursor-pointer hover:border-brand-400 hover:bg-brand-50'
               }`}
             >
               <input
@@ -565,18 +565,18 @@ export default function Import() {
 
               {isRunning ? (
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                  <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
                   <div>
-                    <p className="text-base font-semibold text-gray-800">{msg.heading}</p>
-                    <p className="text-sm text-slate-500 mt-1">{msg.sub}</p>
+                    <p className="text-base font-semibold text-ink-800">{msg.heading}</p>
+                    <p className="text-sm text-ink-500 mt-1">{msg.sub}</p>
                   </div>
                   <div className="w-48">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-400">{progress}%</span>
+                      <span className="text-xs text-ink-400">{progress}%</span>
                     </div>
-                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-ink-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 rounded-full transition-all duration-700"
+                        className="h-full bg-brand-500 rounded-full transition-all duration-700"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -584,30 +584,30 @@ export default function Import() {
                 </div>
               ) : file ? (
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-1">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center mb-1">
+                    <svg className="w-6 h-6 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <p className="text-base font-semibold text-gray-900">{file.name}</p>
+                  <p className="text-base font-semibold text-ink-900">{file.name}</p>
                   {rowCount !== null && (
-                    <p className="text-sm text-gray-500">{rowCount} rader hittades</p>
+                    <p className="text-sm text-ink-500">{rowCount} rader hittades</p>
                   )}
                   <button
                     onClick={e => { e.stopPropagation(); reset() }}
-                    className="mt-2 text-xs text-gray-400 hover:text-gray-600 underline">
+                    className="mt-2 text-xs text-ink-400 hover:text-ink-600 underline">
                     Välj en annan fil
                   </button>
                 </div>
               ) : (
                 <>
-                  <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="w-16 h-16 bg-ink-100 rounded-2xl flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-ink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                   </div>
-                  <p className="text-lg font-semibold text-gray-700 mb-1">Dra hit din fil eller klicka för att välja</p>
-                  <p className="text-sm text-gray-400">Excel (.xlsx) eller CSV</p>
+                  <p className="text-lg font-semibold text-ink-700 mb-1">Dra hit din fil eller klicka för att välja</p>
+                  <p className="text-sm text-ink-400">Excel (.xlsx) eller CSV</p>
                 </>
               )}
             </div>
@@ -618,22 +618,22 @@ export default function Import() {
 
                 {/* Preview table */}
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-3">Ser detta rätt ut? Klicka <em>Importera</em> för att fortsätta.</p>
+                  <p className="text-sm font-semibold text-ink-700 mb-3">Ser detta rätt ut? Klicka <em>Importera</em> för att fortsätta.</p>
                   <div className="glass rounded-2xl overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-gray-100 bg-gray-50">
+                          <tr className="border-b border-ink-100 bg-ink-50">
                             {previewHeaders.map(h => (
-                              <th key={h} className="text-left px-4 py-2.5 font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                              <th key={h} className="text-left px-4 py-2.5 font-semibold text-ink-500 whitespace-nowrap">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {previewRows.map((row, i) => (
-                            <tr key={i} className={`${i !== 0 ? 'border-t border-gray-50' : ''} ${i % 2 === 1 ? 'bg-white/20' : ''}`}>
+                            <tr key={i} className={`${i !== 0 ? 'border-t border-ink-50' : ''} ${i % 2 === 1 ? 'bg-white/20' : ''}`}>
                               {previewHeaders.map(h => (
-                                <td key={h} className="px-4 py-2.5 text-gray-600 whitespace-nowrap max-w-[160px] truncate">
+                                <td key={h} className="px-4 py-2.5 text-ink-600 whitespace-nowrap max-w-[160px] truncate">
                                   {String(row[h] ?? '')}
                                 </td>
                               ))}
@@ -643,7 +643,7 @@ export default function Import() {
                       </table>
                     </div>
                     {rowCount !== null && rowCount > 5 && (
-                      <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-400">
+                      <div className="px-4 py-2 border-t border-ink-100 bg-ink-50 text-xs text-ink-400">
                         Visar de 5 första raderna av {rowCount} totalt
                       </div>
                     )}
@@ -652,23 +652,23 @@ export default function Import() {
 
                 {/* Column detection summary */}
                 <div className="glass rounded-2xl p-4 shadow-sm">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Vi hittade</p>
+                  <p className="text-xs font-bold text-ink-500 uppercase tracking-widest mb-3">Vi hittade</p>
                   <div className="space-y-3">
 
                     {/* Date */}
                     <div className="flex items-start gap-3">
-                      <span className={`flex items-center gap-1.5 text-sm font-medium min-w-[80px] ${detectedDate ? 'text-green-700' : 'text-red-600'}`}>
+                      <span className={`flex items-center gap-1.5 text-sm font-medium min-w-[80px] ${detectedDate ? 'text-positive-700' : 'text-negative-600'}`}>
                         <span>{detectedDate ? '✓' : '✗'}</span> Datum
                       </span>
                       {detectedDate ? (
-                        <span className="text-sm text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-mono">{detectedDate}</span>
+                        <span className="text-sm text-ink-400 bg-ink-50 px-2 py-0.5 rounded font-mono">{detectedDate}</span>
                       ) : (
                         <div className="flex-1">
-                          <p className="text-xs text-red-500 mb-1">Datum hittades inte. Välj rätt kolumn:</p>
+                          <p className="text-xs text-negative-600 mb-1">Datum hittades inte. Välj rätt kolumn:</p>
                           <select
                             value={mappedDate}
                             onChange={e => setMappedDate(e.target.value)}
-                            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                            className="w-full text-sm border border-ink-200 rounded-lg px-3 py-1.5 text-ink-700 focus:outline-none focus:ring-2 focus:ring-brand-300"
                           >
                             <option value="">Välj kolumn</option>
                             {previewHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -679,18 +679,18 @@ export default function Import() {
 
                     {/* Amount */}
                     <div className="flex items-start gap-3">
-                      <span className={`flex items-center gap-1.5 text-sm font-medium min-w-[80px] ${detectedAmount ? 'text-green-700' : 'text-red-600'}`}>
+                      <span className={`flex items-center gap-1.5 text-sm font-medium min-w-[80px] ${detectedAmount ? 'text-positive-700' : 'text-negative-600'}`}>
                         <span>{detectedAmount ? '✓' : '✗'}</span> Belopp
                       </span>
                       {detectedAmount ? (
-                        <span className="text-sm text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-mono">{detectedAmount}</span>
+                        <span className="text-sm text-ink-400 bg-ink-50 px-2 py-0.5 rounded font-mono">{detectedAmount}</span>
                       ) : (
                         <div className="flex-1">
-                          <p className="text-xs text-red-500 mb-1">Belopp hittades inte. Välj rätt kolumn:</p>
+                          <p className="text-xs text-negative-600 mb-1">Belopp hittades inte. Välj rätt kolumn:</p>
                           <select
                             value={mappedAmount}
                             onChange={e => setMappedAmount(e.target.value)}
-                            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                            className="w-full text-sm border border-ink-200 rounded-lg px-3 py-1.5 text-ink-700 focus:outline-none focus:ring-2 focus:ring-brand-300"
                           >
                             <option value="">Välj kolumn</option>
                             {previewHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -703,14 +703,14 @@ export default function Import() {
                     <div className="flex items-center gap-3">
                       {detectedCategory ? (
                         <>
-                          <span className="flex items-center gap-1.5 text-sm text-green-700 font-medium min-w-[80px]">
-                            <span className="text-green-500">✓</span> Kategori
+                          <span className="flex items-center gap-1.5 text-sm text-positive-700 font-medium min-w-[80px]">
+                            <span className="text-positive-500">✓</span> Kategori
                           </span>
-                          <span className="text-sm text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-mono">{detectedCategory}</span>
+                          <span className="text-sm text-ink-400 bg-ink-50 px-2 py-0.5 rounded font-mono">{detectedCategory}</span>
                         </>
                       ) : (
-                        <span className="flex items-center gap-1.5 text-sm text-gray-400 font-medium">
-                          <span className="text-gray-300">✗</span> Kategori
+                        <span className="flex items-center gap-1.5 text-sm text-ink-400 font-medium">
+                          <span className="text-ink-300">✗</span> Kategori
                           <span className="font-normal ml-1">saknas (valfritt)</span>
                         </span>
                       )}
@@ -724,8 +724,8 @@ export default function Import() {
 
             {/* Error */}
             {step === 'error' && error && (
-              <div className="mb-5 bg-red-50 border border-red-100 text-red-700 rounded-xl px-4 py-4 text-sm flex gap-3 items-start">
-                <svg className="w-5 h-5 shrink-0 mt-0.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="mb-5 bg-negative-50 border border-negative-100 text-negative-700 rounded-xl px-4 py-4 text-sm flex gap-3 items-start">
+                <svg className="w-5 h-5 shrink-0 mt-0.5 text-negative-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div>
@@ -739,7 +739,7 @@ export default function Import() {
             <button
               onClick={runImport}
               disabled={!file || isRunning || !mappedDate || !mappedAmount}
-              className="w-full py-3.5 bg-blue-600 text-white text-base font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+              className="w-full py-3.5 bg-brand-600 text-white text-base font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
               {isRunning ? msg.heading : 'Importera'}
             </button>
@@ -749,23 +749,23 @@ export default function Import() {
         {/* ── Import history ──────────────────────────────────────────────── */}
         {history.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-xl text-gray-800 mb-4">Tidigare importer</h2>
+            <h2 className="text-2xl text-ink-800 mb-4">Tidigare importer</h2>
             <div className="glass rounded-2xl overflow-hidden shadow-sm">
               {history.map((rec, i) => (
                 <div
                   key={rec.id}
-                  className={`flex items-center gap-4 px-5 py-4 ${i !== 0 ? 'border-t border-gray-50' : ''}`}
+                  className={`flex items-center gap-4 px-5 py-4 ${i !== 0 ? 'border-t border-ink-50' : ''}`}
                 >
                   {/* Status icon */}
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                    rec.status === 'success' ? 'bg-green-100' : 'bg-red-100'
+                    rec.status === 'success' ? 'bg-positive-100' : 'bg-negative-100'
                   }`}>
                     {rec.status === 'success' ? (
-                      <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <svg className="w-4 h-4 text-positive-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
-                      <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-4 h-4 text-negative-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     )}
@@ -773,20 +773,20 @@ export default function Import() {
 
                   {/* Details */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{rec.fileName}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{fmtDate(rec.importedAt)}</p>
+                    <p className="text-sm font-medium text-ink-800 truncate">{rec.fileName}</p>
+                    <p className="text-xs text-ink-400 mt-0.5">{fmtDate(rec.importedAt)}</p>
                   </div>
 
                   {/* Row count */}
                   {rec.rowCount !== null && (
-                    <span className="text-xs text-gray-400 shrink-0">{rec.rowCount} rader</span>
+                    <span className="text-xs text-ink-400 shrink-0">{rec.rowCount} rader</span>
                   )}
 
                   {/* Status badge */}
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
                     rec.status === 'success'
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-red-50 text-red-600'
+                      ? 'bg-positive-50 text-positive-700'
+                      : 'bg-negative-50 text-negative-600'
                   }`}>
                     {rec.status === 'success' ? 'Lyckad' : 'Misslyckad'}
                   </span>

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL as string
-const CHART_COLORS = ['#2563eb', '#7c3aed', '#f59e0b', '#10b981', '#ef4444', '#06b6d4']
+const CHART_COLORS = ['#3A5CD8', '#0E9C6B', '#C9821F', '#7C5BD9', '#CE4646']
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -87,32 +87,32 @@ const SEVERITY_STYLES: Record<Severity, {
   iconColor: string
 }> = {
   critical: {
-    border: 'border-l-red-500',
-    badge: 'bg-red-100 text-red-700',
+    border: 'border-l-negative-500',
+    badge: 'bg-negative-100 text-negative-700',
     label: 'Kritisk',
     Icon: AlertCircle,
-    iconColor: 'text-red-500',
+    iconColor: 'text-negative-600',
   },
   warning: {
-    border: 'border-l-yellow-400',
-    badge: 'bg-yellow-100 text-yellow-700',
+    border: 'border-l-caution-400',
+    badge: 'bg-caution-100 text-caution-700',
     label: 'Varning',
     Icon: AlertTriangle,
-    iconColor: 'text-yellow-500',
+    iconColor: 'text-caution-500',
   },
   opportunity: {
-    border: 'border-l-green-500',
-    badge: 'bg-green-100 text-green-700',
+    border: 'border-l-positive-500',
+    badge: 'bg-positive-100 text-positive-700',
     label: 'Möjlighet',
     Icon: TrendingUp,
-    iconColor: 'text-green-600',
+    iconColor: 'text-positive-600',
   },
   info: {
-    border: 'border-l-blue-400',
-    badge: 'bg-blue-100 text-blue-700',
+    border: 'border-l-brand-400',
+    badge: 'bg-brand-100 text-brand-700',
     label: 'Info',
     Icon: Info,
-    iconColor: 'text-blue-500',
+    iconColor: 'text-brand-500',
   },
 }
 
@@ -167,10 +167,10 @@ function normalizeToDatasets(chartData: DataPoint[] | ChartDataV2 | null | undef
 function Skeleton() {
   return (
     <div className="flex flex-col gap-3 animate-pulse">
-      <div className="h-4 bg-gray-200/80 rounded-lg w-3/4" />
-      <div className="h-4 bg-gray-200/80 rounded-lg w-full" />
-      <div className="h-4 bg-gray-200/80 rounded-lg w-5/6" />
-      <div className="h-4 bg-gray-200/80 rounded-lg w-2/3" />
+      <div className="h-4 bg-ink-200/80 rounded-lg w-3/4" />
+      <div className="h-4 bg-ink-200/80 rounded-lg w-full" />
+      <div className="h-4 bg-ink-200/80 rounded-lg w-5/6" />
+      <div className="h-4 bg-ink-200/80 rounded-lg w-2/3" />
     </div>
   )
 }
@@ -183,7 +183,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
 
   if (!pivoted.length) {
     return (
-      <div className="flex items-center justify-center text-sm text-gray-400" style={{ height }}>
+      <div className="flex items-center justify-center text-sm text-ink-400" style={{ height }}>
         Ingen grafdata
       </div>
     )
@@ -196,15 +196,15 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
 
   const axes = (
     <>
-      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+      <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
       <XAxis
         dataKey="label"
-        tick={{ fontSize: 11, fill: '#9ca3af' }}
+        tick={{ fontSize: 11, fill: '#8B8A93' }}
         axisLine={false}
         tickLine={false}
       />
       <YAxis
-        tick={{ fontSize: 11, fill: '#9ca3af' }}
+        tick={{ fontSize: 11, fill: '#8B8A93' }}
         axisLine={false}
         tickLine={false}
         width={52}
@@ -216,7 +216,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
       <Tooltip
         contentStyle={{
           background: 'rgba(255,255,255,0.97)',
-          border: '1px solid #e5e7eb',
+          border: '1px solid #DEDCDC',
           borderRadius: 10,
           fontSize: 12,
           boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
@@ -225,7 +225,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
       />
       {nonZero.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
       {hasZeroRef && (
-        <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 2" strokeWidth={1.5} />
+        <ReferenceLine y={0} stroke="#CE4646" strokeDasharray="4 2" strokeWidth={1.5} />
       )}
     </>
   )
@@ -271,12 +271,12 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
 function FeaturedChartCard({ chart }: { chart: FeaturedChart }) {
   return (
     <div className="glass rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
-      <h3 className="font-bold text-gray-900 tracking-tight mb-1">{chart.title}</h3>
+      <h3 className="font-bold text-ink-900 tracking-tight mb-1">{chart.title}</h3>
       <div className="mt-4">
         <ChartBlock chart={chart} height={240} />
       </div>
       {chart.reason && (
-        <div className="mt-3 flex items-start gap-2 text-xs text-gray-400">
+        <div className="mt-3 flex items-start gap-2 text-xs text-ink-400">
           <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
           <span>{chart.reason}</span>
         </div>
@@ -297,19 +297,19 @@ function InsightCard({ insight, formatAmount }: { insight: Insight; formatAmount
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <s.Icon className={`w-4 h-4 shrink-0 ${s.iconColor}`} aria-hidden="true" />
-          <h3 className="font-bold text-gray-900 tracking-tight text-sm leading-snug">{insight.title}</h3>
+          <h3 className="font-bold text-ink-900 tracking-tight text-sm leading-snug">{insight.title}</h3>
         </div>
         <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${s.badge}`}>
           {s.label}
         </span>
       </div>
 
-      <p className="text-sm text-gray-600 leading-relaxed mb-3">{insight.description}</p>
+      <p className="text-sm text-ink-600 leading-relaxed mb-3">{insight.description}</p>
 
       {insight.impact !== undefined && (
-        <p className="text-sm font-semibold text-gray-700 tabular-nums mb-3">
+        <p className="text-sm font-semibold text-ink-700 tabular-nums mb-3">
           Påverkan:{' '}
-          <span className={insight.impact >= 0 ? 'text-green-600' : 'text-red-600'}>
+          <span className={insight.impact >= 0 ? 'text-positive-600' : 'text-negative-600'}>
             {insight.impact >= 0 ? '+' : ''}{formatAmount(insight.impact)}
           </span>
         </p>
@@ -322,11 +322,11 @@ function InsightCard({ insight, formatAmount }: { insight: Insight; formatAmount
       )}
 
       {insight.suggestedAction && (
-        <div className="bg-blue-50/60 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
-          <Lightbulb className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="bg-brand-50/60 border border-brand-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
+          <Lightbulb className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <p className="text-xs font-semibold text-blue-700 mb-0.5">Rekommenderad åtgärd</p>
-            <p className="text-xs text-blue-600 leading-relaxed">{insight.suggestedAction}</p>
+            <p className="text-xs font-semibold text-brand-700 mb-0.5">Rekommenderad åtgärd</p>
+            <p className="text-xs text-brand-600 leading-relaxed">{insight.suggestedAction}</p>
           </div>
         </div>
       )}
@@ -404,18 +404,18 @@ export default function Insights() {
 
         {/* ── Page header ── */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-50/80 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-brand-50/80 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-3xl tracking-tight text-slate-900">AI-insikter</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Genererat utifrån din ekonomidata</p>
+            <h1 className="text-4xl tracking-tight text-ink-900">AI-insikter</h1>
+            <p className="text-xs text-ink-400 mt-0.5">Genererat utifrån din ekonomidata</p>
           </div>
         </div>
 
         {/* ── AI Chart Generator ── */}
         <div className="glass rounded-2xl p-5 sm:p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Fråga AI om en graf</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-400 mb-3">Fråga AI om en graf</p>
           <div className="flex gap-2">
             <input
               ref={inputRef}
@@ -425,13 +425,13 @@ export default function Insights() {
               onKeyDown={e => e.key === 'Enter' && handleGenerate()}
               placeholder="t.ex. visa Olaplex vs Redken senaste 6 månaderna"
               disabled={generating}
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors disabled:opacity-50 bg-white/80 min-h-[44px]"
+              className="flex-1 border border-ink-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors disabled:opacity-50 bg-white/80 min-h-[44px]"
             />
             <button
               onClick={handleGenerate}
               disabled={!query.trim() || generating}
               aria-label="Generera graf"
-              className="px-4 py-3 bg-primary text-white rounded-xl shadow-md shadow-blue-500/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="px-4 py-3 bg-primary text-white rounded-xl shadow-md shadow-brand-500/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               {generating ? (
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -445,17 +445,17 @@ export default function Insights() {
           </div>
 
           {generating && (
-            <p className="mt-3 text-sm text-gray-400 flex items-center gap-2">
+            <p className="mt-3 text-sm text-ink-400 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary animate-pulse" aria-hidden="true" />
               AI:n bygger din graf...
             </p>
           )}
 
           {generateError && (
-            <div className="mt-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              <p className="text-sm font-semibold text-red-700 mb-1">{String(generateError.error)}</p>
+            <div className="mt-3 bg-negative-50 border border-negative-100 rounded-xl px-4 py-3">
+              <p className="text-sm font-semibold text-negative-700 mb-1">{String(generateError.error)}</p>
               {generateError.suggestions?.length ? (
-                <ul className="text-xs text-red-600 list-disc list-inside space-y-0.5">
+                <ul className="text-xs text-negative-600 list-disc list-inside space-y-0.5">
                   {generateError.suggestions.map((s, i) => (
                     <li key={i}>{s}</li>
                   ))}
@@ -474,19 +474,19 @@ export default function Insights() {
                   <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">AI-genererad graf</span>
                 </div>
-                <h3 className="font-bold text-gray-900 tracking-tight">{generatedChart.title || generatedChart.query}</h3>
+                <h3 className="font-bold text-ink-900 tracking-tight">{generatedChart.title || generatedChart.query}</h3>
               </div>
               <button
                 onClick={() => setGeneratedChart(null)}
                 aria-label="Stäng graf"
-                className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-white/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 rounded-lg text-ink-400 hover:text-ink-700 hover:bg-white/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
             <ChartBlock chart={generatedChart} height={280} />
             {generatedChart.reason && (
-              <div className="mt-3 flex items-start gap-2 text-xs text-gray-400">
+              <div className="mt-3 flex items-start gap-2 text-xs text-ink-400">
                 <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>{generatedChart.reason}</span>
               </div>
@@ -497,31 +497,31 @@ export default function Insights() {
         {/* ── AI Summary ── */}
         <div className="glass rounded-2xl p-5 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md shadow-blue-500/20">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-md shadow-brand-500/20">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
-            <h2 className="text-xl text-gray-900 tracking-tight">Läget just nu</h2>
+            <h2 className="text-2xl text-ink-900 tracking-tight">Läget just nu</h2>
           </div>
 
           {loading ? (
             <div>
-              <p className="text-sm text-gray-400 mb-4 flex items-center gap-2">
+              <p className="text-sm text-ink-400 mb-4 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary animate-pulse" aria-hidden="true" />
                 Analyserar din ekonomi...
               </p>
               <Skeleton />
             </div>
           ) : fetchError ? (
-            <p className="text-sm text-red-600">{fetchError}</p>
+            <p className="text-sm text-negative-600">{fetchError}</p>
           ) : (
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{data?.summary}</p>
+            <p className="text-sm text-ink-700 leading-relaxed whitespace-pre-line">{data?.summary}</p>
           )}
         </div>
 
         {/* ── Featured charts ── */}
         {!loading && !fetchError && data?.featuredCharts?.length ? (
           <section>
-            <h2 className="text-xl text-gray-900 tracking-tight mb-4">Utvalda grafer</h2>
+            <h2 className="text-2xl text-ink-900 tracking-tight mb-4">Utvalda grafer</h2>
             <div className="flex flex-col gap-5">
               {data.featuredCharts.map((chart, i) => (
                 <FeaturedChartCard key={i} chart={chart} />
@@ -533,11 +533,11 @@ export default function Insights() {
         {/* Loading skeletons for charts */}
         {loading && (
           <section>
-            <div className="h-5 bg-gray-200/80 rounded-lg w-40 animate-pulse mb-4" />
+            <div className="h-5 bg-ink-200/80 rounded-lg w-40 animate-pulse mb-4" />
             {[0, 1].map(i => (
               <div key={i} className="glass rounded-2xl p-5 mb-5 shadow-sm">
-                <div className="h-4 bg-gray-200/80 rounded-lg w-48 animate-pulse mb-4" />
-                <div className="h-56 bg-gray-100/80 rounded-xl animate-pulse" />
+                <div className="h-4 bg-ink-200/80 rounded-lg w-48 animate-pulse mb-4" />
+                <div className="h-56 bg-ink-100/80 rounded-xl animate-pulse" />
               </div>
             ))}
           </section>
@@ -547,8 +547,8 @@ export default function Insights() {
         {!loading && !fetchError && sortedInsights.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl text-gray-900 tracking-tight">Insikter</h2>
-              <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+              <h2 className="text-2xl text-ink-900 tracking-tight">Insikter</h2>
+              <span className="text-xs font-semibold text-ink-400 bg-ink-100 px-2.5 py-1 rounded-full">
                 {sortedInsights.length} st
               </span>
             </div>
@@ -563,16 +563,16 @@ export default function Insights() {
         {/* Loading skeletons for insights */}
         {loading && (
           <section>
-            <div className="h-5 bg-gray-200/80 rounded-lg w-28 animate-pulse mb-4" />
+            <div className="h-5 bg-ink-200/80 rounded-lg w-28 animate-pulse mb-4" />
             {[0, 1, 2].map(i => (
-              <div key={i} className="glass border-l-4 border-l-gray-200 rounded-2xl p-5 mb-4 shadow-sm animate-pulse">
+              <div key={i} className="glass border-l-4 border-l-ink-200 rounded-2xl p-5 mb-4 shadow-sm animate-pulse">
                 <div className="flex justify-between mb-3">
-                  <div className="h-4 bg-gray-200/80 rounded-lg w-48" />
-                  <div className="h-5 bg-gray-200/80 rounded-full w-16" />
+                  <div className="h-4 bg-ink-200/80 rounded-lg w-48" />
+                  <div className="h-5 bg-ink-200/80 rounded-full w-16" />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="h-3 bg-gray-200/80 rounded-lg w-full" />
-                  <div className="h-3 bg-gray-200/80 rounded-lg w-5/6" />
+                  <div className="h-3 bg-ink-200/80 rounded-lg w-full" />
+                  <div className="h-3 bg-ink-200/80 rounded-lg w-5/6" />
                 </div>
               </div>
             ))}
@@ -582,8 +582,8 @@ export default function Insights() {
         {/* Empty state */}
         {!loading && !fetchError && !sortedInsights.length && !data?.featuredCharts?.length && (
           <div className="glass rounded-2xl p-10 text-center shadow-sm">
-            <Sparkles className="w-8 h-8 text-gray-300 mx-auto mb-3" aria-hidden="true" />
-            <p className="text-sm text-gray-400">Inga insikter ännu. Importera mer data för att aktivera AI-analysen.</p>
+            <Sparkles className="w-8 h-8 text-ink-300 mx-auto mb-3" aria-hidden="true" />
+            <p className="text-sm text-ink-400">Inga insikter ännu. Importera mer data för att aktivera AI-analysen.</p>
           </div>
         )}
 

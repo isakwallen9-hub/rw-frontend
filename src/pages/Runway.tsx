@@ -61,11 +61,11 @@ export default function Runway() {
     })) ?? []
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-ink-50 font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
 
-        <h1 className="text-3xl tracking-tight text-slate-900 mb-1">Runway: 90-dagarsprognos</h1>
-        <p className="text-sm text-gray-500 mb-8">
+        <h1 className="text-4xl tracking-tight text-ink-900 mb-1">Runway: 90-dagarsprognos</h1>
+        <p className="text-sm text-ink-500 mb-8">
           Prognos för hur länge nuvarande likviditet räcker.
         </p>
 
@@ -73,66 +73,66 @@ export default function Runway() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />
+                <div key={i} className="h-24 bg-ink-100 rounded-2xl animate-pulse" />
               ))}
             </div>
-            <div className="h-[300px] bg-gray-100 rounded-2xl animate-pulse" />
+            <div className="h-[300px] bg-ink-100 rounded-2xl animate-pulse" />
           </>
         ) : error ? (
-          <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-5 py-4 text-sm">
+          <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">
             {error}
           </div>
         ) : !data ? (
-          <div className="text-center text-gray-400 text-sm py-16">
+          <div className="text-center text-ink-400 text-sm py-16">
             Ingen data tillgänglig.
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+              <div className="bg-white rounded-2xl shadow-sm border border-ink-100 p-5">
+                <p className="text-xs font-medium text-ink-400 uppercase tracking-wide mb-1">
                   Nuvarande saldo
                 </p>
-                <p className="text-xl font-bold text-gray-900">{fmt(data.currentBalance)}</p>
+                <p className="text-3xl font-bold tabular text-ink-900">{fmt(data.currentBalance)}</p>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+              <div className="bg-white rounded-2xl shadow-sm border border-ink-100 p-5">
+                <p className="text-xs font-medium text-ink-400 uppercase tracking-wide mb-1">
                   Burn rate/mån
                 </p>
-                <p className="text-xl font-bold text-red-600">{fmt(data.monthlyBurnRate)}</p>
+                <p className="text-3xl font-bold tabular text-negative-600">{fmt(data.monthlyBurnRate)}</p>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+              <div className="bg-white rounded-2xl shadow-sm border border-ink-100 p-5">
+                <p className="text-xs font-medium text-ink-400 uppercase tracking-wide mb-1">
                   Runway
                 </p>
-                <p className="text-xl font-bold text-blue-600">{data.runwayDays} dagar</p>
+                <p className="text-3xl font-bold tabular text-brand-600">{data.runwayDays} dagar</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-ink-100 p-6">
               {chartData.length === 0 ? (
-                <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+                <div className="h-[300px] flex items-center justify-center text-ink-400 text-sm">
                   Ingen prognosdata tillgänglig.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
                     <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                     <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} width={90} />
                     <Tooltip formatter={(value: unknown) => fmt(Number(value ?? 0))} />
                     <Legend />
                     <ReferenceLine
                       y={0}
-                      stroke="#ef4444"
+                      stroke="#CE4646"
                       strokeDasharray="4 4"
-                      label={{ value: 'Noll', fill: '#ef4444', fontSize: 12 }}
+                      label={{ value: 'Noll', fill: '#CE4646', fontSize: 12 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="balance"
                       name="Saldo"
-                      stroke="#2563eb"
+                      stroke="#3A5CD8"
                       strokeWidth={2}
                       dot={false}
                     />
@@ -143,7 +143,7 @@ export default function Runway() {
           </>
         )}
 
-        <div className="mt-8 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-8 text-center text-gray-400 text-sm">
+        <div className="mt-8 bg-ink-50 border border-dashed border-ink-200 rounded-2xl p-8 text-center text-ink-400 text-sm">
           Egna grafer: kommer snart
         </div>
       </div>

@@ -8,7 +8,7 @@ import {
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 
 const API_URL = import.meta.env.VITE_API_URL as string
-const CHART_COLORS = ['#2563eb', '#7c3aed', '#f59e0b', '#10b981', '#ef4444', '#06b6d4']
+const CHART_COLORS = ['#3A5CD8', '#0E9C6B', '#C9821F', '#7C5BD9', '#CE4646']
 const SS_KEY           = 'rw_ai_history'
 const MEMORY_NOTICE_KEY = 'rw_ai_memory_notice_dismissed'
 
@@ -76,9 +76,9 @@ const QUICK_QS: Record<AiContext, string[]> = {
 }
 
 const PRIO_BADGE: Record<string, string> = {
-  high:   'bg-red-100 text-red-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  low:    'bg-green-100 text-green-700',
+  high:   'bg-negative-100 text-negative-700',
+  medium: 'bg-caution-100 text-caution-700',
+  low:    'bg-positive-100 text-positive-700',
 }
 const PRIO_LABEL: Record<string, string> = { high: 'Hög', medium: 'Medium', low: 'Låg' }
 
@@ -146,7 +146,7 @@ function ChartBlock({ chart, height = 190 }: { chart: InlineChart; height?: numb
 
   if (!pivoted.length) {
     return (
-      <div className="flex items-center justify-center text-xs text-gray-400" style={{ height }}>
+      <div className="flex items-center justify-center text-xs text-ink-400" style={{ height }}>
         Ingen grafdata
       </div>
     )
@@ -156,17 +156,17 @@ function ChartBlock({ chart, height = 190 }: { chart: InlineChart; height?: numb
 
   const axes = (
     <>
-      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-      <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+      <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+      <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#8B8A93' }} axisLine={false} tickLine={false} />
       <YAxis
-        tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40}
+        tick={{ fontSize: 10, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={40}
         tickFormatter={v => Math.abs(Number(v)) >= 1000 ? `${(Number(v) / 1000).toFixed(0)}k` : String(v)}
       />
       <Tooltip
-        contentStyle={{ background: 'rgba(255,255,255,0.97)', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 11 }}
+        contentStyle={{ background: 'rgba(255,255,255,0.97)', border: '1px solid #DEDCDC', borderRadius: 8, fontSize: 11 }}
         formatter={(value) => [Number(value).toLocaleString('sv-SE'), undefined]}
       />
-      {hasZRef && <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 2" strokeWidth={1.5} />}
+      {hasZRef && <ReferenceLine y={0} stroke="#CE4646" strokeDasharray="4 2" strokeWidth={1.5} />}
     </>
   )
 
@@ -204,7 +204,7 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
   if (msg.role === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-sm text-sm leading-relaxed bg-gradient-to-br from-blue-700 to-indigo-700 text-white">
+        <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-sm text-sm leading-relaxed bg-gradient-to-br from-brand-700 to-brand-700 text-white">
           {msg.text}
         </div>
       </div>
@@ -214,7 +214,7 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
   if (msg.role === 'error') {
     return (
       <div className="flex justify-start">
-        <div className="max-w-[88%] px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-red-50 border border-red-100 text-red-700">
+        <div className="max-w-[88%] px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-negative-50 border border-negative-100 text-negative-700">
           {String(msg.text)}
         </div>
       </div>
@@ -225,21 +225,21 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
     <div className="flex justify-start">
       <div className="max-w-[92%] flex flex-col gap-2">
         {msg.text && (
-          <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-white/70 border border-white/60 text-gray-800 shadow-sm whitespace-pre-line">
+          <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-white/70 border border-white/60 text-ink-800 shadow-sm whitespace-pre-line">
             {msg.text}
           </div>
         )}
         {msg.chart && (
           <div className="rounded-2xl bg-white/70 border border-white/60 shadow-sm p-3">
             {msg.chart.title && (
-              <p className="text-xs font-semibold text-gray-700 mb-2">{msg.chart.title}</p>
+              <p className="text-xs font-semibold text-ink-700 mb-2">{msg.chart.title}</p>
             )}
             <ChartBlock chart={msg.chart} height={170} />
           </div>
         )}
         {msg.forecast && msg.forecast.length > 0 && (
           <div className="rounded-2xl bg-white/70 border border-white/60 shadow-sm p-3">
-            <p className="text-xs font-semibold text-gray-600 mb-2">Prognos</p>
+            <p className="text-xs font-semibold text-ink-600 mb-2">Prognos</p>
             <ChartBlock
               chart={{ chartType: 'line', datasets: [{ label: 'Prognos', data: msg.forecast }] }}
               height={130}
@@ -252,11 +252,11 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
               <button
                 key={i}
                 onClick={() => onNavigate('/actions')}
-                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/70 border border-white/60 shadow-sm hover:bg-blue-50/70 hover:border-blue-200 transition-colors text-left group w-full"
+                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/70 border border-white/60 shadow-sm hover:bg-brand-50/70 hover:border-brand-200 transition-colors text-left group w-full"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                    <p className="text-xs font-semibold text-gray-800 group-hover:text-blue-700 transition-colors leading-snug">
+                    <p className="text-xs font-semibold text-ink-800 group-hover:text-brand-700 transition-colors leading-snug">
                       {a.title}
                     </p>
                     {a.priority && (
@@ -266,10 +266,10 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
                     )}
                   </div>
                   {a.description && (
-                    <p className="text-xs text-gray-500 leading-snug">{a.description}</p>
+                    <p className="text-xs text-ink-500 leading-snug">{a.description}</p>
                   )}
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 shrink-0 transition-colors" />
+                <ArrowRight className="w-3.5 h-3.5 text-ink-400 group-hover:text-brand-500 shrink-0 transition-colors" />
               </button>
             ))}
           </div>
@@ -421,11 +421,11 @@ export default function AiAssistant() {
         onClick={() => setOpen(o => !o)}
         aria-label="Öppna AI-assistent"
         aria-expanded={open}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-blue-900/30 transition-all duration-200 hover:scale-105 active:scale-95 bg-gradient-to-br from-blue-600 to-indigo-700"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-brand-900/30 transition-all duration-200 hover:scale-105 active:scale-95 bg-gradient-to-br from-brand-600 to-brand-700"
       >
         {/* Pulse ring */}
         <span
-          className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping pointer-events-none"
+          className="absolute inset-0 rounded-full bg-brand-400/30 animate-ping pointer-events-none"
           style={{ animationDuration: '2.8s' }}
           aria-hidden="true"
         />
@@ -437,19 +437,19 @@ export default function AiAssistant() {
         <div
           role="dialog"
           aria-label="AI-assistent"
-          className="fixed bottom-[88px] right-6 z-50 w-[calc(100vw-48px)] sm:w-[400px] max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl shadow-blue-900/20 border border-white/50 bg-white/60 backdrop-blur-3xl"
+          className="fixed bottom-[88px] right-6 z-50 w-[calc(100vw-48px)] sm:w-[400px] max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl shadow-brand-900/20 border border-white/50 bg-white/60 backdrop-blur-3xl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-blue-700 to-indigo-700 shrink-0">
+          <div className="flex items-center justify-between px-5 py-4.5 bg-gradient-to-r from-brand-700 to-brand-700 shrink-0">
             <div className="flex items-center gap-2.5">
               <Sparkles className="w-4 h-4 text-white/80" aria-hidden="true" />
               <span className="text-white font-semibold text-sm tracking-tight">AI-assistent</span>
-              <span className="text-xs font-medium text-blue-200 bg-blue-950/30 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-brand-200 bg-brand-950/30 px-2 py-0.5 rounded-full">
                 {CTX_LABEL[ctx]}
               </span>
               {memoryEnabled && (
                 <span title="AI-minne aktivt: jag kommer ihåg våra tidigare samtal" className="inline-flex">
-                  <Brain className="w-3.5 h-3.5 text-blue-200" aria-label="AI-minne aktivt" />
+                  <Brain className="w-3.5 h-3.5 text-brand-200" aria-label="AI-minne aktivt" />
                 </span>
               )}
             </div>
@@ -476,12 +476,12 @@ export default function AiAssistant() {
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0">
             {/* One-time memory-off notice */}
             {history.length === 0 && !loading && memoryEnabled === false && noticeVisible && (
-              <div className="bg-blue-50/80 border border-blue-100 rounded-xl px-4 py-3 mb-1">
-                <p className="text-xs text-blue-700 leading-relaxed mb-2">
+              <div className="bg-brand-50/80 border border-brand-100 rounded-xl px-4 py-3 mb-1">
+                <p className="text-xs text-brand-700 leading-relaxed mb-2">
                   Vill du att jag ska komma ihåg våra samtal?{' '}
                   <button
                     onClick={() => navigate('/profile')}
-                    className="font-semibold underline underline-offset-2 hover:text-blue-800 transition-colors"
+                    className="font-semibold underline underline-offset-2 hover:text-brand-800 transition-colors"
                   >
                     Aktivera AI-minne i Profil →
                   </button>
@@ -491,7 +491,7 @@ export default function AiAssistant() {
                     localStorage.setItem(MEMORY_NOTICE_KEY, '1')
                     setNoticeVisible(false)
                   }}
-                  className="text-[10px] text-blue-400 hover:text-blue-600 transition-colors"
+                  className="text-[10px] text-brand-400 hover:text-brand-600 transition-colors"
                 >
                   Visa inte igen
                 </button>
@@ -500,14 +500,14 @@ export default function AiAssistant() {
 
             {history.length === 0 && !loading && (
               <div className="flex flex-col gap-1.5 mt-1">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 px-1 mb-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-400 px-1 mb-1">
                   Snabbfrågor
                 </p>
                 {QUICK_QS[ctx].map(q => (
                   <button
                     key={q}
                     onClick={() => send(q)}
-                    className="text-xs text-left border border-white/60 bg-white/50 rounded-xl px-3 py-2.5 hover:bg-white/80 hover:border-blue-200 hover:text-blue-700 transition-all text-gray-700 font-medium min-h-[44px]"
+                    className="text-xs text-left border border-white/60 bg-white/50 rounded-xl px-3 py-2.5 hover:bg-white/80 hover:border-brand-200 hover:text-brand-700 transition-all text-ink-700 font-medium min-h-[44px]"
                   >
                     {q} →
                   </button>
@@ -522,10 +522,10 @@ export default function AiAssistant() {
             {loading && (
               <div className="flex justify-start">
                 <div className="bg-white/70 border border-white/60 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-2 shadow-sm">
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '120ms' }} />
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
-                  <span className="text-xs text-gray-400 ml-1">AI:n tänker...</span>
+                  <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '120ms' }} />
+                  <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
+                  <span className="text-xs text-ink-400 ml-1">AI:n tänker...</span>
                 </div>
               </div>
             )}
@@ -543,13 +543,13 @@ export default function AiAssistant() {
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }}
               placeholder="Fråga vad som helst om din ekonomi..."
               disabled={loading}
-              className="flex-1 text-sm bg-white/60 border border-white/60 rounded-xl px-3.5 py-2.5 outline-none focus:border-blue-400 focus:bg-white/80 transition-all disabled:opacity-50 placeholder-gray-400 min-h-[44px]"
+              className="flex-1 text-sm bg-white/60 border border-white/60 rounded-xl px-3.5 py-2.5 outline-none focus:border-brand-400 focus:bg-white/80 transition-all disabled:opacity-50 placeholder-ink-400 min-h-[44px]"
             />
             <button
               onClick={() => void send()}
               disabled={loading || !input.trim()}
               aria-label="Skicka"
-              className="px-4 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl hover:opacity-90 disabled:opacity-40 active:scale-95 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+              className="px-4 bg-gradient-to-br from-brand-600 to-brand-700 text-white rounded-xl hover:opacity-90 disabled:opacity-40 active:scale-95 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>
