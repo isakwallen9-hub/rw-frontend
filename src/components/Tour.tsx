@@ -191,7 +191,7 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
           {STEPS.map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
+              className={`h-1.5 rounded-full transition-[transform,box-shadow,background-color,border-color,color] duration-300 ${
                 i === step
                   ? 'w-6 bg-accent'
                   : i < step

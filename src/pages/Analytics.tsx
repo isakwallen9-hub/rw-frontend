@@ -1,7 +1,8 @@
 ﻿import { useEffect, useState, useCallback, useMemo } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, BarChart3 } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
+import { ChartTooltip } from '../components/chart'
 import {
   ResponsiveContainer,
   BarChart, Bar,
@@ -539,7 +540,7 @@ export default function Analytics() {
   }
 
   const commonAxisProps = {
-    tick: { fontSize: 11, fill: '#8B8A93' },
+    tick: { fontSize: 13, fill: '#72717C' },
     axisLine: false as const,
     tickLine: false as const,
   }
@@ -581,26 +582,26 @@ export default function Analytics() {
     <ResponsiveContainer width="100%" height={300}>
       {chartType === 'bar' ? (
         <BarChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+          <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
           <XAxis dataKey="label" {...commonAxisProps} />
           <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
-          <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+          <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           {catMode
-            ? catSeriesDef.map(cs => <Bar key={cs.key} dataKey={cs.key} name={cs.label} fill={cs.color} radius={[4, 4, 0, 0]} />)
-            : series.map(s => <Bar key={s} dataKey={s} name={SHOW_LABEL[s]} fill={SERIES_COLOR[s]} radius={[4, 4, 0, 0]} />)
+            ? catSeriesDef.map(cs => <Bar key={cs.key} dataKey={cs.key} name={cs.label} fill={cs.color} radius={[6, 6, 0, 0]} />)
+            : series.map(s => <Bar key={s} dataKey={s} name={SHOW_LABEL[s]} fill={SERIES_COLOR[s]} radius={[6, 6, 0, 0]} />)
           }
         </BarChart>
       ) : (
         <LineChart data={rows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+          <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
           <XAxis dataKey="label" {...commonAxisProps} />
           <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
-          <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+          <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           {catMode
-            ? catSeriesDef.map(cs => <Line key={cs.key} type="monotone" dataKey={cs.key} name={cs.label} stroke={cs.color} strokeWidth={2} dot={false} />)
-            : series.map(s => <Line key={s} type="monotone" dataKey={s} name={SHOW_LABEL[s]} stroke={SERIES_COLOR[s]} strokeWidth={2} dot={false} />)
+            ? catSeriesDef.map(cs => <Line key={cs.key} type="monotone" dataKey={cs.key} name={cs.label} stroke={cs.color} strokeWidth={2.5} dot={false} />)
+            : series.map(s => <Line key={s} type="monotone" dataKey={s} name={SHOW_LABEL[s]} stroke={SERIES_COLOR[s]} strokeWidth={2.5} dot={false} />)
           }
         </LineChart>
       )}
@@ -662,7 +663,7 @@ export default function Analytics() {
                       window.dispatchEvent(new CustomEvent('rw:ai:open', { detail: { question: 'Jämför min bästa och sämsta intäktskategori.' } }))
                     }
                   }}
-                  className="bg-white/40 backdrop-blur border border-ink-200/60 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-ink-700 hover:bg-white/60 hover:border-brand-300 hover:text-brand-700 transition-all cursor-pointer min-h-[44px]"
+                  className="bg-white/40 backdrop-blur border border-ink-200/60 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-ink-700 hover:bg-white/60 hover:border-brand-300 hover:text-brand-700 transition-[transform,box-shadow,background-color,border-color,color,opacity] cursor-pointer min-h-[44px]"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-brand-500 shrink-0" aria-hidden="true" />
                   {chip.label}
@@ -810,7 +811,7 @@ export default function Analytics() {
                       key={cat}
                       onClick={() => !isDisabled && toggleCat(cat)}
                       disabled={isDisabled}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-[transform,box-shadow,background-color,border-color,color,opacity] ${
                         isSelected
                           ? 'text-white border-transparent shadow-sm'
                           : isDisabled
@@ -941,7 +942,7 @@ export default function Analytics() {
 
           {compareMode ? (
             compareLoading ? (
-              <div className="h-[300px] bg-ink-100 rounded-xl animate-pulse" />
+              <div className="h-[300px] skeleton rounded-xl" />
             ) : compareError ? (
               <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">{compareError}</div>
             ) : compareRows.length === 0 ? (
@@ -952,34 +953,35 @@ export default function Analytics() {
               <ResponsiveContainer width="100%" height={300}>
                 {chartType === 'bar' ? (
                   <BarChart data={compareRows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+                    <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
                     <XAxis dataKey="label" {...commonAxisProps} />
                     <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
-                    <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+                    <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="a" name="Period A" fill="#3A5CD8" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="b" name="Period B" fill="#7C5BD9" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="a" name="Period A" fill="#3A5CD8" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="b" name="Period B" fill="#7C5BD9" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 ) : (
                   <LineChart data={compareRows} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+                    <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
                     <XAxis dataKey="label" {...commonAxisProps} />
                     <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} {...commonAxisProps} width={50} />
-                    <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+                    <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line type="monotone" dataKey="a" name="Period A" stroke="#3A5CD8" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="b" name="Period B" stroke="#7C5BD9" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="a" name="Period A" stroke="#3A5CD8" strokeWidth={2.5} dot={false} />
+                    <Line type="monotone" dataKey="b" name="Period B" stroke="#7C5BD9" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
             )
           ) : loading ? (
-            <div className="h-[300px] bg-ink-100 rounded-xl animate-pulse" />
+            <div className="h-[300px] skeleton rounded-xl" />
           ) : error ? (
             <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">{error}</div>
           ) : rows.length === 0 ? (
-            <div className="h-[300px] flex items-center justify-center text-ink-400 text-sm">
-              Ingen data tillgänglig för valda filter.
+            <div className="h-[300px] flex flex-col items-center justify-center text-center gap-2 text-ink-400">
+              <BarChart3 className="w-8 h-8 text-ink-300" aria-hidden="true" />
+              <p className="text-sm">Ingen data för valda filter. Justera period eller kategori ovan.</p>
             </div>
           ) : renderChart()}
         </div>
@@ -1010,7 +1012,7 @@ export default function Analytics() {
                     </div>
                     <div className="h-1.5 bg-ink-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-500"
+                        className="h-full rounded-full transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500"
                         style={{ width: `${pct}%`, backgroundColor: CAT_COLORS[i % CAT_COLORS.length] }}
                       />
                     </div>
@@ -1171,12 +1173,13 @@ export default function Analytics() {
           </div>
 
           {seasonalLoading ? (
-            <div className="h-[260px] bg-ink-100 rounded-2xl animate-pulse" />
+            <div className="h-[260px] skeleton rounded-2xl" />
           ) : seasonalError ? (
             <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">{seasonalError}</div>
           ) : seasonalData.length === 0 ? (
-            <div className="glass rounded-2xl shadow-sm h-[260px] flex items-center justify-center text-ink-400 text-sm">
-              Ingen säsongsdata tillgänglig.
+            <div className="glass rounded-2xl shadow-sm h-[260px] flex flex-col items-center justify-center text-center gap-2 text-ink-400">
+              <BarChart3 className="w-8 h-8 text-ink-300" aria-hidden="true" />
+              <p className="text-sm">Ingen säsongsdata ännu. Importera minst några månaders historik.</p>
             </div>
           ) : (
             <>
@@ -1217,24 +1220,18 @@ export default function Analytics() {
                 </div>
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={seasonalChartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={50} />
-                    <Tooltip
-                      formatter={(v: unknown) => fmt(Number(v ?? 0))}
-                      labelFormatter={(label: unknown) => {
-                        const m = seasonalChartData.find(d => d.label === String(label))
-                        return m?.fullLabel ?? String(label)
-                      }}
-                    />
+                    <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} width={50} />
+                    <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
                     {hasSeasonalCompare ? (
                       <>
                         <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey="value" name={seasonalCategory || 'Alla produkter'} fill="#3A5CD8" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="valueB" name={seasonalCategoryB} fill="#7C5BD9" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="value" name={seasonalCategory || 'Alla produkter'} fill="#3A5CD8" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="valueB" name={seasonalCategoryB} fill="#7C5BD9" radius={[6, 6, 0, 0]} />
                       </>
                     ) : (
-                      <Bar dataKey="value" name={SHOW_LABEL[seasonalMetric]} radius={[4, 4, 0, 0]}>
+                      <Bar dataKey="value" name={SHOW_LABEL[seasonalMetric]} radius={[6, 6, 0, 0]}>
                         {seasonalChartData.map((entry, idx) => (
                           <Cell key={idx} fill={entry.value >= seasonalAvg ? '#0E9C6B' : '#CE4646'} />
                         ))}

@@ -163,7 +163,7 @@ export default function Register() {
                     key={ind.value}
                     onClick={() => handleRegister(ind.value)}
                     disabled={loading}
-                    className="flex flex-col items-center justify-center gap-2 border-2 border-ink-100 rounded-xl py-5 px-3 hover:border-accent hover:bg-accent/5 transition-all disabled:opacity-50 group"
+                    className="flex flex-col items-center justify-center gap-2 border-2 border-ink-100 rounded-xl py-5 px-3 hover:border-accent hover:bg-accent/5 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 group"
                   >
                     <span className="text-3xl">{ind.icon}</span>
                     <span className="text-sm font-medium text-ink-700 group-hover:text-accent text-center leading-tight">{ind.label}</span>

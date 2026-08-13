@@ -2,6 +2,7 @@
 import { z } from 'zod'
 import { Sparkles } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import { ChartTooltip } from '../components/chart'
 import {
   ResponsiveContainer,
   LineChart,
@@ -719,7 +720,7 @@ export default function Simulate() {
                     <button
                       key={s.id}
                       onClick={() => applyAiSuggestion(s)}
-                      className="flex items-start gap-3 bg-white/40 backdrop-blur border border-purple-200/60 rounded-xl px-4 py-3 text-left hover:bg-purple-50/60 hover:border-purple-300 transition-all cursor-pointer min-h-[44px] group"
+                      className="flex items-start gap-3 bg-white/40 backdrop-blur border border-purple-200/60 rounded-xl px-4 py-3 text-left hover:bg-purple-50/60 hover:border-purple-300 transition-[transform,box-shadow,background-color,border-color,color,opacity] cursor-pointer min-h-[44px] group"
                     >
                       <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5 group-hover:text-purple-600 transition-colors" aria-hidden="true" />
                       <div>
@@ -934,14 +935,14 @@ export default function Simulate() {
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={displayData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={55} />
-                    <Tooltip formatter={(v: unknown) => fmt(Number(v ?? 0))} />
+                    <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} width={55} />
+                    <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="#CE4646" strokeWidth={1} strokeDasharray="4 3"
                       label={{ value: 'Saldo noll', position: 'insideTopRight', fontSize: 10, fill: '#CE4646' }} />
-                    <Line type="monotone" dataKey="baseline" name="Utan ändring" stroke="#8B8A93" strokeWidth={2} dot={false} strokeDasharray="5 3" />
+                    <Line type="monotone" dataKey="baseline" name="Utan ändring" stroke="#8B8A93" strokeWidth={2.5} dot={false} strokeDasharray="5 3" />
                     <Line type="monotone" dataKey="simulated" name="Med scenario" stroke="#3A5CD8" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>

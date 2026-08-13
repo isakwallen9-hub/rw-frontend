@@ -1,8 +1,9 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, FileDown, Sheet } from 'lucide-react'
+import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, FileDown, Sheet, PackageOpen, Info } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
+import { EmptyState } from './components/EmptyState'
 import Tour from './components/Tour'
 import { fetchWithAuth } from './utils/fetchWithAuth'
 import { isTourCompleted, markTourCompleted } from './utils/tourStorage'
@@ -103,6 +104,10 @@ interface OverviewData {
     summary?: { totalInflow: number; totalOutflow: number; netCashflow: number; currency: string; grossMarginPercent?: number | null; costTrend?: CostTrend | null }
     lateInvoiceCount?: number
     runwayDays?: number | null
+    hasFixedCosts?: boolean
+    fixedCostCount?: number
+    hasPaymentTerms?: boolean
+    paymentTermsCount?: number
     latestSnapshot?: unknown
     alerts?: Alert[]
     cashflow?: CashflowMonth[]
@@ -337,6 +342,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     costTrend: overview?.data?.summary?.costTrend ?? null,
   }), [overview, runwayDays])
 
+  // Contextual reminders: only when the overview EXPLICITLY reports the data is
+  // missing (undefined => no nag). Backend exposes these alongside onboarding.
+  const missingFixedCosts   = overview?.data?.hasFixedCosts === false   || overview?.data?.fixedCostCount === 0
+  const missingPaymentTerms = overview?.data?.hasPaymentTerms === false || overview?.data?.paymentTermsCount === 0
+
   const transactions: Transaction[] = overview?.data?.recentTransactions ?? []
 
   const topProducts = useMemo(() => {
@@ -558,7 +568,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <button
               onClick={exportExcel}
               disabled={exportingExcel}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-ink-700 bg-white/60 backdrop-blur border border-ink-200/60 px-4 py-2.5 rounded-lg hover:bg-white/40 hover:shadow-md active:scale-[0.98] transition-all duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-ink-700 bg-white/60 backdrop-blur border border-ink-200/60 px-4 py-2.5 rounded-lg hover:bg-white/40 hover:shadow-md active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color] duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
             >
               {exportingExcel ? (
                 <>
@@ -576,7 +586,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <button
               onClick={downloadReport}
               disabled={downloadingPdf}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-white bg-primary shadow-md shadow-brand-500/20 px-4 py-2.5 rounded-lg hover:opacity-90 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-white bg-primary shadow-md shadow-brand-500/20 px-4 py-2.5 rounded-lg hover:opacity-90 active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color] duration-200 disabled:opacity-60 min-h-[44px]"
             >
               {downloadingPdf ? (
                 <>
@@ -624,7 +634,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               const cfg = ALERT_CONFIG[alert.severity ?? 'low']
               const key = alert.id ?? alert.message ?? String(i)
               return (
-                <div key={key} className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 ${cfg.bg} ${cfg.border}`}>
+                <div key={key} className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-[transform,box-shadow,background-color,border-color,color] duration-200 ${cfg.bg} ${cfg.border}`}>
                   <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${cfg.iconBg} ${cfg.text}`}>
                     {cfg.icon}
                   </span>
@@ -708,7 +718,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <div className="h-px bg-ink-200/70 flex-1" />
               <AskAiButton question="Förklara mina nyckeltal och vad jag bör agera på" />
             </div>
-            <div data-tour="kpi-cards" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div data-tour="kpi-cards" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 stagger-in">
               <KpiCard
                 icon={<Banknote className="w-5 h-5" />}
                 label="Likvida medel"
@@ -730,6 +740,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 accent={kpi.overdueInvoices === 0 ? 'green' : 'red'}
                 onClick={() => navigate('/invoices')}
                 onExplain={() => explainThis('diagnosis', { type: 'overdueInvoices', value: kpi.overdueInvoices })}
+                reminder={missingPaymentTerms ? { text: 'Förfallna fakturor blir mer träffsäkra när du angett dina betalningsvillkor', href: '/import' } : undefined}
               />
               <KpiCard
                 icon={<BarChart2 className="w-5 h-5" />}
@@ -753,6 +764,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 isPlaceholder={runwayNull}
                 onClick={() => navigate('/runway')}
                 onExplain={() => explainThis('diagnosis', { type: 'runway', value: rd })}
+                reminder={missingFixedCosts ? { text: 'Runway blir mer träffsäker när du lagt in dina fasta kostnader', href: '/import' } : undefined}
               />
               <KpiCard
                 icon={<TrendingUp className="w-5 h-5" />}
@@ -801,15 +813,15 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Snabb-statistik */}
         {!loadingCashflow && cashflowDays.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="glass rounded-xl px-3 sm:px-5 py-4 sm:py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="glass rounded-xl px-3 sm:px-5 py-4 sm:py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
               <p className="text-2xl sm:text-3xl font-bold tabular text-ink-900 tracking-tight">{quickStats.totalTx}</p>
               <p className="text-xs text-ink-400 mt-1">Aktiva dagar</p>
             </div>
-            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
               <p className="text-3xl font-bold tabular text-ink-900 tracking-tight">{fmt(Math.round(quickStats.avgInflow))}</p>
               <p className="text-xs text-ink-400 mt-1">Genomsnittligt dagligt inflöde</p>
             </div>
-            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-all duration-200">
+            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
               <p className="text-3xl font-bold tabular text-ink-900 tracking-tight">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
               <p className="text-xs text-ink-400 mt-1">
                 Bästa dag{quickStats.bestDay?.date ? `: ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
@@ -865,14 +877,14 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                     <stop offset="95%" stopColor="#CE4646" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} width={42} />
+                <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <YAxis tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} width={42} />
                 <ReferenceLine y={0} stroke="#DEDCDC" strokeWidth={1.5} strokeDasharray="4 3" />
                 <Tooltip content={<CashflowTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-                <Area type="monotone" dataKey="inflow" name="Inflöde" stroke="#3A5CD8" strokeWidth={2} fill="url(#inflowGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                <Area type="monotone" dataKey="outflow" name="Utflöde" stroke="#CE4646" strokeWidth={2} fill="url(#outflowGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="inflow" name="Inflöde" stroke="#3A5CD8" strokeWidth={2.5} fill="url(#inflowGrad)" dot={false} activeDot={{ r: 5, fill: "#fff", strokeWidth: 2 }} />
+                <Area type="monotone" dataKey="outflow" name="Utflöde" stroke="#CE4646" strokeWidth={2.5} fill="url(#outflowGrad)" dot={false} activeDot={{ r: 5, fill: "#fff", strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -1148,7 +1160,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
       <button
         onClick={() => setQuickAddOpen(true)}
-        className="fixed bottom-6 right-24 bg-white border border-ink-200 text-ink-700 rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-ink-50 active:scale-95 transition-all duration-200"
+        className="fixed bottom-6 right-24 bg-white border border-ink-200 text-ink-700 rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-ink-50 active:scale-95 transition-[transform,box-shadow,background-color,border-color,color] duration-200"
         title="Lägg till transaktion"
         aria-label="Lägg till transaktion"
       >
@@ -1176,13 +1188,13 @@ function CashflowTooltip({ active, payload, label }: {
   const { formatAmount: fmt } = useCurrency()
   if (!active || !payload?.length) return null
   return (
-    <div className="glass rounded-xl shadow-lg px-4 py-3 text-sm">
-      <p className="font-semibold text-ink-700 mb-2">{label}</p>
+    <div className="bg-white rounded-xl border border-ink-100 shadow-[0_8px_24px_rgba(26,25,32,0.12)] px-3.5 py-2.5 text-xs min-w-[9rem]">
+      <p className="font-semibold text-ink-800 mb-1.5">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-          <span className="text-ink-500 w-16">{p.name}:</span>
-          <span className="font-semibold" style={{ color: p.color }}>{fmt(p.value)}</span>
+          <span className="text-ink-500">{p.name}</span>
+          <span className="ml-auto font-semibold text-ink-800 tabular">{fmt(p.value)}</span>
         </div>
       ))}
     </div>
@@ -1195,10 +1207,10 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
   const p = PRIORITY_CONFIG[r.priority ?? 'medium']
 
   return (
-    <div className="group glass rounded-2xl overflow-hidden hover:bg-white/82 hover:shadow-[0_12px_40px_rgba(26,25,32,0.09)] transition-all duration-200 cursor-default">
+    <div className="group glass rounded-2xl overflow-hidden hover:bg-white/82 hover:shadow-[0_12px_40px_rgba(26,25,32,0.09)] transition-[transform,box-shadow,background-color,border-color,color] duration-200 cursor-default">
       {/* Urgency strip */}
       <div className="h-1 w-full bg-ink-100">
-        <div className={`h-full ${p.bar} transition-all`} style={{ width: `${p.urgencyPct}%` }} />
+        <div className={`h-full ${p.bar} transition-[width] duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)]`} style={{ width: `${p.urgencyPct}%` }} />
       </div>
 
       <div className="p-5">
@@ -1269,11 +1281,11 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
         <div className="flex gap-2">
           <button
             onClick={onExplain}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-2 rounded-lg hover:bg-brand-50 transition-all duration-200"
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-2 rounded-lg hover:bg-brand-50 transition-[transform,box-shadow,background-color,border-color,color] duration-200"
           >
             <SparkleIcon className="w-3 h-3" /> Förklara
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-white bg-accent px-3 py-2 rounded-lg hover:bg-brand-700 active:scale-95 transition-all duration-200">
+          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-white bg-accent px-3 py-2 rounded-lg hover:bg-brand-700 active:scale-95 transition-[transform,box-shadow,background-color,border-color,color] duration-200">
             Åtgärda <span className="text-sm leading-none">→</span>
           </button>
         </div>
@@ -1300,7 +1312,7 @@ const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }
   neutral: { arrow: '→', text: 'text-caution-600', bg: 'bg-caution-50' },
 }
 
-function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'blue', isPlaceholder = false, onExplain, onClick }: {
+function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'blue', isPlaceholder = false, onExplain, onClick, reminder }: {
   icon: React.ReactNode
   label: string
   value: string
@@ -1311,6 +1323,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
   isPlaceholder?: boolean
   onExplain?: () => void
   onClick?: () => void
+  reminder?: { text: string; href: string }
 }) {
   const c = ACCENT_STYLES[accent]
   const t = trend ? TREND_STYLES[trend] : null
@@ -1318,7 +1331,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
   return (
     <div
       onClick={onClick}
-      className={`glass-kpi border-l-[3px] ${c.accentBorder} rounded-2xl px-5 py-5 group relative transition-all duration-300 min-h-[160px] flex flex-col ${c.shadow} ${c.shadowHover} hover:bg-white/90 ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
+      className={`glass-kpi border-l-[3px] ${c.accentBorder} rounded-2xl px-5 py-5 group relative transition-[transform,box-shadow,background-color,border-color,color] duration-300 min-h-[160px] flex flex-col ${c.shadow} ${c.shadowHover} hover:bg-white/90 ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
     >
       {/* Icon row */}
       <div className="flex items-start justify-between mb-3">
@@ -1357,6 +1370,18 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
           </span>
         )}
       </div>
+
+      {/* Contextual reminder — discrete line tied to this metric */}
+      {reminder && (
+        <a
+          href={reminder.href}
+          onClick={e => e.stopPropagation()}
+          className="mt-3 pt-2.5 border-t border-ink-100/80 flex items-start gap-1.5 text-[11px] leading-snug text-ink-400 hover:text-brand-600 transition-colors group/reminder"
+        >
+          <Info className="w-3 h-3 mt-0.5 shrink-0 text-ink-300 group-hover/reminder:text-brand-500 transition-colors" aria-hidden="true" />
+          <span>{reminder.text}</span>
+        </a>
+      )}
     </div>
   )
 }
@@ -1370,8 +1395,17 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
   const { formatAmount: fmt } = useCurrency()
   if (items.length === 0) {
     return (
-      <div className="glass rounded-2xl p-6 text-center text-ink-400 text-sm">
-        {emptyText}
+      <div className="glass rounded-2xl">
+        <EmptyState
+          icon={<PackageOpen />}
+          title={emptyText}
+          hint="Importera din bank- eller försäljningsfil så rankas dina bästa här."
+          action={
+            <a href="/import" className="inline-flex items-center min-h-[40px] px-4 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150">
+              Importera data
+            </a>
+          }
+        />
       </div>
     )
   }
@@ -1391,7 +1425,7 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
             const avg = p.transactionCount > 0 ? p.totalInflow / p.transactionCount : 0
             return (
               <div key={i} className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 hover:bg-white/40 transition-colors ${i !== 0 ? 'border-t border-ink-100/60' : ''}`}>
-                <div className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-500`} style={{ width: `${barPct}%` }} />
+                <div className={`absolute inset-y-0 left-0 ${barColor} transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500`} style={{ width: `${barPct}%` }} />
                 <span className="relative text-sm font-semibold text-ink-800 truncate pr-4">{p.label}</span>
                 <span className="relative text-sm font-semibold text-ink-900 text-right pr-6 whitespace-nowrap tabular-nums">{fmt(p.totalInflow)}</span>
                 <span className="relative text-sm text-ink-400 text-right pr-6 whitespace-nowrap tabular-nums">{p.transactionCount} st</span>
@@ -1579,9 +1613,9 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
           <SparkleIcon className="w-4 h-4 text-brand-500 animate-pulse" />
         </div>
         <div className="flex flex-col gap-1.5 flex-1">
-          <div className="h-3.5 bg-ink-200/80 rounded-full w-48 animate-pulse" />
-          <div className="h-3 bg-ink-100/80 rounded-full w-80 max-w-full animate-pulse" />
-          <div className="h-3 bg-ink-100/80 rounded-full w-64 max-w-full animate-pulse" />
+          <div className="h-3.5 skeleton rounded-full w-48" />
+          <div className="h-3 skeleton rounded-full w-80 max-w-full" />
+          <div className="h-3 skeleton rounded-full w-64 max-w-full" />
         </div>
         <p className="text-xs text-ink-400 shrink-0 hidden sm:block">AI:n analyserar din ekonomi...</p>
       </div>
@@ -1633,7 +1667,7 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
                 <button
                   key={i}
                   onClick={() => onNavigate('/insights')}
-                  className={`flex items-start gap-3 px-3.5 py-3 rounded-xl border text-left transition-all hover:shadow-sm active:scale-[0.99] ${cfg.bg} ${cfg.border}`}
+                  className={`flex items-start gap-3 px-3.5 py-3 rounded-xl border text-left transition-[transform,box-shadow,background-color,border-color,color,opacity] hover:shadow-sm active:scale-[0.99] ${cfg.bg} ${cfg.border}`}
                 >
                   <span className={`w-2 h-2 rounded-full ${cfg.dot} shrink-0 mt-1.5`} />
                   <div className="min-w-0 flex-1">

@@ -216,7 +216,7 @@ export default function Actions() {
               <p className="text-xs text-ink-400 mt-0.5">Slutförda</p>
               <div className="mt-2 h-1.5 bg-ink-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-positive-400 rounded-full transition-all duration-500"
+                  className="h-full bg-positive-400 rounded-full transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500"
                   style={{ width: `${actions.length > 0 ? (doneCount / actions.length) * 100 : 0}%` }}
                 />
               </div>
@@ -234,7 +234,7 @@ export default function Actions() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-150 ${
                 tab === t.key
                   ? 'bg-white shadow-sm text-ink-900'
                   : 'text-ink-500 hover:text-ink-700'
@@ -254,7 +254,7 @@ export default function Actions() {
         {loading ? (
           <div className="flex flex-col gap-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-36 bg-ink-100 rounded-2xl animate-pulse" />
+              <div key={i} className="h-36 skeleton rounded-2xl" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -285,7 +285,7 @@ export default function Actions() {
           </div>
 
           {loading ? (
-            <div className="h-32 bg-ink-100 rounded-2xl animate-pulse" />
+            <div className="h-32 skeleton rounded-2xl" />
           ) : invoices.length === 0 ? (
             <div className="glass rounded-2xl p-8 text-center text-ink-400 text-sm">
               Inga förfallna fakturor. Allt är i ordning!
@@ -324,10 +324,10 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
     : []
 
   return (
-    <div className={`glass rounded-2xl overflow-hidden shadow-sm transition-all duration-300 ${done ? 'opacity-70' : 'hover:shadow-md'}`}>
+    <div className={`glass rounded-2xl overflow-hidden shadow-sm transition-[transform,box-shadow,background-color,border-color,color] duration-300 ${done ? 'opacity-70' : 'hover:shadow-md'}`}>
       {/* Urgency strip */}
       <div className="h-1 w-full bg-ink-100">
-        <div className={`h-full ${done ? 'bg-positive-400' : p.bar} transition-all duration-500`} style={{ width: `${done ? 100 : p.urgencyPct}%` }} />
+        <div className={`h-full ${done ? 'bg-positive-400' : p.bar} transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500`} style={{ width: `${done ? 100 : p.urgencyPct}%` }} />
       </div>
 
       <div className="p-5">
@@ -345,7 +345,7 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
           </div>
           <button
             onClick={onToggle}
-            className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-all duration-200 ${
+            className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-[transform,box-shadow,background-color,border-color,color] duration-200 ${
               done
                 ? 'border-positive-200 bg-positive-50 text-positive-700 hover:bg-negative-50 hover:border-negative-200 hover:text-negative-600'
                 : 'border-ink-200 bg-ink-50 text-ink-600 hover:border-positive-300 hover:bg-positive-50 hover:text-positive-700'

@@ -484,7 +484,7 @@ export default function Diagnosis() {
                     <button
                       key={q}
                       onClick={() => openAiWith(q)}
-                      className="bg-white border border-ink-200 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-ink-600 hover:bg-white/80 hover:border-brand-300 hover:text-brand-700 transition-all min-h-[44px]"
+                      className="bg-white border border-ink-200 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-ink-600 hover:bg-white/80 hover:border-brand-300 hover:text-brand-700 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px]"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-brand-400 shrink-0" aria-hidden="true" />
                       {q}
@@ -524,9 +524,9 @@ export default function Diagnosis() {
 
             {loading ? (
               <div className="flex flex-col gap-6">
-                <div className="h-72 bg-ink-100 rounded-2xl animate-pulse" />
-                <div className="h-52 bg-ink-100 rounded-2xl animate-pulse" />
-                <div className="h-40 bg-ink-100 rounded-2xl animate-pulse" />
+                <div className="h-72 skeleton rounded-2xl" />
+                <div className="h-52 skeleton rounded-2xl" />
+                <div className="h-40 skeleton rounded-2xl" />
               </div>
             ) : !diagnosis || !cfg ? (
               <div className="text-center text-ink-400 text-sm py-16">Ingen diagnosdata tillgänglig.</div>
@@ -571,7 +571,7 @@ export default function Diagnosis() {
                             </div>
                             <div className="h-3 bg-ink-100 rounded-full overflow-hidden">
                               <div
-                                className={`h-full ${color} rounded-full transition-all duration-700`}
+                                className={`h-full ${color} rounded-full transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-700`}
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
@@ -591,7 +591,7 @@ export default function Diagnosis() {
                   {loadingRC ? (
                     <div className="grid sm:grid-cols-2 gap-4">
                       {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-32 bg-ink-100 rounded-2xl animate-pulse" />
+                        <div key={i} className="h-32 skeleton rounded-2xl" />
                       ))}
                     </div>
                   ) : rootCauses.length === 0 ? (
@@ -622,8 +622,8 @@ export default function Diagnosis() {
                             <stop offset="95%" stopColor="#3A5CD8" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={26} />
+                        <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} width={26} />
                         <Tooltip
                           content={({ active, payload, label }) =>
                             active && payload?.length ? (

@@ -83,16 +83,17 @@ export default {
         serif: ['Instrument Serif', 'Georgia', 'serif'],
         sans: ['General Sans', 'system-ui', 'sans-serif'],
       },
-      // Soft, layered, diffuse depth — Apple-style ambient shadows.
-      // Overrides the default scale, so every existing `shadow-*` utility
-      // across the app is upgraded without touching a single component.
+      // Three-level depth hierarchy — overrides the default scale so every
+      // existing `shadow-*` utility is upgraded without touching components.
+      //   sm  = resting card      md = hovered card
+      //   xl/2xl = modals & panels (deepest)
       boxShadow: {
-        sm:      '0 1px 2px rgba(26, 25, 32, 0.04), 0 1px 3px rgba(26, 25, 32, 0.05)',
-        DEFAULT: '0 1px 2px rgba(26, 25, 32, 0.04), 0 4px 12px -2px rgba(26, 25, 32, 0.06)',
-        md:      '0 2px 4px rgba(26, 25, 32, 0.04), 0 8px 20px -4px rgba(26, 25, 32, 0.08)',
-        lg:      '0 4px 8px rgba(26, 25, 32, 0.04), 0 16px 32px -8px rgba(26, 25, 32, 0.10)',
-        xl:      '0 8px 16px rgba(26, 25, 32, 0.05), 0 24px 48px -12px rgba(26, 25, 32, 0.12)',
-        '2xl':   '0 16px 32px rgba(26, 25, 32, 0.08), 0 40px 72px -16px rgba(26, 25, 32, 0.16)',
+        sm:      '0 1px 2px rgba(26, 25, 32, 0.04), 0 4px 16px rgba(26, 25, 32, 0.04)',   // resting
+        DEFAULT: '0 1px 2px rgba(26, 25, 32, 0.05), 0 6px 20px rgba(26, 25, 32, 0.06)',
+        md:      '0 2px 4px rgba(26, 25, 32, 0.06), 0 12px 32px rgba(26, 25, 32, 0.08)',  // hovered
+        lg:      '0 4px 10px rgba(26, 25, 32, 0.07), 0 18px 44px rgba(26, 25, 32, 0.10)',
+        xl:      '0 10px 28px rgba(26, 25, 32, 0.10), 0 24px 56px rgba(26, 25, 32, 0.14)',
+        '2xl':   '0 24px 64px rgba(26, 25, 32, 0.18)',                                    // modals / panels
       },
       transitionTimingFunction: {
         apple: 'cubic-bezier(0.22, 1, 0.36, 1)',

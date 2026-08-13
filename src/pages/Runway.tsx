@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import { ChartTooltip } from '../components/chart'
 import {
   ResponsiveContainer,
   LineChart,
@@ -73,10 +74,10 @@ export default function Runway() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-24 bg-ink-100 rounded-2xl animate-pulse" />
+                <div key={i} className="h-24 skeleton rounded-2xl" />
               ))}
             </div>
-            <div className="h-[300px] bg-ink-100 rounded-2xl animate-pulse" />
+            <div className="h-[300px] skeleton rounded-2xl" />
           </>
         ) : error ? (
           <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">
@@ -117,10 +118,10 @@ export default function Runway() {
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+                    <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
                     <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                     <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} width={90} />
-                    <Tooltip formatter={(value: unknown) => fmt(Number(value ?? 0))} />
+                    <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
                     <Legend />
                     <ReferenceLine
                       y={0}

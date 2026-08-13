@@ -50,7 +50,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="flex gap-3">
             <button
               onClick={this.reset}
-              className="flex-1 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl shadow-md shadow-brand-500/20 hover:opacity-90 active:scale-[0.98] transition-all"
+              className="flex-1 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl shadow-md shadow-brand-500/20 hover:opacity-90 active:scale-[0.98] transition-[transform,opacity,box-shadow] duration-150"
             >
               Försök igen
             </button>

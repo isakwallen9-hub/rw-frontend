@@ -6,6 +6,7 @@ import {
   ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import { ChartTooltip } from './chart'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const CHART_COLORS = ['#3A5CD8', '#0E9C6B', '#C9821F', '#7C5BD9', '#CE4646']
@@ -156,16 +157,13 @@ function ChartBlock({ chart, height = 190 }: { chart: InlineChart; height?: numb
 
   const axes = (
     <>
-      <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
-      <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#8B8A93' }} axisLine={false} tickLine={false} />
+      <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
+      <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#72717C' }} axisLine={false} tickLine={false} />
       <YAxis
-        tick={{ fontSize: 10, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={40}
+        tick={{ fontSize: 10, fill: '#72717C' }} axisLine={false} tickLine={false} width={40}
         tickFormatter={v => Math.abs(Number(v)) >= 1000 ? `${(Number(v) / 1000).toFixed(0)}k` : String(v)}
       />
-      <Tooltip
-        contentStyle={{ background: 'rgba(255,255,255,0.97)', border: '1px solid #DEDCDC', borderRadius: 8, fontSize: 11 }}
-        formatter={(value) => [Number(value).toLocaleString('sv-SE'), undefined]}
-      />
+      <Tooltip content={<ChartTooltip format={(v) => Number(v).toLocaleString('sv-SE')} />} cursor={{ fill: 'rgba(26,25,32,0.04)' }} />
       {hasZRef && <ReferenceLine y={0} stroke="#CE4646" strokeDasharray="4 2" strokeWidth={1.5} />}
     </>
   )
@@ -176,7 +174,7 @@ function ChartBlock({ chart, height = 190 }: { chart: InlineChart; height?: numb
         <BarChart {...shared}>
           {axes}
           {nonZero.map((ds, i) => (
-            <Bar key={ds.label} dataKey={ds.label} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[3, 3, 0, 0]} />
+            <Bar key={ds.label} dataKey={ds.label} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[6, 6, 0, 0]} />
           ))}
         </BarChart>
       </ResponsiveContainer>
@@ -190,7 +188,7 @@ function ChartBlock({ chart, height = 190 }: { chart: InlineChart; height?: numb
         {nonZero.map((ds, i) => (
           <Line
             key={ds.label} type="monotone" dataKey={ds.label}
-            stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2} dot={false} activeDot={{ r: 4 }}
+            stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
           />
         ))}
       </LineChart>
@@ -421,7 +419,7 @@ export default function AiAssistant() {
         onClick={() => setOpen(o => !o)}
         aria-label="Öppna AI-assistent"
         aria-expanded={open}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-brand-900/30 transition-all duration-200 hover:scale-105 active:scale-95 bg-gradient-to-br from-brand-600 to-brand-700"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-brand-900/30 transition-[transform,box-shadow,background-color,border-color,color] duration-200 hover:scale-105 active:scale-95 bg-gradient-to-br from-brand-600 to-brand-700"
       >
         {/* Pulse ring */}
         <span
@@ -507,7 +505,7 @@ export default function AiAssistant() {
                   <button
                     key={q}
                     onClick={() => send(q)}
-                    className="text-xs text-left border border-white/60 bg-white/50 rounded-xl px-3 py-2.5 hover:bg-white/80 hover:border-brand-200 hover:text-brand-700 transition-all text-ink-700 font-medium min-h-[44px]"
+                    className="text-xs text-left border border-white/60 bg-white/50 rounded-xl px-3 py-2.5 hover:bg-white/80 hover:border-brand-200 hover:text-brand-700 transition-[transform,box-shadow,background-color,border-color,color,opacity] text-ink-700 font-medium min-h-[44px]"
                   >
                     {q} →
                   </button>
@@ -543,13 +541,13 @@ export default function AiAssistant() {
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }}
               placeholder="Fråga vad som helst om din ekonomi..."
               disabled={loading}
-              className="flex-1 text-sm bg-white/60 border border-white/60 rounded-xl px-3.5 py-2.5 outline-none focus:border-brand-400 focus:bg-white/80 transition-all disabled:opacity-50 placeholder-ink-400 min-h-[44px]"
+              className="flex-1 text-sm bg-white/60 border border-white/60 rounded-xl px-3.5 py-2.5 outline-none focus:border-brand-400 focus:bg-white/80 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 placeholder-ink-400 min-h-[44px]"
             />
             <button
               onClick={() => void send()}
               disabled={loading || !input.trim()}
               aria-label="Skicka"
-              className="px-4 bg-gradient-to-br from-brand-600 to-brand-700 text-white rounded-xl hover:opacity-90 disabled:opacity-40 active:scale-95 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+              className="px-4 bg-gradient-to-br from-brand-600 to-brand-700 text-white rounded-xl hover:opacity-90 disabled:opacity-40 active:scale-95 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>

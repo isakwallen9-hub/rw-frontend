@@ -50,7 +50,7 @@ function FadeIn({ children, className = '', delay = 0 }: {
   return (
     <div
       ref={ref}
-      className={`opacity-0 translate-y-6 transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${className}`}
+      className={`opacity-0 translate-y-6 transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
@@ -183,7 +183,7 @@ export default function Landing() {
             {loggedIn ? (
               <Link
                 to="/dashboard"
-                className="group inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-lg shadow-md shadow-brand-900/15 hover:shadow-lg hover:-translate-y-px active:translate-y-0 transition-all min-h-[44px]"
+                className="group inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-lg shadow-md shadow-brand-900/15 hover:shadow-lg hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px]"
               >
                 Gå till dashboard
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -198,7 +198,7 @@ export default function Landing() {
                 </Link>
                 <Link
                   to="/register"
-                  className="text-sm font-semibold text-white bg-primary px-4 py-2 rounded-lg shadow-md shadow-brand-900/15 hover:shadow-lg hover:-translate-y-px active:translate-y-0 transition-all min-h-[44px] flex items-center"
+                  className="text-sm font-semibold text-white bg-primary px-4 py-2 rounded-lg shadow-md shadow-brand-900/15 hover:shadow-lg hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px] flex items-center"
                 >
                   Kom igång gratis
                 </Link>
@@ -243,7 +243,7 @@ export default function Landing() {
                 {loggedIn ? (
                   <Link
                     to="/dashboard"
-                    className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all min-h-[52px]"
+                    className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                   >
                     Gå till dashboard
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -252,14 +252,14 @@ export default function Landing() {
                   <>
                     <Link
                       to="/register"
-                      className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all min-h-[52px]"
+                      className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                     >
                       Kom igång gratis
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
                     </Link>
                     <Link
                       to="/login"
-                      className="inline-flex items-center justify-center gap-2 text-ink-700 font-semibold text-base px-6 py-4 rounded-xl border border-ink-200/70 bg-white/50 backdrop-blur hover:bg-white/80 hover:border-ink-300 active:scale-[0.99] transition-all min-h-[52px]"
+                      className="inline-flex items-center justify-center gap-2 text-ink-700 font-semibold text-base px-6 py-4 rounded-xl border border-ink-200/70 bg-white/50 backdrop-blur hover:bg-white/80 hover:border-ink-300 active:scale-[0.99] transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                     >
                       Logga in
                     </Link>
@@ -384,7 +384,7 @@ export default function Landing() {
 
           {/* Focal cell — AI coach (spans 2) */}
           <FadeIn className="lg:col-span-2">
-            <div className="group relative h-full glass rounded-3xl p-7 sm:p-8 overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-all duration-500">
+            <div className="group relative h-full glass rounded-3xl p-7 sm:p-8 overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
               <div className="absolute -top-10 -right-10 w-48 h-48 bg-gradient-to-br from-brand-400/15 to-brand-400/10 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
               <div className="relative flex flex-col sm:flex-row sm:items-start gap-6">
                 <div className="flex-1 min-w-0">
@@ -418,7 +418,7 @@ export default function Landing() {
 
           {/* Kassaflöde — with sparkline */}
           <FadeIn delay={80}>
-            <div className="group h-full glass rounded-3xl p-7 flex flex-col hover:-translate-y-1 hover:shadow-xl transition-all duration-500">
+            <div className="group h-full glass rounded-3xl p-7 flex flex-col hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
               <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 mb-5">
                 <BarChart2 className="w-5 h-5 text-brand-600" aria-hidden="true" />
               </div>
@@ -430,7 +430,7 @@ export default function Landing() {
 
           {/* Budget — with bar */}
           <FadeIn delay={120}>
-            <div className="group h-full glass rounded-3xl p-7 flex flex-col hover:-translate-y-1 hover:shadow-xl transition-all duration-500">
+            <div className="group h-full glass rounded-3xl p-7 flex flex-col hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
               <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-caution-50 border border-caution-100 mb-5">
                 <Target className="w-5 h-5 text-caution-600" aria-hidden="true" />
               </div>
@@ -449,7 +449,7 @@ export default function Landing() {
 
           {/* Simulering */}
           <FadeIn delay={80}>
-            <div className="group h-full glass rounded-3xl p-7 hover:-translate-y-1 hover:shadow-xl transition-all duration-500">
+            <div className="group h-full glass rounded-3xl p-7 hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
               <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 mb-5">
                 <TrendingUp className="w-5 h-5 text-brand-600" aria-hidden="true" />
               </div>
@@ -460,7 +460,7 @@ export default function Landing() {
 
           {/* Kundanalys */}
           <FadeIn delay={120}>
-            <div className="group h-full glass rounded-3xl p-7 hover:-translate-y-1 hover:shadow-xl transition-all duration-500">
+            <div className="group h-full glass rounded-3xl p-7 hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
               <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-cyan-50 border border-cyan-100 mb-5">
                 <Users className="w-5 h-5 text-cyan-600" aria-hidden="true" />
               </div>
@@ -471,7 +471,7 @@ export default function Landing() {
 
           {/* Export — wide slim */}
           <FadeIn delay={160} className="lg:col-span-3">
-            <div className="group glass rounded-3xl p-7 flex flex-col sm:flex-row sm:items-center gap-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-500">
+            <div className="group glass rounded-3xl p-7 flex flex-col sm:flex-row sm:items-center gap-5 hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
               <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-ink-100 border border-ink-200/70 shrink-0">
                 <FileText className="w-5 h-5 text-ink-600" aria-hidden="true" />
               </div>
@@ -481,7 +481,7 @@ export default function Landing() {
               </div>
               <Link
                 to={loggedIn ? '/dashboard' : '/register'}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-all shrink-0"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-[transform,box-shadow,background-color,border-color,color,opacity] shrink-0"
               >
                 Prova det <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
@@ -511,7 +511,7 @@ export default function Landing() {
                 {loggedIn ? (
                   <Link
                     to="/dashboard"
-                    className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all min-h-[52px]"
+                    className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                   >
                     Gå till dashboard
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -520,7 +520,7 @@ export default function Landing() {
                   <>
                     <Link
                       to="/register"
-                      className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all min-h-[52px]"
+                      className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                     >
                       Skapa gratis konto
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />

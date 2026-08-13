@@ -6,6 +6,15 @@
    Base — system-wide rendering & typography polish
    The SF/Apple signature: crisp antialiasing + tight optical tracking.
    ══════════════════════════════════════════════════════════════════════ */
+/* ── Motion system — shared easings & durations ───────────────────────── */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 150ms;   /* hover */
+  --dur-normal: 250ms; /* state changes */
+  --dur-slow: 400ms;   /* entrance */
+}
+
 @layer base {
   html {
     /* Larger, more comfortable base — every rem scales from here */
@@ -51,11 +60,25 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Keyboard focus — brand ring, suppressed on mouse click */
+  /* Keyboard focus — brand ring (ring-2 + 2px offset), suppressed on mouse click.
+     Applied globally so every interactive element is reachable by keyboard. */
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-    outline: 2px solid rgba(58, 92, 216, 0.55); /* brand-500 */
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(58, 92, 216, 0.40); /* brand-500/40 */
     border-radius: 6px;
+  }
+
+  /* Every button gets a subtle press; inputs ease background + border on focus */
+  :where(button):not(:disabled):active {
+    transform: scale(0.98);
+  }
+  :where(button) {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  :where(input, select, textarea) {
+    transition: background-color var(--dur-normal) var(--ease-out),
+                border-color var(--dur-normal) var(--ease-out),
+                box-shadow var(--dur-normal) var(--ease-out);
   }
 
   ::selection {
@@ -70,6 +93,43 @@
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1;
+  }
+
+  /* ── Entrance: fade in + rise 8px, 400ms ease-out ─────────────────────── */
+  @keyframes animate-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in {
+    animation: animate-in var(--dur-slow) var(--ease-out) both;
+  }
+  /* Staggered children — first six enter in sequence, 60ms apart */
+  .stagger-in > * {
+    animation: animate-in var(--dur-slow) var(--ease-out) both;
+  }
+  .stagger-in > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-in > *:nth-child(2) { animation-delay: 60ms; }
+  .stagger-in > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger-in > *:nth-child(4) { animation-delay: 180ms; }
+  .stagger-in > *:nth-child(5) { animation-delay: 240ms; }
+  .stagger-in > *:nth-child(6) { animation-delay: 300ms; }
+
+  /* ── Skeleton shimmer — a soft highlight sweeping across on 1.6s ──────── */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: #EEEDEC; /* ink-100 */
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+  @keyframes skeleton-shimmer {
+    100% { transform: translateX(100%); }
   }
 }
 
@@ -111,11 +171,12 @@
     backdrop-filter: blur(24px) saturate(150%);
     -webkit-backdrop-filter: blur(24px) saturate(150%);
     border: 1px solid rgba(255, 255, 255, 0.60);
-    box-shadow: 0 1px 2px rgba(26, 25, 32, 0.03), 0 12px 32px -16px rgba(26, 25, 32, 0.12);
-    transition: box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-                background-color 0.3s ease,
-                border-color 0.3s ease;
+    /* Depth level 1 — resting card */
+    box-shadow: 0 1px 2px rgba(26, 25, 32, 0.04), 0 4px 16px rgba(26, 25, 32, 0.04);
+    transition: box-shadow var(--dur-slow) var(--ease-out),
+                transform var(--dur-slow) var(--ease-out),
+                background-color var(--dur-normal) var(--ease-out),
+                border-color var(--dur-normal) var(--ease-out);
   }
 
   .glass::before {
@@ -146,11 +207,12 @@
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
     border: 1px solid rgba(255, 255, 255, 0.55);
-    box-shadow: 0 1px 2px rgba(26, 25, 32, 0.03), 0 10px 28px -18px rgba(26, 25, 32, 0.14);
-    transition: box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-                background-color 0.3s ease,
-                border-color 0.3s ease;
+    /* Depth level 1 — resting card */
+    box-shadow: 0 1px 2px rgba(26, 25, 32, 0.04), 0 4px 16px rgba(26, 25, 32, 0.04);
+    transition: box-shadow var(--dur-slow) var(--ease-out),
+                transform var(--dur-slow) var(--ease-out),
+                background-color var(--dur-normal) var(--ease-out),
+                border-color var(--dur-normal) var(--ease-out);
   }
 
   .glass-kpi::before {
@@ -164,14 +226,24 @@
     z-index: 1;
   }
 
-  /* ── Sidebar panel ──────────────────────────────────────────────── */
+  /* ── Sidebar panel — sits visually BELOW content (recessed background
+     surface, not a floating card). Only a hairline divider, no drop shadow. */
   .glass-sidebar {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(32px) saturate(150%);
-    -webkit-backdrop-filter: blur(32px) saturate(150%);
-    /* Dark structural edge — panel divider, not decorative glass */
-    border-right: 1px solid rgba(26, 25, 32, 0.08);
-    box-shadow: 1px 0 0 rgba(255, 255, 255, 0.5), 6px 0 24px -8px rgba(26, 25, 32, 0.06);
+    background: rgba(252, 251, 250, 0.80);
+    backdrop-filter: blur(32px) saturate(140%);
+    -webkit-backdrop-filter: blur(32px) saturate(140%);
+    border-right: 1px solid rgba(26, 25, 32, 0.07);
+    box-shadow: inset -12px 0 24px -24px rgba(26, 25, 32, 0.10);
+  }
+
+  /* Interactive card lift — depth level 2 on hover (opt-in via .card-lift) */
+  .card-lift {
+    transition: box-shadow var(--dur-normal) var(--ease-out),
+                transform var(--dur-normal) var(--ease-out);
+  }
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(26, 25, 32, 0.06), 0 12px 32px rgba(26, 25, 32, 0.08);
   }
 }
 
@@ -194,15 +266,35 @@
   html {
     scroll-behavior: auto;
   }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
   .animate-orb-1,
   .animate-orb-2,
   .animate-orb-3,
   .animate-orb-4,
-  .animate-fade-rise {
+  .animate-fade-rise,
+  .animate-in,
+  .stagger-in > *,
+  .skeleton::after {
     animation: none !important;
   }
+  .animate-in,
+  .stagger-in > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  :where(button):not(:disabled):active {
+    transform: none;
+  }
   .glass,
-  .glass-kpi {
+  .glass-kpi,
+  .card-lift {
     transition: none;
   }
 }

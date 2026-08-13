@@ -248,7 +248,7 @@ export default function Cashflow() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-150 ${
                 tab === t.key ? 'bg-white shadow-sm text-ink-900' : 'text-ink-500 hover:text-ink-700'
               }`}
             >
@@ -262,7 +262,7 @@ export default function Cashflow() {
           <>
             {loadingRunway || loadingSeries ? (
               <div className="grid sm:grid-cols-3 gap-4">
-                {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-ink-100 rounded-2xl animate-pulse" />)}
+                {[...Array(3)].map((_, i) => <div key={i} className="h-32 skeleton rounded-2xl" />)}
               </div>
             ) : (
               <>
@@ -325,7 +325,7 @@ export default function Cashflow() {
                     </div>
                     <div className="mt-2 h-2 bg-ink-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-700 ${burnRatio > 90 ? 'bg-negative-500' : burnRatio > 70 ? 'bg-caution-400' : 'bg-positive-500'}`}
+                        className={`h-full rounded-full transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-700 ${burnRatio > 90 ? 'bg-negative-500' : burnRatio > 70 ? 'bg-caution-400' : 'bg-positive-500'}`}
                         style={{ width: `${Math.min(burnRatio, 100)}%` }}
                       />
                     </div>
@@ -395,10 +395,11 @@ export default function Cashflow() {
             {/* Area chart */}
             <div className="glass rounded-2xl shadow-sm p-6">
               {loadingSeries ? (
-                <div className="h-72 bg-ink-100 rounded-xl animate-pulse" />
+                <div className="h-72 skeleton rounded-xl" />
               ) : historyChartData.length === 0 ? (
-                <div className="h-72 flex items-center justify-center text-ink-400 text-sm">
-                  Ingen data tillgänglig för vald period.
+                <div className="h-72 flex flex-col items-center justify-center text-center gap-2 text-ink-400">
+                  <TrendingUp className="w-8 h-8 text-ink-300" aria-hidden="true" />
+                  <p className="text-sm">Ingen data för vald period. Välj ett annat intervall ovan.</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={288}>
@@ -409,18 +410,18 @@ export default function Cashflow() {
                         <stop offset="95%" stopColor="#3A5CD8" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="outflowGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#CE4646" stopOpacity={0.13} />
+                        <stop offset="5%"  stopColor="#CE4646" stopOpacity={0.18} />
                         <stop offset="95%" stopColor="#CE4646" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={42} />
+                    <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} width={42} />
                     <ReferenceLine y={0} stroke="#DEDCDC" strokeWidth={1.5} strokeDasharray="4 3" />
                     <Tooltip content={<CashflowTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-                    <Area type="monotone" dataKey="inflow"  name="Inflöde"  stroke="#3A5CD8" strokeWidth={2} fill="url(#inflowGrad)"  dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                    <Area type="monotone" dataKey="outflow" name="Utflöde"  stroke="#CE4646" strokeWidth={2} fill="url(#outflowGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                    <Area type="monotone" dataKey="inflow"  name="Inflöde"  stroke="#3A5CD8" strokeWidth={2.5} fill="url(#inflowGrad)"  dot={false} activeDot={{ r: 5, fill: "#fff", strokeWidth: 2 }} />
+                    <Area type="monotone" dataKey="outflow" name="Utflöde"  stroke="#CE4646" strokeWidth={2.5} fill="url(#outflowGrad)" dot={false} activeDot={{ r: 5, fill: "#fff", strokeWidth: 2 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
@@ -434,7 +435,7 @@ export default function Cashflow() {
             {/* Forecast KPIs */}
             {loadingRunway ? (
               <div className="grid sm:grid-cols-3 gap-4">
-                {[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-ink-100 rounded-2xl animate-pulse" />)}
+                {[...Array(3)].map((_, i) => <div key={i} className="h-24 skeleton rounded-2xl" />)}
               </div>
             ) : runwayData && (
               <div className="grid sm:grid-cols-3 gap-4">
@@ -485,24 +486,25 @@ export default function Cashflow() {
             <div className="glass rounded-2xl shadow-sm p-6">
               <h3 className="text-sm font-bold text-ink-700 mb-5">90-dagars saldoprognos</h3>
               {loadingRunway ? (
-                <div className="h-72 bg-ink-100 rounded-xl animate-pulse" />
+                <div className="h-72 skeleton rounded-xl" />
               ) : forecastData.length === 0 ? (
-                <div className="h-72 flex items-center justify-center text-ink-400 text-sm">
-                  Ingen prognosdata tillgänglig.
+                <div className="h-72 flex flex-col items-center justify-center text-center gap-2 text-ink-400">
+                  <TrendingUp className="w-8 h-8 text-ink-300" aria-hidden="true" />
+                  <p className="text-sm">Ingen prognosdata tillgänglig ännu.</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={288}>
                   <LineChart data={forecastData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#8B8A93' }} axisLine={false} tickLine={false} width={42} />
-                    <ReferenceLine y={0} stroke="#CE4646" strokeWidth={1.5} strokeDasharray="4 3" label={{ value: 'Nollpunkt', fill: '#CE4646', fontSize: 11, position: 'insideTopLeft' }} />
+                    <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} width={42} />
+                    <ReferenceLine y={0} stroke="#CE4646" strokeWidth={1.5} strokeDasharray="4 3" label={{ value: 'Nollpunkt', fill: '#CE4646', fontSize: 13, position: 'insideTopLeft' }} />
                     {zeroCrossing && (
                       <ReferenceLine
                         x={fmtDate(zeroCrossing)}
                         stroke="#CE4646"
                         strokeDasharray="4 3"
-                        label={{ value: 'Saldo = 0', fill: '#CE4646', fontSize: 11, position: 'top' }}
+                        label={{ value: 'Saldo = 0', fill: '#CE4646', fontSize: 13, position: 'top' }}
                       />
                     )}
                     <Tooltip
@@ -515,7 +517,7 @@ export default function Cashflow() {
                         ) : null
                       }
                     />
-                    <Line type="monotone" dataKey="balance" name="Saldo" stroke="#3A5CD8" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                    <Line type="monotone" dataKey="balance" name="Saldo" stroke="#3A5CD8" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#fff", strokeWidth: 2 }} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -535,13 +537,13 @@ function CashflowTooltip({ active, payload, label }: {
 }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="glass rounded-xl shadow-lg px-4 py-3 text-sm">
-      <p className="font-semibold text-ink-700 mb-2">{label}</p>
+    <div className="bg-white rounded-xl border border-ink-100 shadow-[0_8px_24px_rgba(26,25,32,0.12)] px-3.5 py-2.5 text-xs min-w-[9rem]">
+      <p className="font-semibold text-ink-800 mb-1.5">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-          <span className="text-ink-500 w-14">{p.name}:</span>
-          <span className="font-semibold" style={{ color: p.color }}>
+          <span className="text-ink-500">{p.name}</span>
+          <span className="ml-auto font-semibold text-ink-800 tabular">
             {p.value.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </span>
         </div>

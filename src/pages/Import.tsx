@@ -576,7 +576,7 @@ export default function Import() {
                     </div>
                     <div className="w-full h-2 bg-ink-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-brand-500 rounded-full transition-all duration-700"
+                        className="h-full bg-brand-500 rounded-full transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-700"
                         style={{ width: `${progress}%` }}
                       />
                     </div>

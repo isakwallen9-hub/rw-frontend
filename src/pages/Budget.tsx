@@ -128,7 +128,7 @@ function BudgetBar({
             <span className="font-semibold">{fillPct.toFixed(0)}%</span>
           </div>
           <div className="w-full h-2.5 bg-ink-100 rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-700 ${barColor}`} style={{ width: `${Math.min(fillPct, 100)}%` }} />
+            <div className={`h-full rounded-full transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-700 ${barColor}`} style={{ width: `${Math.min(fillPct, 100)}%` }} />
           </div>
         </div>
       )}
@@ -556,7 +556,7 @@ export default function Budget() {
                 return (
                   <button
                     onClick={() => openAiWith(`Varför ligger jag ${direction} budget för ${periodLabel(period)}?`)}
-                    className="mt-2 w-full flex items-center gap-2 bg-white/40 backdrop-blur border border-ink-200/60 rounded-xl px-4 py-3 text-sm font-medium text-ink-700 hover:bg-white/60 hover:border-brand-300 hover:text-brand-700 transition-all min-h-[44px]"
+                    className="mt-2 w-full flex items-center gap-2 bg-white/40 backdrop-blur border border-ink-200/60 rounded-xl px-4 py-3 text-sm font-medium text-ink-700 hover:bg-white/60 hover:border-brand-300 hover:text-brand-700 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px]"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-brand-500 shrink-0" aria-hidden="true" />
                     Fråga AI varför du ligger {direction} budget

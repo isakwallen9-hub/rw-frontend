@@ -303,7 +303,7 @@ export default function Profile() {
                     key={ind.value}
                     onClick={() => saveIndustry(ind.value)}
                     disabled={industrySaving}
-                    className={`flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-2 transition-all disabled:opacity-50 ${
+                    className={`flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-2 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 ${
                       industry === ind.value
                         ? 'border-accent bg-accent/5'
                         : 'border-ink-100 hover:border-accent/50 hover:bg-ink-50'
@@ -333,7 +333,7 @@ export default function Profile() {
                     key={c.code}
                     onClick={() => saveCurrency(c.code)}
                     disabled={currencySaving}
-                    className={`flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 transition-all disabled:opacity-50 ${
+                    className={`flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 ${
                       currency === c.code
                         ? 'border-accent bg-accent/5'
                         : 'border-ink-100 hover:border-accent/50 hover:bg-ink-50'

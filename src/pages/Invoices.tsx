@@ -45,7 +45,7 @@ export default function Invoices() {
           {loading ? (
             <div className="p-6 space-y-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-10 bg-ink-100 rounded-xl animate-pulse" />
+                <div key={i} className="h-10 skeleton rounded-xl" />
               ))}
             </div>
           ) : error ? (

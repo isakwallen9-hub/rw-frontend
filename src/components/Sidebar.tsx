@@ -48,7 +48,7 @@ function NavItem({ to, label, icon: Icon, onNav }: NavItem & { onNav?: () => voi
       to={to}
       onClick={onNav}
       className={({ isActive }) =>
-        `relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ease-apple min-h-[44px] ${
+        `relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-apple min-h-[44px] ${
           isActive
             ? 'bg-brand-600/[.07] text-brand-700 shadow-[inset_0_0_0_1px_rgba(58,92,216,0.12)]'
             : 'text-ink-500 hover:bg-white/75 hover:text-ink-900 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)]'

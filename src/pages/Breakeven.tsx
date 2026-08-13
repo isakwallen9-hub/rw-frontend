@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import { ChartTooltip } from '../components/chart'
 import {
   ResponsiveContainer,
   BarChart,
@@ -62,7 +63,7 @@ export default function Breakeven() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-ink-100 p-6">
           {loading ? (
-            <div className="h-[300px] bg-ink-100 rounded-xl animate-pulse" />
+            <div className="h-[300px] skeleton rounded-xl" />
           ) : error ? (
             <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">
               {error}
@@ -75,10 +76,10 @@ export default function Breakeven() {
             <>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+                  <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 13 }} />
                   <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip formatter={(value: unknown) => fmt(Number(value ?? 0))} />
+                  <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
                   <Legend />
                   <Bar dataKey="value" name="Belopp" radius={[6, 6, 0, 0]}>
                     {chartData.map((entry, index) => (

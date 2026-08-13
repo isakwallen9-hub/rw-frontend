@@ -1,6 +1,8 @@
 ﻿import { useEffect, useState, useRef, useCallback } from 'react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
+import { ChartTooltip } from '../components/chart'
+import { EmptyState } from '../components/EmptyState'
 import {
   ResponsiveContainer,
   LineChart, Line,
@@ -196,15 +198,15 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
 
   const axes = (
     <>
-      <CartesianGrid strokeDasharray="3 3" stroke="#EEEDEC" />
+      <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
       <XAxis
         dataKey="label"
-        tick={{ fontSize: 11, fill: '#8B8A93' }}
+        tick={{ fontSize: 13, fill: '#72717C' }}
         axisLine={false}
         tickLine={false}
       />
       <YAxis
-        tick={{ fontSize: 11, fill: '#8B8A93' }}
+        tick={{ fontSize: 13, fill: '#72717C' }}
         axisLine={false}
         tickLine={false}
         width={52}
@@ -213,16 +215,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
           : String(v)
         }
       />
-      <Tooltip
-        contentStyle={{
-          background: 'rgba(255,255,255,0.97)',
-          border: '1px solid #DEDCDC',
-          borderRadius: 10,
-          fontSize: 12,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-        }}
-        formatter={(value) => [Number(value).toLocaleString('sv-SE'), undefined]}
-      />
+      <Tooltip content={<ChartTooltip format={(v) => Number(v).toLocaleString('sv-SE')} />} cursor={{ fill: 'rgba(26,25,32,0.04)' }} />
       {nonZero.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
       {hasZeroRef && (
         <ReferenceLine y={0} stroke="#CE4646" strokeDasharray="4 2" strokeWidth={1.5} />
@@ -240,7 +233,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
               key={ds.label}
               dataKey={ds.label}
               fill={CHART_COLORS[i % CHART_COLORS.length]}
-              radius={[3, 3, 0, 0]}
+              radius={[6, 6, 0, 0]}
             />
           ))}
         </BarChart>
@@ -258,9 +251,9 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
             type="monotone"
             dataKey={ds.label}
             stroke={CHART_COLORS[i % CHART_COLORS.length]}
-            strokeWidth={2}
+            strokeWidth={2.5}
             dot={false}
-            activeDot={{ r: 4 }}
+            activeDot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
           />
         ))}
       </LineChart>
@@ -270,7 +263,7 @@ function ChartBlock({ chart, height = 240 }: { chart: FeaturedChart; height?: nu
 
 function FeaturedChartCard({ chart }: { chart: FeaturedChart }) {
   return (
-    <div className="glass rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
+    <div className="glass rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-[transform,box-shadow] duration-250">
       <h3 className="font-bold text-ink-900 tracking-tight mb-1">{chart.title}</h3>
       <div className="mt-4">
         <ChartBlock chart={chart} height={240} />
@@ -293,7 +286,7 @@ function InsightCard({ insight, formatAmount }: { insight: Insight; formatAmount
     : null
 
   return (
-    <div className={`glass border-l-4 ${s.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
+    <div className={`glass border-l-4 ${s.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-[transform,box-shadow] duration-250`}>
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <s.Icon className={`w-4 h-4 shrink-0 ${s.iconColor}`} aria-hidden="true" />
@@ -431,7 +424,7 @@ export default function Insights() {
               onClick={handleGenerate}
               disabled={!query.trim() || generating}
               aria-label="Generera graf"
-              className="px-4 py-3 bg-primary text-white rounded-xl shadow-md shadow-brand-500/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="px-4 py-3 bg-primary text-white rounded-xl shadow-md shadow-brand-500/20 hover:opacity-90 active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-40 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               {generating ? (
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -533,11 +526,11 @@ export default function Insights() {
         {/* Loading skeletons for charts */}
         {loading && (
           <section>
-            <div className="h-5 bg-ink-200/80 rounded-lg w-40 animate-pulse mb-4" />
+            <div className="h-5 skeleton rounded-lg w-40 mb-4" />
             {[0, 1].map(i => (
               <div key={i} className="glass rounded-2xl p-5 mb-5 shadow-sm">
-                <div className="h-4 bg-ink-200/80 rounded-lg w-48 animate-pulse mb-4" />
-                <div className="h-56 bg-ink-100/80 rounded-xl animate-pulse" />
+                <div className="h-4 skeleton rounded-lg w-48 mb-4" />
+                <div className="h-56 skeleton rounded-xl" />
               </div>
             ))}
           </section>
@@ -563,7 +556,7 @@ export default function Insights() {
         {/* Loading skeletons for insights */}
         {loading && (
           <section>
-            <div className="h-5 bg-ink-200/80 rounded-lg w-28 animate-pulse mb-4" />
+            <div className="h-5 skeleton rounded-lg w-28 mb-4" />
             {[0, 1, 2].map(i => (
               <div key={i} className="glass border-l-4 border-l-ink-200 rounded-2xl p-5 mb-4 shadow-sm animate-pulse">
                 <div className="flex justify-between mb-3">
@@ -581,9 +574,17 @@ export default function Insights() {
 
         {/* Empty state */}
         {!loading && !fetchError && !sortedInsights.length && !data?.featuredCharts?.length && (
-          <div className="glass rounded-2xl p-10 text-center shadow-sm">
-            <Sparkles className="w-8 h-8 text-ink-300 mx-auto mb-3" aria-hidden="true" />
-            <p className="text-sm text-ink-400">Inga insikter ännu. Importera mer data för att aktivera AI-analysen.</p>
+          <div className="glass rounded-2xl shadow-sm">
+            <EmptyState
+              icon={<Sparkles />}
+              title="Inga insikter ännu"
+              hint="Importera mer data så aktiverar AI:n automatiska insikter och grafer."
+              action={
+                <a href="/import" className="inline-flex items-center min-h-[40px] px-4 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150">
+                  Importera data
+                </a>
+              }
+            />
           </div>
         )}
 
