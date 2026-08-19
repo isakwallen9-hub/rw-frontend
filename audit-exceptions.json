@@ -1,13 +1,4 @@
 {
   "$comment": "Dokumenterade undantag för npm audit-gaten i CI. Varje undantag måste omprövas senast vid review_by. Ta bort undantaget så fort en patchad version finns. Se BUGS.md §9.",
-  "exceptions": [
-    {
-      "advisory": "GHSA-5p4m-2wfm-xmqj",
-      "package": "js-yaml",
-      "severity": "high",
-      "added": "2026-08-11",
-      "review_by": "2026-11-11",
-      "reason": "js-yaml Quadratic CPU consumption i !!omap (CVE-2026-59870). Endast ett DEV-/byggtidsberoende: kommer transitivt via eslint -> @eslint/eslintrc -> js-yaml@4.3.0 och ingår INTE i produktionsbundlen (Vite bundlar bara src/). Fixen är inte backportad till js-yaml 4.x (finns bara i 5.x), och senaste eslint drar fortfarande in @eslint/eslintrc som pinnar js-yaml ^4.3.0 — en eslint-uppgradering löser alltså inte advisoryn. Omprövas när @eslint/eslintrc släpper en version på js-yaml 5.x."
-    }
-  ]
+  "exceptions": []
 }

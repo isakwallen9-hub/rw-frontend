@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
-import { z } from 'zod'
 import { Sparkles } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { ChartTooltip } from '../components/chart'
@@ -167,19 +166,6 @@ function cleanScenarioLabel(label: string): string {
     .trim()
 }
 
-// Zod schema for AI-extracted scenario validation
-const ScenarioSchema = z.object({
-  type: z.enum([
-    'remove_category', 'change_amount', 'add_revenue',
-    'change_revenue_percent', 'change_expenses_percent', 'one_time_expense',
-  ]),
-  category: z.string().optional(),
-  changePercent: z.number().optional(),
-  amount: z.number().optional(),
-  frequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
-  date: z.string().optional(),
-})
-
 function parseAiForecast(data: Record<string, unknown>, cb: number): ForecastPoint[] | null {
   // Format 1: data.forecast = { baseline: [], simulated: [] }
   const fcast = data.forecast as Record<string, unknown> | null | undefined
@@ -280,6 +266,7 @@ export default function Simulate() {
   const [aiAnswer, setAiAnswer] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiSimFailed, setAiSimFailed] = useState(false)
+  const [aiScenarioError, setAiScenarioError] = useState<{ message: string; suggestions: string[] } | null>(null)
   const [manualOpen, setManualOpen] = useState(false)
   const [scenarioLabel, setScenarioLabel] = useState('')
 
@@ -291,8 +278,12 @@ export default function Simulate() {
         setCategories(cats)
         if (cats.length > 0) setAddCategory(cats[0])
 
-        // Fetch inflow per category over the last 90 days to find the worst
-        if (cats.length > 1) {
+        // Pick the least profitable REVENUE category: fetch inflow per category
+        // over the last 90 days and keep only categories with inflow > 0 — cost
+        // categories have zero inflow and would otherwise always "win". Take the
+        // lowest of those. If none have revenue, leave it empty so the template
+        // hides itself instead of simulating a meaningless removal.
+        if (cats.length > 0) {
           const now = new Date()
           const from = new Date(now.getTime() - 90 * 86400000).toISOString().split('T')[0] + 'T00:00:00Z'
           const to   = now.toISOString().split('T')[0] + 'T00:00:00Z'
@@ -300,18 +291,15 @@ export default function Simulate() {
             .then(r => r.json())
             .then(json2 => {
               const data: { label: string; value: number }[] = Array.isArray(json2?.data?.data) ? json2.data.data : []
-              // Only consider categories we actually know about
-              const known = data.filter(d => cats.includes(d.label))
-              if (known.length > 0) {
-                const worst = known.reduce((a, b) => b.value < a.value ? b : a)
+              const revenueCats = data.filter(d => cats.includes(d.label) && d.value > 0)
+              if (revenueCats.length > 0) {
+                const worst = revenueCats.reduce((a, b) => b.value < a.value ? b : a)
                 setWorstCategory(worst.label)
-              } else if (cats.length > 0) {
-                setWorstCategory(cats[0])
+              } else {
+                setWorstCategory('')
               }
             })
-            .catch(() => { if (cats.length > 0) setWorstCategory(cats[0]) })
-        } else if (cats.length === 1) {
-          setWorstCategory(cats[0])
+            .catch(() => setWorstCategory(''))
         }
       })
       .catch(() => {})
@@ -416,7 +404,7 @@ export default function Simulate() {
   const applyTemplate = (tpl: 'remove_worst' | 'increase_prices' | 'cut_costs') => {
     let scenario: Scenario
     if (tpl === 'remove_worst') {
-      const cat = worstCategory || (categories.length > 0 ? categories[0] : '')
+      const cat = worstCategory
       if (!cat) return
       scenario = { id: Date.now().toString(), type: 'remove_category', category: cat }
     } else if (tpl === 'increase_prices') {
@@ -517,23 +505,6 @@ export default function Simulate() {
     void runSimulation(next)
   }
 
-  const tryParseScenario = (raw: unknown): Scenario | null => {
-    try {
-      let obj: unknown
-      if (typeof raw === 'string') {
-        const match = raw.match(/\{[\s\S]*\}/)
-        if (!match) return null
-        obj = JSON.parse(match[0])
-      } else {
-        obj = raw
-      }
-      const validated = ScenarioSchema.safeParse(obj)
-      return validated.success ? { ...validated.data, id: `ai-extract-${Date.now()}` } : null
-    } catch {
-      return null
-    }
-  }
-
   const handleAiAsk = async () => {
     if (!aiQuestion.trim()) return
     setAiLoading(true)
@@ -542,6 +513,7 @@ export default function Simulate() {
     setScenarios([])
     setScenarioLabel(aiQuestion)
     setAiSimFailed(false)
+    setAiScenarioError(null)
 
     try {
       // ── First pass: AI interpretation ─────────────────────────────
@@ -573,25 +545,34 @@ export default function Simulate() {
         return
       }
 
-      // ── Second pass: extract scenario from question ────────────────
-      const extractRes = await fetchWithAuth(`${API_URL}api/v1/ai/ask`, {
+      // ── Second pass: convert the question to a validated scenario ──
+      // The backend returns a ready, validated scenario object (no text to
+      // parse); run it straight through runSimulation so the graph draws.
+      const scenarioRes = await fetchWithAuth(`${API_URL}api/v1/ai/to-scenario`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          context: 'simulate',
-          question: `Konvertera till simuleringsscenario-JSON för: "${aiQuestion}". Svara ENBART med ett JSON-objekt: {"type":"remove_category|change_amount|add_revenue|change_revenue_percent|change_expenses_percent","category":"string","changePercent":number,"amount":number,"frequency":"daily|weekly|monthly"}. Inkludera bara relevanta fält.`,
-        }),
+        body: JSON.stringify({ context: 'simulate', question: aiQuestion }),
       })
-      const extractJson = await extractRes.json()
-      const extractData = (extractJson?.data ?? extractJson) as Record<string, unknown>
 
-      const extracted =
-        tryParseScenario((extractData?.answer as string | undefined) ?? '') ??
-        tryParseScenario(extractData?.scenario)
+      // 422: the question could not be turned into a scenario — surface the
+      // backend's message together with its suggestions.
+      if (scenarioRes.status === 422) {
+        const errJson = await scenarioRes.json().catch(() => null)
+        const errData = (errJson?.error ?? errJson) as { message?: string; suggestions?: unknown } | null
+        setAiScenarioError({
+          message: errData?.message ?? 'Vi kunde inte tolka din fråga som ett scenario.',
+          suggestions: Array.isArray(errData?.suggestions) ? errData.suggestions.map(String) : [],
+        })
+        return
+      }
 
-      if (extracted) {
-        setScenarios([extracted])
-        await runSimulation([extracted])
+      if (scenarioRes.ok) {
+        // Response shape: { success: true, data: { scenario: {...} } }
+        const scenarioJson = await scenarioRes.json()
+        const scenario = scenarioJson?.data?.scenario as Omit<Scenario, 'id'>
+        const withId: Scenario = { ...scenario, id: `ai-scenario-${Date.now()}` }
+        setScenarios([withId])
+        await runSimulation([withId])
         return
       }
 
@@ -680,6 +661,28 @@ export default function Simulate() {
             </div>
           )}
 
+          {aiScenarioError && !result && !aiLoading && (
+            <div className="mt-4 p-4 bg-negative-50 border border-negative-200 rounded-xl">
+              <p className="text-sm font-medium text-negative-800">{aiScenarioError.message}</p>
+              {aiScenarioError.suggestions.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs font-semibold text-negative-700 mb-2">Prova något av dessa:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {aiScenarioError.suggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setAiQuestion(s)}
+                        className="text-xs font-medium text-negative-800 bg-white border border-negative-200 rounded-lg px-3 py-1.5 hover:border-negative-400 transition-colors min-h-[36px]"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {aiSimFailed && !result && !aiLoading && (
             <div className="mt-4 p-4 bg-caution-50 border border-caution-200 rounded-xl">
               <p className="text-sm text-caution-800">
@@ -755,14 +758,20 @@ export default function Simulate() {
                 <p className="text-xs font-semibold text-ink-400 uppercase tracking-widest mb-3">Snabb-scenarion</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {([
-                    { key: 'remove_worst',    icon: '✕', label: 'Ta bort sämsta produkten', color: 'border-negative-200 hover:border-negative-400 hover:bg-negative-50' },
-                    { key: 'increase_prices', icon: '↑', label: 'Öka alla priser 10%',       color: 'border-positive-200 hover:border-positive-400 hover:bg-positive-50' },
-                    { key: 'cut_costs',       icon: '↓', label: 'Minska kostnader 15%',      color: 'border-caution-200 hover:border-caution-400 hover:bg-caution-50' },
-                  ] as const).map(t => (
+                    // Only shown when a revenue category was found to remove.
+                    ...(worstCategory
+                      ? [{ key: 'remove_worst' as const, icon: '✕', label: 'Ta bort minst lönsamma intäktskällan', sub: worstCategory, color: 'border-negative-200 hover:border-negative-400 hover:bg-negative-50' }]
+                      : []),
+                    { key: 'increase_prices' as const, icon: '↑', label: 'Öka alla priser 10%',  color: 'border-positive-200 hover:border-positive-400 hover:bg-positive-50' },
+                    { key: 'cut_costs' as const,       icon: '↓', label: 'Minska kostnader 15%', color: 'border-caution-200 hover:border-caution-400 hover:bg-caution-50' },
+                  ]).map(t => (
                     <button key={t.key} onClick={() => applyTemplate(t.key)}
                       className={`flex sm:flex-col items-center gap-2 sm:gap-1.5 px-4 sm:px-3 py-3 bg-white border rounded-xl sm:text-center transition-colors min-h-[44px] ${t.color}`}>
                       <span className="text-lg font-bold text-ink-600">{t.icon}</span>
                       <span className="text-xs font-medium text-ink-600 leading-tight">{t.label}</span>
+                      {'sub' in t && t.sub && (
+                        <span className="text-[11px] font-semibold text-negative-700 leading-tight truncate max-w-full" title={t.sub}>{t.sub}</span>
+                      )}
                     </button>
                   ))}
                 </div>

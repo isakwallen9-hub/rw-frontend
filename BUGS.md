@@ -202,6 +202,16 @@ En ny hög advisory tillkom: **GHSA-5p4m-2wfm-xmqj** (`js-yaml`, Quadratic CPU c
 
 **Gate-status (2026-08-11):** `node scripts/audit-check.mjs` → **PASSERAR** (js-yaml ursäktat; inga andra high/critical utanför undantag). `tsc -b` och `npm run build` gröna.
 
+### Uppdatering 2026-08-13: nanoid åtgärdad + js-yaml-undantaget borttaget
+
+En ny hög advisory tillkom: **GHSA-2v37-7h3g-55p8** (`nanoid`, oändlig loop i custom-generator när `size` är 0), transitivt via **postcss** (byggtidsberoende, ingår inte i produktionsbundlen).
+
+**Åtgärd (löstes utan undantag):** advisoryn gäller `nanoid < 3.3.18` och fixen är icke-brytande. Uppdaterade `postcss` → **8.5.26** (vars `^3.3.17`-range tillåter patchad nanoid) och körde `npm audit fix`, som lyfte `nanoid` **3.3.17 → 3.3.18**. Inget undantag behövdes.
+
+**Sidoeffekt:** samma `npm audit fix` lyfte även `js-yaml` **4.3.0 → 4.3.1** (fixen för GHSA-5p4m-2wfm-xmqj blev till slut backportad till 4.x). Advisoryn flaggas inte längre, så **js-yaml-undantaget togs bort** ur `audit-exceptions.json` (som nu är tomt). Antagandet ovan ("inte backportad till 4.x") gällde vid 2026-08-11 men är inte längre sant.
+
+**Verifiering:** `tsc -b` = 0, `npm run build` grönt, `node scripts/audit-check.mjs` → **PASSERAR utan några undantag**. Kvar i `npm audit`: endast 2 måttliga (uuid via exceljs), under high-tröskeln.
+
 ---
 
 ## 10. Tankstrecksstädning i UI-text 2026-08-05

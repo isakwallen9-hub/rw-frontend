@@ -168,6 +168,58 @@ const PRIORITY_CONFIG = {
   low:    { label: 'Låg',           badge: 'bg-positive-100 text-positive-700 border-positive-200', bar: 'bg-positive-400',  urgencyPct: 25,  symbol: '✓' },
 }
 
+type CashflowPeriod = '30d' | '90d' | '6m' | '1y' | 'all'
+
+const CASHFLOW_PERIODS: { value: CashflowPeriod; label: string }[] = [
+  { value: '30d', label: '30 dagar' },
+  { value: '90d', label: '90 dagar' },
+  { value: '6m',  label: '6 månader' },
+  { value: '1y',  label: '1 år' },
+  { value: 'all', label: 'Allt' },
+]
+
+// Default granularity per period; the user can still override afterwards.
+function granularityFor(period: CashflowPeriod): 'day' | 'week' | 'month' {
+  if (period === '30d') return 'day'
+  if (period === '90d') return 'week'
+  return 'month'
+}
+
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+// { from?, to } for the cashflow query. 'all' omits `from` so the backend falls
+// back to the oldest transaction date.
+function cashflowRange(period: CashflowPeriod): { from?: string; to: string } {
+  const now = new Date()
+  const to = isoDate(now)
+  if (period === 'all') return { to }
+  const from = new Date(now)
+  if (period === '30d')      from.setDate(from.getDate() - 30)
+  else if (period === '90d') from.setDate(from.getDate() - 90)
+  else if (period === '6m')  from.setMonth(from.getMonth() - 6)
+  else if (period === '1y')  from.setFullYear(from.getFullYear() - 1)
+  return { from: isoDate(from), to }
+}
+
+function cashflowUrl(period: CashflowPeriod): string {
+  const { from, to } = cashflowRange(period)
+  const qs = new URLSearchParams({ to })
+  if (from) qs.set('from', from)
+  return `${API_URL}api/v1/cashflow/current?${qs.toString()}`
+}
+
+function parseCashflowSeries(json: unknown): CashflowDay[] {
+  const series = (json as { data?: { series?: unknown } })?.data?.series
+  const raw: Record<string, unknown>[] = Array.isArray(series) ? series as Record<string, unknown>[] : []
+  return raw.map(r => ({
+    date:    String(r.date    ?? r.Date ?? r.day     ?? ''),
+    inflow:  Number(r.inflow  ?? r.in   ?? r.income  ?? 0),
+    outflow: Number(r.outflow ?? r.out  ?? r.expense ?? 0),
+  }))
+}
+
 export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => void }) {
   const navigate = useNavigate()
   const { formatAmount: fmt } = useCurrency()
@@ -179,6 +231,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
   const [loadingCashflow, setLoadingCashflow] = useState(true)
   const [cashflowError, setCashflowError] = useState('')
   const [cashflowView, setCashflowView] = useState<'day' | 'week' | 'month'>('week')
+  const [cashflowPeriod, setCashflowPeriod] = useState<CashflowPeriod>('90d')
   const [runwayDays, setRunwayDays] = useState<number | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [downloadingPdf, setDownloadingPdf] = useState(false)
@@ -216,17 +269,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       .finally(() => setLoadingOverview(false))
 
   const fetchCashflow = () =>
-    fetchWithAuth(`${API_URL}api/v1/cashflow/current`)
+    fetchWithAuth(cashflowUrl(cashflowPeriod))
       .then((r) => r.json())
-      .then((json) => {
-        const raw: Record<string, unknown>[] = Array.isArray(json.data?.series) ? json.data.series : []
-        const rows: CashflowDay[] = raw.map(r => ({
-          date:    String(r.date    ?? r.Date    ?? r.day  ?? ''),
-          inflow:  Number(r.inflow  ?? r.in      ?? r.income  ?? 0),
-          outflow: Number(r.outflow ?? r.out     ?? r.expense ?? 0),
-        }))
-        setCashflowDays(rows)
-      })
+      .then((json) => setCashflowDays(parseCashflowSeries(json)))
       .catch(() => setCashflowError('Kunde inte hämta kassaflödesdata.'))
       .finally(() => setLoadingCashflow(false))
 
@@ -276,18 +321,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       .catch(guard(() => setOverview(MOCK_OVERVIEW)))
       .finally(guard(() => setLoadingOverview(false)))
 
-    fetchWithAuth(`${API_URL}api/v1/cashflow/current`)
-      .then(r => r.json())
-      .then(guard((json) => {
-        const raw: Record<string, unknown>[] = Array.isArray(json.data?.series) ? json.data.series : []
-        setCashflowDays(raw.map(r => ({
-          date:    String(r.date    ?? r.Date    ?? r.day  ?? ''),
-          inflow:  Number(r.inflow  ?? r.in      ?? r.income  ?? 0),
-          outflow: Number(r.outflow ?? r.out     ?? r.expense ?? 0),
-        })))
-      }))
-      .catch(guard(() => setCashflowError('Kunde inte hämta kassaflödesdata.')))
-      .finally(guard(() => setLoadingCashflow(false)))
+    // Cashflow is loaded by its own period-keyed effect below.
 
     fetchWithAuth(`${API_URL}api/v1/cashflow/runway`)
       .then(r => r.json())
@@ -330,6 +364,21 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
     return () => { cancelled = true }
   }, [])
+
+  // Cashflow — (re)loads whenever the selected period changes.
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken')
+    if (!token || token === 'undefined' || token === 'null') return
+    let cancelled = false
+    setLoadingCashflow(true)
+    setCashflowError('')
+    fetchWithAuth(cashflowUrl(cashflowPeriod))
+      .then(r => r.json())
+      .then(json => { if (!cancelled) setCashflowDays(parseCashflowSeries(json)) })
+      .catch(() => { if (!cancelled) setCashflowError('Kunde inte hämta kassaflödesdata.') })
+      .finally(() => { if (!cancelled) setLoadingCashflow(false) })
+    return () => { cancelled = true }
+  }, [cashflowPeriod])
 
   const cashflowData: CashflowMonth[] = overview?.data?.cashflow ?? []
 
@@ -397,6 +446,20 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
     if (cashflowDays.length < 2) return ''
     const toLabel = (d: Date) => d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
     return `${toLabel(new Date(cashflowDays[0].date))} till ${toLabel(new Date(cashflowDays[cashflowDays.length - 1].date))}`
+  }, [cashflowDays])
+
+  // Month-level heading of the loaded span, e.g. "januari till augusti".
+  const periodHeading = useMemo(() => {
+    if (cashflowDays.length < 1) return ''
+    const first = new Date(cashflowDays[0].date)
+    const last  = new Date(cashflowDays[cashflowDays.length - 1].date)
+    if (isNaN(first.getTime()) || isNaN(last.getTime())) return ''
+    const sameYear = first.getFullYear() === last.getFullYear()
+    const mo  = (d: Date) => d.toLocaleDateString('sv-SE', { month: 'long' })
+    const moY = (d: Date) => d.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })
+    const fromStr = sameYear ? mo(first) : moY(first)
+    const toStr   = sameYear ? mo(last)  : moY(last)
+    return fromStr === toStr ? fromStr : `${fromStr} till ${toStr}`
   }, [cashflowDays])
 
   const aggregatedCashflow = useMemo(() => {
@@ -841,10 +904,23 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           <div data-tour="cashflow-chart" className="glass rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg text-ink-700 mb-0.5 tracking-tight">Kassaflöde</h2>
+                <h2 className="text-lg text-ink-700 mb-0.5 tracking-tight">Kassaflöde{periodHeading ? `: ${periodHeading}` : ''}</h2>
                 {periodLabel && <p className="text-xs text-ink-400">{periodLabel}</p>}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 justify-end">
+                {/* Period */}
+                <div className="flex items-center bg-ink-100 rounded-lg p-0.5 text-xs font-semibold">
+                  {CASHFLOW_PERIODS.map(p => (
+                    <button
+                      key={p.value}
+                      onClick={() => { setCashflowPeriod(p.value); setCashflowView(granularityFor(p.value)) }}
+                      className={`px-2.5 py-1.5 rounded-md transition-colors whitespace-nowrap ${cashflowPeriod === p.value ? 'bg-white text-ink-800 shadow-sm' : 'text-ink-500 hover:text-ink-700'}`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Granularity */}
                 <div className="flex items-center bg-ink-100 rounded-lg p-0.5 text-xs font-semibold">
                   {(['day', 'week', 'month'] as const).map(v => (
                     <button
