@@ -567,10 +567,15 @@ export default function Simulate() {
       }
 
       if (scenarioRes.ok) {
-        // Response shape: { success: true, data: { scenario: {...} } }
+        // Response shape: { success: true, data: { scenario: {...}, description: "..." } }
         const scenarioJson = await scenarioRes.json()
-        const scenario = scenarioJson?.data?.scenario as Omit<Scenario, 'id'>
+        const data = scenarioJson?.data ?? {}
+        const scenario = (data.scenario ?? {}) as Omit<Scenario, 'id'>
+        const description = data.description as string | undefined
         const withId: Scenario = { ...scenario, id: `ai-scenario-${Date.now()}` }
+        // Use the human-readable description in the result sentence; fall back
+        // to the question (already set) when it is missing.
+        if (typeof description === 'string' && description.trim()) setScenarioLabel(description.trim())
         setScenarios([withId])
         await runSimulation([withId])
         return
