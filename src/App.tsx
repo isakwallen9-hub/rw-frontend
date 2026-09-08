@@ -23,6 +23,8 @@ import Actions from './pages/Actions'
 import Budget from './pages/Budget'
 import Customers from './pages/Customers'
 import Insights from './pages/Insights'
+import LegalGate from './components/LegalGate'
+import { Terms, DataProcessingAgreement, PrivacyPolicy } from './pages/Legal'
 
 const SKIP_AI = ['/', '/login', '/register', '/onboarding']
 
@@ -47,7 +49,9 @@ function SidebarLayout() {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 lg:ml-60 min-w-0 animate-fade-rise">
-        <Outlet />
+        <LegalGate>
+          <Outlet />
+        </LegalGate>
       </main>
     </div>
   )
@@ -76,6 +80,11 @@ export default function App() {
                 <Route path="/login"      element={<Login />} />
                 <Route path="/register"   element={<Register />} />
                 <Route path="/onboarding" element={<Onboarding />} />
+
+                {/* ── Legal documents (public, placeholder content) ──── */}
+                <Route path="/villkor"                     element={<Terms />} />
+                <Route path="/personuppgiftsbitradesavtal" element={<DataProcessingAgreement />} />
+                <Route path="/integritetspolicy"           element={<PrivacyPolicy />} />
 
                 {/* ── Sidebar layout routes ──────────────────────────── */}
                 <Route element={<SidebarLayout />}>

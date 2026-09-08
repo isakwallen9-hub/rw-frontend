@@ -4,6 +4,8 @@ import { Sparkles, AlertTriangle, AlertCircle, Info, FileSpreadsheet, Files, Che
 import ExcelJS from 'exceljs'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useCurrency } from '../contexts/CurrencyContext'
+import { DuplicateWarning } from '../components/DuplicateWarning'
+import { parseImportConflict, type ImportConflict } from '../utils/importConflict'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -200,6 +202,11 @@ export default function Onboarding() {
   const [anomaliesLoading, setAnomaliesLoading] = useState(false)
   const anomalyAbortRef                         = useRef<AbortController | null>(null)
 
+  // Duplicate/overlap conflict on commit (409)
+  const [conflict, setConflict]         = useState<ImportConflict | null>(null)
+  const [conflictBusy, setConflictBusy] = useState(false)
+  const pendingCommitRef                = useRef<{ sId: string; onDone: () => void | Promise<void> } | null>(null)
+
   // Separate-path step machine
   const [step, setStep]                     = useState(0)
   const [completedSteps, setCompletedSteps] = useState<boolean[]>([false, false, false, false])
@@ -306,17 +313,38 @@ export default function Onboarding() {
     return sId
   }
 
-  const commitSession = async (sId: string) => {
+  // Commit the session. On 409 (duplicate/overlap) show the conflict dialog and
+  // remember how to continue; `onDone` runs the step's follow-up on success.
+  const commitOrConflict = async (sId: string, onDone: () => void | Promise<void>, confirmDuplicate = false): Promise<void> => {
     setProgressLabel('Sparar…')
-    const res = await fetchWithAuth(`${API_URL}api/v1/data-import/${sId}/commit`, { method: 'POST' })
+    const res = await fetchWithAuth(`${API_URL}api/v1/data-import/${sId}/commit`, {
+      method: 'POST',
+      ...(confirmDuplicate ? { body: JSON.stringify({ confirmDuplicate: true }) } : {}),
+    })
+    if (res.status === 409) {
+      pendingCommitRef.current = { sId, onDone }
+      setConflict(await parseImportConflict(res))
+      return
+    }
     if (!res.ok) throw new Error(await parseErrorMessage(res))
+    pendingCommitRef.current = null
+    await onDone()
   }
 
-  // Full flow used by the separate-files path.
-  const runImportFlow = async (file: File, columnMapping: Record<string, string>): Promise<string> => {
-    const sId = await runUploadValidate(file, columnMapping)
-    await commitSession(sId)
-    return sId
+  // "Importera ändå" — re-commit the pending session with confirmDuplicate: true.
+  const confirmConflictImport = () => {
+    const pending = pendingCommitRef.current
+    if (!pending) return
+    setConflict(null)
+    setConflictBusy(true)
+    commitOrConflict(pending.sId, pending.onDone, true)
+      .catch(err => setStepError(toSwedishError(err instanceof Error ? err.message : 'okänt fel')))
+      .finally(() => setConflictBusy(false))
+  }
+
+  const cancelConflictImport = () => {
+    pendingCommitRef.current = null
+    setConflict(null)
   }
 
   // Easy path: read the content summary + detected fixed costs.
@@ -464,10 +492,11 @@ export default function Onboarding() {
 
   const confirmEasy = () => run(async () => {
     if (!easySessionId) throw new Error('Din session är ogiltig. Logga in på nytt.')
-    await commitSession(easySessionId)
-    const selected = detectedCosts.filter((_, i) => costSelected[i])
-    if (selected.length > 0) await applyDetected(easySessionId, selected)
-    setEasyStage('payment')
+    await commitOrConflict(easySessionId, async () => {
+      const selected = detectedCosts.filter((_, i) => costSelected[i])
+      if (selected.length > 0) await applyDetected(easySessionId, selected)
+      setEasyStage('payment')
+    })
   })
 
   const finishEasy = (savePayment: boolean) => run(async () => {
@@ -481,18 +510,22 @@ export default function Onboarding() {
     if (!bankMappedDate || !bankMappedAmount) throw new Error('Välj vilka kolumner som är datum och belopp innan du fortsätter.')
     const mapping: Record<string, string> = { date: bankMappedDate, amount: bankMappedAmount }
     if (bankMappedCategory) mapping.category = bankMappedCategory
-    const sId = await runImportFlow(bankFile, mapping)
-    setBankSessionId(sId); setBankUploaded(true); markComplete(0)
-    advanceAfter(`Bankfilen importerad: ${bankTotalRows} rader uppladdade.`, 1)
+    const sId = await runUploadValidate(bankFile, mapping)
+    await commitOrConflict(sId, () => {
+      setBankSessionId(sId); setBankUploaded(true); markComplete(0)
+      advanceAfter(`Bankfilen importerad: ${bankTotalRows} rader uppladdade.`, 1)
+    })
   })
 
   const saveStep2 = () => run(async () => {
     if (!invoiceFile) throw new Error('Välj en fil innan du fortsätter.')
     if (!invoiceMappedDate || !invoiceMappedAmount) throw new Error('Välj vilka kolumner som är datum och belopp innan du fortsätter.')
     const mapping: Record<string, string> = { date: invoiceMappedDate, amount: invoiceMappedAmount }
-    await runImportFlow(invoiceFile, mapping)
-    setInvoiceUploaded(true); markComplete(1)
-    advanceAfter(`Fakturor importerade: ${invoiceTotalRows} rader uppladdade.`, 2)
+    const sId = await runUploadValidate(invoiceFile, mapping)
+    await commitOrConflict(sId, () => {
+      setInvoiceUploaded(true); markComplete(1)
+      advanceAfter(`Fakturor importerade: ${invoiceTotalRows} rader uppladdade.`, 2)
+    })
   })
 
   const saveStep3 = () => run(async () => {
@@ -641,6 +674,14 @@ export default function Onboarding() {
   // ── Main shell (easy + separate) ───────────────────────────────────────
   return (
     <div className="min-h-screen font-sans">
+      {conflict && (
+        <DuplicateWarning
+          conflict={conflict}
+          busy={conflictBusy}
+          onCancel={cancelConflictImport}
+          onConfirm={confirmConflictImport}
+        />
+      )}
       <div className="bg-white border-b border-ink-200 px-8 py-4 flex items-center justify-between">
         <span onClick={() => navigate('/dashboard')} className="font-semibold text-ink-900 cursor-pointer select-none tracking-tight">RW Systems</span>
         {path === 'separate'

@@ -5,6 +5,8 @@ import ExcelJS from 'exceljs'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { getImportHistoryKey } from '../utils/jwtUser'
 import { useCurrency } from '../contexts/CurrencyContext'
+import { DuplicateWarning } from '../components/DuplicateWarning'
+import { parseImportConflict, type ImportConflict } from '../utils/importConflict'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -236,6 +238,8 @@ export default function Import() {
   const [detectedCategory, setDetectedCategory] = useState<string | null>(null)
 
   const [sessionId, setSessionId]           = useState<string | null>(null)
+  const [conflict, setConflict]             = useState<ImportConflict | null>(null)
+  const [conflictBusy, setConflictBusy]     = useState(false)
   const [aiSummary, setAiSummary]           = useState<string | null>(null)
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
   const [anomalies, setAnomalies]           = useState<Anomaly[]>([])
@@ -358,6 +362,56 @@ export default function Import() {
     if (f) handleFileChange(f)
   }
 
+  const finishImport = () => {
+    pushHistory({ fileName: file?.name ?? 'okänd fil', importedAt: new Date().toISOString(), rowCount, status: 'success' })
+    setHistory(loadHistory())
+    setStep('done')
+  }
+
+  // Commit the session. Returns true if imported; false if commit returned 409
+  // and the conflict dialog was shown (the caller should pause).
+  const doCommit = async (sId: string, confirmDuplicate: boolean): Promise<boolean> => {
+    const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sId}/commit`, {
+      method: 'POST',
+      ...(confirmDuplicate ? { body: JSON.stringify({ confirmDuplicate: true }) } : {}),
+    })
+    if (commitRes.status === 409) {
+      setConflict(await parseImportConflict(commitRes))
+      return false
+    }
+    if (!commitRes.ok) {
+      const json = await commitRes.json().catch(() => ({}))
+      throw new Error(json?.error?.message ?? json?.message ?? `http ${commitRes.status}`)
+    }
+    return true
+  }
+
+  // "Importera ändå" — re-commit the same session with confirmDuplicate: true.
+  const confirmDuplicateImport = async () => {
+    if (!sessionId) return
+    setConflict(null)
+    setConflictBusy(true)
+    setStep('committing')
+    try {
+      const committed = await doCommit(sessionId, true)
+      if (committed) finishImport()
+      else setStep('idle')
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : 'okänt fel'
+      pushHistory({ fileName: file?.name ?? 'okänd fil', importedAt: new Date().toISOString(), rowCount, status: 'error' })
+      setHistory(loadHistory())
+      setStep('error')
+      setError(friendlyError(raw))
+    } finally {
+      setConflictBusy(false)
+    }
+  }
+
+  const cancelDuplicateImport = () => {
+    setConflict(null)
+    setStep('idle')
+  }
+
   const runImport = async () => {
     if (!file) return
     setError('')
@@ -395,15 +449,9 @@ export default function Import() {
       }
 
       setStep('committing')
-      const commitRes = await fetchWithAuth(`${API_URL}api/v1/data-import/${sId}/commit`, { method: 'POST' })
-      if (!commitRes.ok) {
-        const json = await commitRes.json().catch(() => ({}))
-        throw new Error(json?.error?.message ?? json?.message ?? `http ${commitRes.status}`)
-      }
-
-      pushHistory({ fileName: file.name, importedAt: new Date().toISOString(), rowCount, status: 'success' })
-      setHistory(loadHistory())
-      setStep('done')
+      const committed = await doCommit(sId, false)
+      if (!committed) { setStep('idle'); return }  // 409 conflict dialog shown; wait for the user
+      finishImport()
     } catch (err) {
       const raw = err instanceof Error ? err.message : 'okänt fel'
       pushHistory({ fileName: file?.name ?? 'okänd fil', importedAt: new Date().toISOString(), rowCount, status: 'error' })
@@ -427,6 +475,7 @@ export default function Import() {
     setDetectedAmount(null)
     setDetectedCategory(null)
     setSessionId(null)
+    setConflict(null)
     setAiSummary(null)
     setAiSummaryLoading(false)
     setAnomalies([])
@@ -441,6 +490,14 @@ export default function Import() {
 
   return (
     <div className="font-sans">
+      {conflict && (
+        <DuplicateWarning
+          conflict={conflict}
+          busy={conflictBusy}
+          onCancel={cancelDuplicateImport}
+          onConfirm={() => void confirmDuplicateImport()}
+        />
+      )}
       <div className="max-w-2xl mx-auto px-4 sm:px-8 py-10">
 
         {/* ── Success banner ─────────────────────────────────────────────── */}
