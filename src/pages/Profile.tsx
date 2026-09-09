@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { SkeletonCard } from '../components/Skeleton'
+import TwoFactorSection from '../components/TwoFactorSection'
 import { useCurrency } from '../contexts/CurrencyContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
@@ -436,6 +437,9 @@ export default function Profile() {
             </div>
           )}
         </div>
+
+        {/* Tvåfaktorsautentisering */}
+        <TwoFactorSection />
 
         {/* AI-minne */}
         <div>

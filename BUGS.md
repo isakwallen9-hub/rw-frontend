@@ -212,6 +212,14 @@ En ny hög advisory tillkom: **GHSA-2v37-7h3g-55p8** (`nanoid`, oändlig loop i 
 
 **Verifiering:** `tsc -b` = 0, `npm run build` grönt, `node scripts/audit-check.mjs` → **PASSERAR utan några undantag**. Kvar i `npm audit`: endast 2 måttliga (uuid via exceljs), under high-tröskeln.
 
+### Uppdatering 2026-09-09: browserslist åtgärdad
+
+Två nya höga advisories tillkom: **GHSA-c83g-rgw3-j3cx** (obegränsad minnesökning/OOM) och **GHSA-73wf-gq98-2v4g** (krasch/prototype-write via `browserslist-stats.json`) i **browserslist**, transitivt via `autoprefixer` och `@babel/*` — **byggtidsberoende, ingår inte i produktionsbundlen** (ej refererad i `src/`).
+
+**Åtgärd (löstes utan undantag):** advisoryn gäller `browserslist <= 4.28.6` och fixen är icke-brytande (`fixAvailable: true`). `npm audit fix` lyfte `browserslist` **4.28.1 → 4.28.9**. Endast `package-lock.json` ändrades (transitivt); inga direkta beroenden i `package.json` rördes. Inget undantag behövdes.
+
+**Verifiering:** `tsc -b` = 0, `npm run build` grönt, `node scripts/audit-check.mjs` → **PASSERAR** (exit 0). Kvar i `npm audit`: endast 2 måttliga (uuid via exceljs), under high-tröskeln.
+
 ---
 
 ## 10. Tankstrecksstädning i UI-text 2026-08-05
