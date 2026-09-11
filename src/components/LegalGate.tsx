@@ -8,7 +8,8 @@ const API_URL = import.meta.env.VITE_API_URL as string
 // what gets hashed — each document's full archived text is submitted instead.
 const CONSENT_TEXT =
   'Genom att fortsätta bekräftar du att du har rätt att företräda ditt företag och accepterar RW Systems ' +
-  'användarvillkor och personuppgiftsbiträdesavtal. Du bekräftar också att du har tagit del av integritetspolicyn.'
+  'användarvillkor och personuppgiftsbiträdesavtal. Du bekräftar också att du har tagit del av integritetspolicyn. ' +
+  'RWS ger automatiska analyser och beslutsstöd. Inte redovisnings-, skatte- eller investeringsrådgivning.'
 
 const CONSENT_LINKS: { phrase: string; href: string }[] = [
   { phrase: 'användarvillkor', href: '/villkor' },
