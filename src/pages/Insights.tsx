@@ -57,7 +57,8 @@ interface Insight {
   title: string
   description: string
   severity: Severity
-  impact?: number
+  // amount is null when the backend could not quantify it; period is a label.
+  impact?: { amount: number | null; period: string }
   suggestedAction?: string
   chartData?: DataPoint[] | ChartDataV2
 }
@@ -299,12 +300,15 @@ function InsightCard({ insight, formatAmount }: { insight: Insight; formatAmount
 
       <p className="text-sm text-ink-600 leading-relaxed mb-3">{insight.description}</p>
 
-      {insight.impact !== undefined && (
+      {insight.impact?.amount != null && (
         <p className="text-sm font-semibold text-ink-700 tabular-nums mb-3">
           Påverkan:{' '}
-          <span className={insight.impact >= 0 ? 'text-positive-600' : 'text-negative-600'}>
-            {insight.impact >= 0 ? '+' : ''}{formatAmount(insight.impact)}
+          <span className={insight.impact.amount >= 0 ? 'text-positive-600' : 'text-negative-600'}>
+            {insight.impact.amount >= 0 ? '+' : ''}{formatAmount(insight.impact.amount)}
           </span>
+          {insight.impact.period && (
+            <span className="text-ink-400 font-normal"> · {insight.impact.period}</span>
+          )}
         </p>
       )}
 

@@ -120,7 +120,9 @@ interface OverviewData {
 interface InsightItem {
   title: string
   severity: 'critical' | 'warning' | 'info'
-  impact?: number | null
+  // Backend shape: amount is null when it can't be quantified (see insights
+  // sanitizeImpact); period is always a human-readable label like "augusti".
+  impact?: { amount: number | null; period: string }
   category?: string
   description?: string
 }
@@ -1748,9 +1750,10 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
                   <span className={`w-2 h-2 rounded-full ${cfg.dot} shrink-0 mt-1.5`} />
                   <div className="min-w-0 flex-1">
                     <p className={`text-xs font-semibold leading-snug ${cfg.text}`}>{ins.title}</p>
-                    {ins.impact != null && (
+                    {ins.impact?.amount != null && (
                       <p className="text-xs text-ink-500 mt-0.5">
-                        Påverkan: <span className="font-semibold">{fmt(ins.impact)}</span>
+                        Påverkan: <span className="font-semibold">{fmt(ins.impact.amount)}</span>
+                        {ins.impact.period && <span className="text-ink-400"> · {ins.impact.period}</span>}
                       </p>
                     )}
                   </div>

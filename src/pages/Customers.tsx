@@ -21,8 +21,8 @@ interface InsightItem {
   type: string
   category?: string
   description?: string
-  impact?: number
-  impactAmount?: number
+  // amount is null when the backend could not quantify it; period is a label.
+  impact?: { amount: number | null; period: string }
 }
 
 interface ReminderForm {
@@ -195,9 +195,10 @@ export default function Customers() {
               <p className="text-sm font-semibold text-caution-800 leading-snug">
                 {customerRisk.description ?? 'AI har identifierat en kundrisk i din data.'}
               </p>
-              {(customerRisk.impact ?? customerRisk.impactAmount) != null && (
+              {customerRisk.impact?.amount != null && (
                 <p className="text-xs text-caution-600 mt-0.5">
-                  Potentiell påverkan: {fmt(customerRisk.impact ?? customerRisk.impactAmount ?? 0)}
+                  Potentiell påverkan: {fmt(customerRisk.impact.amount)}
+                  {customerRisk.impact.period && <span className="opacity-80"> · {customerRisk.impact.period}</span>}
                 </p>
               )}
             </div>
