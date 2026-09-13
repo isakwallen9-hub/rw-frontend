@@ -15,6 +15,45 @@ export const AXIS_TICK = { fill: '#72717C', fontSize: 14 } // ink-400
 export const xAxisProps = { axisLine: false, tickLine: false, tick: AXIS_TICK, dy: 8 } as const
 export const yAxisProps = { axisLine: false, tickLine: false, tick: AXIS_TICK, width: 64 } as const
 
+// Compute a "nice" Y-axis scale from a series' values: a [min, max] domain plus
+// an explicit list of tick values spaced by a round step. Leaves ~10% headroom
+// above the highest and below the lowest value, snaps the bounds to a round step
+// (1 / 2 / 2.5 / 5 × 10ⁿ), and returns evenly-spaced ticks so the gaps are always
+// round numbers (5000, 10000, 20000, …) rather than the uneven spacing Recharts
+// would otherwise pick on its own (e.g. 420k, 412k, 403k, 394k, 385k). Zero is
+// only pulled into the range when a value actually goes below zero — an all-
+// positive series keeps its floor near its own minimum, so a curve that only
+// moves between, say, 388k and 421k fills most of the chart height instead of
+// hugging the top edge.
+export function niceScale(values: number[], targetTicks = 5): { domain: [number, number]; ticks: number[] } {
+  const finite = values.filter((v) => Number.isFinite(v))
+  if (finite.length === 0) return { domain: [0, 1], ticks: [0, 1] }
+  const dataMin = Math.min(...finite)
+  const dataMax = Math.max(...finite)
+  const span = dataMax - dataMin || Math.abs(dataMax) || 1
+  const pad = span * 0.1
+  let lower = dataMin - pad
+  let upper = dataMax + pad
+  // Never show a negative axis for an all-positive series.
+  if (dataMin >= 0) lower = Math.max(0, lower)
+
+  // Pick a round step (1 / 2 / 2.5 / 5 × 10ⁿ) close to range / targetTicks.
+  const rawStep = (upper - lower) / Math.max(1, targetTicks)
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep || 1)))
+  const norm = rawStep / mag
+  const niceMult = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10
+  const step = niceMult * mag
+
+  // Snap the padded bounds outward to whole multiples of the step.
+  lower = Math.floor(lower / step) * step
+  upper = Math.ceil(upper / step) * step
+  if (dataMin >= 0) lower = Math.max(0, lower)
+
+  const count = Math.round((upper - lower) / step)
+  const ticks = Array.from({ length: count + 1 }, (_, i) => lower + i * step)
+  return { domain: [lower, upper], ticks }
+}
+
 // Line/area defaults.
 export const LINE_PROPS = { type: 'monotone' as const, strokeWidth: 2.5, dot: false }
 export const activeDot = (color: string) => ({ r: 5, fill: '#fff', strokeWidth: 2, stroke: color })

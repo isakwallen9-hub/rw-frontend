@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
 import { Sparkles } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
-import { ChartTooltip } from '../components/chart'
+import { ChartTooltip, niceScale } from '../components/chart'
 import {
   ResponsiveContainer,
   LineChart,
@@ -600,6 +600,26 @@ export default function Simulate() {
   const breakEvenPoint = result?.forecast.find(p => p.simulated < 0) ?? null
   const cleanedLabel = cleanScenarioLabel(scenarioLabel)
 
+  // Y-axis scale computed from the actual plotted values (both lines), so a curve
+  // that barely moves fills most of the height instead of sitting as a near-flat
+  // line at the top. Explicit ticks keep the gaps round (5000, 10000, …) rather
+  // than the uneven spacing Recharts picks on its own. Shared with the dashboard.
+  const { domain: yDomain, ticks: yTicks } = useMemo(
+    () => niceScale(displayData.flatMap(d => [d.baseline, d.simulated])),
+    [displayData]
+  )
+
+  // The "Saldo noll" line sits at the bottom-right when cash runs out late in the
+  // window — exactly where the final x-axis date label lives. Flip its label to
+  // the left in that case so the two never overlap; otherwise keep it on the right.
+  const breakEvenIdx = result && breakEvenPoint
+    ? result.forecast.findIndex(p => p.date === breakEvenPoint.date)
+    : -1
+  const zeroLabelPos =
+    breakEvenIdx >= 0 && result && breakEvenIdx >= result.forecast.length * 0.6
+      ? 'insideTopLeft'
+      : 'insideTopRight'
+
   return (
     <div className="font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
@@ -951,11 +971,11 @@ export default function Simulate() {
                   <LineChart data={displayData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="2 6" stroke="#1A192010" vertical={false} />
                     <XAxis dataKey="label" tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} width={55} />
+                    <YAxis domain={yDomain} ticks={yTicks} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 13, fill: '#72717C' }} axisLine={false} tickLine={false} width={55} />
                     <Tooltip content={<ChartTooltip format={fmt} />} cursor={{ fill: "rgba(26,25,32,0.04)" }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="#CE4646" strokeWidth={1} strokeDasharray="4 3"
-                      label={{ value: 'Saldo noll', position: 'insideTopRight', fontSize: 10, fill: '#CE4646' }} />
+                      label={{ value: 'Saldo noll', position: zeroLabelPos, fontSize: 10, fill: '#CE4646' }} />
                     <Line type="monotone" dataKey="baseline" name="Utan ändring" stroke="#8B8A93" strokeWidth={2.5} dot={false} strokeDasharray="5 3" />
                     <Line type="monotone" dataKey="simulated" name="Med scenario" stroke="#3A5CD8" strokeWidth={2.5} dot={false} />
                   </LineChart>
