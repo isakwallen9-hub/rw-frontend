@@ -738,44 +738,57 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {loadingOverview ? (
           <SkeletonKpiCards />
         ) : (() => {
+          // ── Unified KPI status model ──────────────────────────────────────
+          // Every card maps to exactly one of three states, and the state alone
+          // decides the colour (see STATUS_ACCENT / STATUS_TREND):
+          //   good      → green : value is positive / within the desired range
+          //   attention → red   : value needs immediate attention
+          //   neutral   → blue/grey : data is missing or not computable yet
+          // Yellow/orange are never used, so "neutral" can't read as a warning,
+          // and a metric that is merely in a middle band is not coloured red.
           const netCashflow = overview?.data?.summary?.netCashflow ?? 0
-          const liquidTrend: KpiTrend = netCashflow > 0 ? 'up' : netCashflow < 0 ? 'down' : 'neutral'
-          const overdueTrend: KpiTrend = kpi.overdueInvoices === 0 ? 'up' : 'down'
-          const ct = kpi.costTrend
-          const breakEvenTrend: KpiTrend = ct
-            ? (ct.direction === 'up' ? 'down' : ct.direction === 'down' ? 'up' : 'neutral')
-            : (kpi.liquidAssets > kpi.breakEven ? 'up' : kpi.liquidAssets < kpi.breakEven ? 'down' : 'neutral')
-          const fmtPct = (n: number) => n.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-          const breakEvenTrendLabel = ct
-            ? (ct.direction === 'up'
-                ? `↑ Kostnader ökar${ct.changePercent != null ? ` ${fmtPct(ct.changePercent)}%` : ''}`
-                : ct.direction === 'down'
-                ? `↓ Kostnader minskar${ct.changePercent != null ? ` ${fmtPct(Math.abs(ct.changePercent))}%` : ''}`
-                : '→ Kostnader stabila')
-            : (kpi.liquidAssets > kpi.breakEven ? 'Inflöde > utflöde' : kpi.liquidAssets < kpi.breakEven ? 'Utflöde > inflöde' : 'I balans')
-          const runwayNull = kpi.runwayDays === null
           const hasAnyData = transactions.length > 0 || cashflowDays.length > 0
+
+          // Likvida medel — health follows the sign of net cashflow.
+          const liquidStatus: KpiStatus = netCashflow > 0 ? 'good' : netCashflow < 0 ? 'attention' : 'neutral'
+          const liquidLabel = netCashflow > 0 ? 'Positivt netto' : netCashflow < 0 ? 'Negativt netto' : 'Nollresultat'
+
+          // Förfallna fakturor — zero overdue is good, anything overdue is red.
+          const overdueStatus: KpiStatus = kpi.overdueInvoices === 0 ? 'good' : 'attention'
+          const overdueLabel = kpi.overdueInvoices === 0 ? 'Allt i ordning' : 'Kräver åtgärd'
+
+          // Break-even — above break-even (inflow covers outflow) is good, below
+          // it needs attention, and an exact balance is a neutral middle state
+          // rather than a warning. No data at all stays neutral too.
+          const beHasData = hasAnyData && (kpi.liquidAssets !== 0 || kpi.breakEven !== 0)
+          const beDiff = kpi.liquidAssets - kpi.breakEven
+          const breakEvenStatus: KpiStatus = !beHasData ? 'neutral' : beDiff > 0 ? 'good' : beDiff < 0 ? 'attention' : 'neutral'
+          const breakEvenLabel = !beHasData ? 'Ingen data' : beDiff > 0 ? 'Inflöde täcker utflöde' : beDiff < 0 ? 'Utflöde överstiger inflöde' : 'I balans'
+
+          // Runway — 30+ days is within range (good), under 30 days needs
+          // attention, null means not computable yet (neutral).
+          const runwayNull = kpi.runwayDays === null
           const rd = kpi.runwayDays ?? 0
           const runwayValue = runwayNull
-            ? (hasAnyData ? 'Beräknas...' : 'Importera data')
-            : rd === 0 ? '0 dagar'
-            : `${rd} dagar`
-          const runwaySubtitleVal = runwayNull ? '' : rd === 0 ? 'Saldot är negativt' : 'Beräknat kassaflöde'
-          const runwayTrend: KpiTrend = runwayNull ? 'neutral' : rd === 0 ? 'down' : rd > 90 ? 'up' : rd > 30 ? 'neutral' : 'down'
-          const runwayAccent: KpiAccent = runwayNull ? 'blue' : rd === 0 ? 'red' : rd > 90 ? 'green' : rd > 30 ? 'yellow' : 'red'
-          const runwayTrendLabel = runwayNull
             ? (hasAnyData ? 'Beräknas' : 'Importera data')
-            : rd === 0 ? 'Kritiskt läge'
+            : `${rd} dagar`
+          const runwayStatus: KpiStatus = runwayNull ? 'neutral' : rd < 30 ? 'attention' : 'good'
+          const runwaySubtitleVal = runwayNull ? '' : rd === 0 ? 'Saldot är negativt' : 'Beräknat kassaflöde'
+          const runwayLabel = runwayNull
+            ? (hasAnyData ? 'Beräknas' : 'Importera data')
+            : rd < 30 ? 'Kritiskt lågt'
             : rd > 90 ? 'Stark likviditet'
-            : rd > 30 ? 'Bevaka noggrant'
-            : 'Kritiskt lågt'
+            : 'God likviditet'
+
+          // Bruttomarginal — any non-negative margin is good, negative needs
+          // attention, null or an implausible value is neutral (not computable).
           const gm = kpi.grossMargin
           const gmOutOfRange = gm !== null && (gm < -200 || gm > 200)
-          const gmTrend: KpiTrend = (gm === null || gmOutOfRange) ? 'neutral' : gm > 30 ? 'up' : gm >= 10 ? 'neutral' : 'down'
-          const gmAccent: KpiAccent = (gm === null || gmOutOfRange) ? 'blue' : gm < 0 ? 'red' : gm > 30 ? 'green' : gm >= 10 ? 'yellow' : 'red'
+          const gmUncomputable = gm === null || gmOutOfRange
+          const gmStatus: KpiStatus = gmUncomputable ? 'neutral' : gm < 0 ? 'attention' : 'good'
           const gmValue = gm === null ? 'Ingen data' : gmOutOfRange ? 'Kontrollera data' : `${gm.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
-          const gmSubtitle = (gm === null || gmOutOfRange) ? '' : gm < 0 ? 'Kostnader överstiger intäkter' : 'Av totalt inflöde'
-          const gmTrendLabel = gm === null ? 'Ingen data' : gmOutOfRange ? 'Kontrollera data' : gm < 0 ? 'Kostnader överstiger intäkter' : gm > 30 ? 'Bra marginal' : gm >= 10 ? 'Acceptabel marginal' : 'Låg marginal'
+          const gmSubtitle = gmUncomputable ? '' : gm < 0 ? 'Kostnader > intäkter' : 'Av totalt inflöde'
+          const gmLabel = gm === null ? 'Ingen data' : gmOutOfRange ? 'Kontrollera data' : gm < 0 ? 'Negativ marginal' : gm > 30 ? 'Stark marginal' : 'Positiv marginal'
           return (
             <>
             <div className="flex items-center gap-3 -mb-2">
@@ -789,9 +802,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 label="Likvida medel"
                 value={fmt(kpi.liquidAssets)}
                 subtitle="Totalt inflöde"
-                trend={liquidTrend}
-                trendLabel={netCashflow >= 0 ? 'Positivt netto' : 'Negativt netto'}
-                accent="blue"
+                trend={STATUS_TREND[liquidStatus]}
+                trendLabel={liquidLabel}
+                accent={STATUS_ACCENT[liquidStatus]}
                 onClick={() => navigate('/cashflow')}
                 onExplain={() => explainThis('cashflow', { type: 'liquidAssets', value: kpi.liquidAssets })}
               />
@@ -800,9 +813,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 label="Förfallna fakturor"
                 value={`${kpi.overdueInvoices} st`}
                 subtitle="Kräver uppföljning"
-                trend={overdueTrend}
-                trendLabel={kpi.overdueInvoices === 0 ? 'Allt i ordning' : 'Kräver åtgärd'}
-                accent={kpi.overdueInvoices === 0 ? 'green' : 'red'}
+                trend={STATUS_TREND[overdueStatus]}
+                trendLabel={overdueLabel}
+                accent={STATUS_ACCENT[overdueStatus]}
                 onClick={() => navigate('/invoices')}
                 onExplain={() => explainThis('diagnosis', { type: 'overdueInvoices', value: kpi.overdueInvoices })}
                 reminder={missingPaymentTerms ? { text: 'Förfallna fakturor blir mer träffsäkra när du angett dina betalningsvillkor', href: '/import' } : undefined}
@@ -812,9 +825,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 label="Break-even"
                 value={fmt(kpi.breakEven)}
                 subtitle="Totalt utflöde"
-                trend={breakEvenTrend}
-                trendLabel={breakEvenTrendLabel}
-                accent="purple"
+                trend={STATUS_TREND[breakEvenStatus]}
+                trendLabel={breakEvenLabel}
+                accent={STATUS_ACCENT[breakEvenStatus]}
                 onClick={() => navigate('/breakeven')}
                 onExplain={() => explainThis('diagnosis', { type: 'breakEven', value: kpi.breakEven })}
               />
@@ -823,9 +836,9 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 label="Runway"
                 value={runwayValue}
                 subtitle={runwaySubtitleVal}
-                trend={runwayTrend}
-                trendLabel={runwayTrendLabel}
-                accent={runwayAccent}
+                trend={STATUS_TREND[runwayStatus]}
+                trendLabel={runwayLabel}
+                accent={STATUS_ACCENT[runwayStatus]}
                 isPlaceholder={runwayNull}
                 onClick={() => navigate('/runway')}
                 onExplain={() => explainThis('diagnosis', { type: 'runway', value: rd })}
@@ -836,10 +849,10 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 label="Bruttomarginal"
                 value={gmValue}
                 subtitle={gmSubtitle}
-                trend={gmTrend}
-                trendLabel={gmTrendLabel}
-                accent={gmAccent}
-                isPlaceholder={gm === null || gmOutOfRange}
+                trend={STATUS_TREND[gmStatus]}
+                trendLabel={gmLabel}
+                accent={STATUS_ACCENT[gmStatus]}
+                isPlaceholder={gmUncomputable}
                 onExplain={() => explainThis('diagnosis', { type: 'grossMargin', value: gm })}
               />
             </div>
@@ -1372,22 +1385,30 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
   )
 }
 
-type KpiAccent = 'blue' | 'green' | 'red' | 'orange' | 'purple' | 'yellow'
+// The KPI colour system is deliberately limited to three accents, one per
+// status. There is no orange/yellow accent so a neutral card can never be
+// mistaken for a warning.
+type KpiAccent = 'blue' | 'green' | 'red'
 type KpiTrend = 'up' | 'down' | 'neutral'
+type KpiStatus = 'good' | 'attention' | 'neutral'
+
+// Single source of truth mapping a status to its accent (border + icon) and its
+// footer chip. good → green, attention → red, neutral → blue/grey.
+const STATUS_ACCENT: Record<KpiStatus, KpiAccent> = { good: 'green', attention: 'red', neutral: 'blue' }
+const STATUS_TREND:  Record<KpiStatus, KpiTrend>  = { good: 'up',    attention: 'down', neutral: 'neutral' }
 
 const ACCENT_STYLES: Record<KpiAccent, { shadow: string; shadowHover: string; iconBg: string; iconText: string; accentBorder: string }> = {
   blue:   { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(58,92,216,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(58,92,216,0.16)]',   iconBg: 'bg-brand-50   border border-brand-100',   iconText: 'text-brand-600',   accentBorder: 'border-l-brand-500'   },
   green:  { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(14,156,107,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(14,156,107,0.16)]',   iconBg: 'bg-positive-50  border border-positive-100',  iconText: 'text-positive-600',  accentBorder: 'border-l-positive-500'  },
   red:    { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(206,70,70,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(206,70,70,0.16)]',   iconBg: 'bg-negative-50    border border-negative-100',    iconText: 'text-negative-600',    accentBorder: 'border-l-negative-500'    },
-  orange: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(201,130,31,0.12)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(201,130,31,0.16)]',  iconBg: 'bg-caution-50 border border-caution-100', iconText: 'text-caution-600', accentBorder: 'border-l-caution-500' },
-  purple: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(124,91,217,0.12)]',  shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(124,91,217,0.16)]',  iconBg: 'bg-purple-50 border border-purple-100', iconText: 'text-purple-600', accentBorder: 'border-l-purple-500' },
-  yellow: { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(201,130,31,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(201,130,31,0.16)]',   iconBg: 'bg-caution-50 border border-caution-100', iconText: 'text-caution-600', accentBorder: 'border-l-caution-500' },
 }
 
 const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }> = {
   up:      { arrow: '↑', text: 'text-positive-600', bg: 'bg-positive-50' },
   down:    { arrow: '↓', text: 'text-negative-600',   bg: 'bg-negative-50' },
-  neutral: { arrow: '→', text: 'text-caution-600', bg: 'bg-caution-50' },
+  // Neutral is a calm grey — never yellow/caution — so "Ingen data" / "I balans"
+  // reads as informational, not as a warning.
+  neutral: { arrow: '→', text: 'text-ink-500', bg: 'bg-ink-100' },
 }
 
 function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'blue', isPlaceholder = false, onExplain, onClick, reminder }: {
@@ -1430,23 +1451,24 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
       {/* Label */}
       <p className="text-xs font-semibold text-ink-400 uppercase tracking-wider mb-1.5">{label}</p>
 
-      {/* Value — flex-1 so it fills space, overflow-hidden so it never breaks layout */}
-      <div className="flex-1 min-h-0 overflow-hidden mb-2">
+      {/* Value — grows to fill space; text wraps rather than clipping mid-word. */}
+      <div className="flex-1 min-h-0 mb-2 flex items-start">
         {isPlaceholder ? (
           <p className="text-sm text-ink-500 font-medium leading-snug break-words">{value}</p>
         ) : (
-          <p className="text-3xl font-extrabold text-ink-900 tracking-tight tabular-nums leading-none">{value}</p>
+          <p className="text-3xl font-extrabold text-ink-900 tracking-tight tabular-nums leading-none break-words">{value}</p>
         )}
       </div>
 
-      {/* Footer row — pinned to bottom */}
-      <div className="flex items-center justify-between gap-2 mt-auto">
-        {subtitle && <p className="text-xs text-ink-400 truncate">{subtitle}</p>}
+      {/* Footer — chip and subtitle stacked so neither is clipped mid-word. */}
+      <div className="mt-auto flex flex-col items-start gap-1.5">
         {t && trendLabel && (
-          <span className={`ml-auto shrink-0 text-[10.5px] font-semibold px-2 py-0.5 rounded-md tracking-wide ${t.text} ${t.bg}`}>
-            {t.arrow} {trendLabel}
+          <span className={`inline-flex items-start gap-1 max-w-full text-[10.5px] font-semibold px-2 py-0.5 rounded-md tracking-wide ${t.text} ${t.bg}`}>
+            <span aria-hidden="true" className="leading-tight">{t.arrow}</span>
+            <span className="break-words leading-tight">{trendLabel}</span>
           </span>
         )}
+        {subtitle && <p className="text-xs text-ink-400 leading-snug break-words">{subtitle}</p>}
       </div>
 
       {/* Contextual reminder — discrete line tied to this metric */}
