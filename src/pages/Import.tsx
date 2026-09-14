@@ -221,6 +221,13 @@ export default function Import() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { formatAmount: fmt } = useCurrency()
 
+  // Hard, synchronous re-entrancy guard for the upload/validate/commit sequence.
+  // The button's state-derived `disabled` only updates on the next render, so a
+  // fast second click — or the main button re-enabling while the duplicate
+  // dialog is open — could otherwise launch a parallel commit. This ref blocks
+  // that immediately, before any await, regardless of the root cause.
+  const commitInFlight = useRef(false)
+
   const [file, setFile] = useState<File | null>(null)
   const [rowCount, setRowCount] = useState<number | null>(null)
   const [previewHeaders, setPreviewHeaders] = useState<string[]>([])
@@ -388,7 +395,8 @@ export default function Import() {
 
   // "Importera ändå" — re-commit the same session with confirmDuplicate: true.
   const confirmDuplicateImport = async () => {
-    if (!sessionId) return
+    if (!sessionId || commitInFlight.current) return
+    commitInFlight.current = true
     setConflict(null)
     setConflictBusy(true)
     setStep('committing')
@@ -404,6 +412,7 @@ export default function Import() {
       setError(friendlyError(raw))
     } finally {
       setConflictBusy(false)
+      commitInFlight.current = false
     }
   }
 
@@ -413,7 +422,8 @@ export default function Import() {
   }
 
   const runImport = async () => {
-    if (!file) return
+    if (!file || commitInFlight.current) return
+    commitInFlight.current = true
     setError('')
 
     try {
@@ -458,6 +468,8 @@ export default function Import() {
       setHistory(loadHistory())
       setStep('error')
       setError(friendlyError(raw))
+    } finally {
+      commitInFlight.current = false
     }
   }
 
@@ -795,7 +807,7 @@ export default function Import() {
             {/* Import button */}
             <button
               onClick={runImport}
-              disabled={!file || isRunning || !mappedDate || !mappedAmount}
+              disabled={!file || isRunning || !mappedDate || !mappedAmount || conflict !== null || conflictBusy}
               className="w-full py-3.5 bg-brand-600 text-white text-base font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
               {isRunning ? msg.heading : 'Importera'}
