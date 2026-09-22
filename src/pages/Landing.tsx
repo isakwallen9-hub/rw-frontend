@@ -454,7 +454,7 @@ export default function Landing() {
                 <TrendingUp className="w-5 h-5 text-brand-600" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-ink-900 tracking-tight">Scenariosimulering</h3>
-              <p className="mt-2 text-sm text-ink-500 leading-relaxed">Testa beslut innan du fattar dem. Se utfallet direkt.</p>
+              <p className="mt-2 text-sm text-ink-500 leading-relaxed">Testa beslut innan du fattar dem. Se utfallet vanligtvis inom några sekunder.</p>
             </div>
           </FadeIn>
 
@@ -505,7 +505,7 @@ export default function Landing() {
                 Redo att se klart?
               </h2>
               <p className="mt-5 text-lg text-ink-500 leading-relaxed">
-                Skapa ett konto på sekunder, koppla din data och få den första AI-analysen samma dag.
+                Skapa ett konto snabbt, koppla din data och få den första AI-analysen samma dag.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-3">
                 {loggedIn ? (
