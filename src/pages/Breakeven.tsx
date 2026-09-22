@@ -63,9 +63,9 @@ export default function Breakeven() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-ink-100 p-6">
           {loading ? (
-            <div className="h-[300px] skeleton rounded-xl" />
+            <div className="h-[300px] skeleton rounded-2xl" />
           ) : error ? (
-            <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">
+            <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-2xl px-5 py-4 text-sm">
               {error}
             </div>
           ) : !summary ? (
@@ -92,7 +92,7 @@ export default function Breakeven() {
               <div className="mt-6 pt-5 border-t border-ink-100 flex items-center justify-between">
                 <span className="text-sm text-ink-500 font-medium">Nettokassaflöde</span>
                 <span
-                  className={`text-lg font-bold ${
+                  className={`text-sm font-bold ${
                     isPositive ? 'text-positive-600' : 'text-negative-600'
                   }`}
                 >
@@ -103,7 +103,7 @@ export default function Breakeven() {
           )}
         </div>
 
-        <div className="mt-8 bg-ink-50 border border-dashed border-ink-200 rounded-2xl p-8 text-center text-ink-400 text-sm">
+        <div className="mt-8 bg-ink-50 border border-dashed border-ink-200 rounded-2xl p-8 text-center text-ink-500 text-sm">
           Egna grafer: kommer snart
         </div>
       </div>

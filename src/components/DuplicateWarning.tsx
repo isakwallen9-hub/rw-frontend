@@ -33,25 +33,25 @@ export function DuplicateWarning({ conflict, busy = false, onCancel, onConfirm }
       onClick={busy ? undefined : onCancel}
     >
       <div
-        className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(26,25,32,0.18)] w-full max-w-md p-6 animate-in"
+        className="bg-white rounded-2xl shadow-lg w-full max-w-md p-6 animate-in"
         onClick={e => e.stopPropagation()}
         role="alertdialog"
         aria-modal="true"
       >
         <div className="flex items-start gap-3 mb-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${overlap ? 'bg-brand-50 text-brand-600' : 'bg-caution-50 text-caution-600'}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${overlap ? 'bg-brand-50 text-brand-600' : 'bg-caution-50 text-caution-700'}`}>
             <Icon className="w-5 h-5" aria-hidden="true" />
           </div>
-          <h2 className="text-lg font-semibold text-ink-900 mt-1.5">{title}</h2>
+          <h2 className="text-sm font-semibold text-ink-900 mt-1.5">{title}</h2>
         </div>
 
-        <p className="text-sm text-ink-600 leading-relaxed mb-6">{message}</p>
+        <p className="text-sm text-ink-700 leading-relaxed mb-6">{message}</p>
 
         <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
           <button
             onClick={onConfirm}
             disabled={busy}
-            className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl text-sm font-semibold border transition-[transform,background-color,border-color] duration-150 active:scale-[0.98] disabled:opacity-50 ${
+            className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-2xl text-sm font-semibold border transition-[transform,background-color,border-color] duration-150 active:scale-[0.98] disabled:opacity-50 ${
               overlap
                 ? 'border-ink-200 text-ink-700 hover:bg-ink-50'
                 : 'border-caution-300 text-caution-700 hover:bg-caution-50'
@@ -63,7 +63,7 @@ export function DuplicateWarning({ conflict, busy = false, onCancel, onConfirm }
           <button
             onClick={onCancel}
             disabled={busy}
-            className="inline-flex items-center justify-center min-h-[44px] px-5 rounded-xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150 disabled:opacity-50"
+            className="inline-flex items-center justify-center min-h-[44px] px-5 rounded-2xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150 disabled:opacity-50"
           >
             Avbryt
           </button>

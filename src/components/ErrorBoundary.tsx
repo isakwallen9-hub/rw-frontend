@@ -43,20 +43,20 @@ export default class ErrorBoundary extends Component<Props, State> {
             Ett oväntat fel uppstod. Försök igen. Om problemet kvarstår, kontakta support.
           </p>
           {import.meta.env.DEV && this.state.error && (
-            <pre className="text-left text-xs bg-ink-50 border border-ink-100 rounded-xl p-4 mb-5 overflow-auto text-negative-600 max-h-32">
+            <pre className="text-left text-xs bg-ink-50 border border-ink-100 rounded-2xl p-4 mb-5 overflow-auto text-negative-600 max-h-32">
               {this.state.error.message}
             </pre>
           )}
           <div className="flex gap-3">
             <button
               onClick={this.reset}
-              className="flex-1 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl shadow-md shadow-brand-500/20 hover:opacity-90 active:scale-[0.98] transition-[transform,opacity,box-shadow] duration-150"
+              className="flex-1 px-4 py-3 bg-primary text-white text-sm font-semibold rounded-2xl shadow-md hover:opacity-90 active:scale-[0.98] transition-[transform,opacity,box-shadow] duration-150"
             >
               Försök igen
             </button>
             <button
               onClick={() => { window.location.href = '/dashboard' }}
-              className="flex-1 px-4 py-2.5 bg-ink-100 text-ink-700 text-sm font-semibold rounded-xl hover:bg-ink-200 transition-colors"
+              className="flex-1 px-4 py-3 bg-ink-100 text-ink-700 text-sm font-semibold rounded-2xl hover:bg-ink-200 transition-colors"
             >
               Till startsidan
             </button>

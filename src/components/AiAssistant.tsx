@@ -202,7 +202,7 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
   if (msg.role === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-sm text-sm leading-relaxed bg-gradient-to-br from-brand-700 to-brand-700 text-white">
+        <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-br-sm text-sm leading-relaxed bg-gradient-to-br from-brand-700 to-brand-700 text-white">
           {msg.text}
         </div>
       </div>
@@ -212,7 +212,7 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
   if (msg.role === 'error') {
     return (
       <div className="flex justify-start">
-        <div className="max-w-[88%] px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-negative-50 border border-negative-100 text-negative-700">
+        <div className="max-w-[88%] px-4 py-3 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-negative-50 border border-negative-100 text-negative-700">
           {String(msg.text)}
         </div>
       </div>
@@ -223,7 +223,7 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
     <div className="flex justify-start">
       <div className="max-w-[92%] flex flex-col gap-2">
         {msg.text && (
-          <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-white/70 border border-white/60 text-ink-800 shadow-sm whitespace-pre-line">
+          <div className="px-4 py-3 rounded-2xl rounded-bl-sm text-sm leading-relaxed bg-white/70 border border-white/60 text-ink-900 shadow-sm whitespace-pre-line">
             {msg.text}
           </div>
         )}
@@ -237,7 +237,7 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
         )}
         {msg.forecast && msg.forecast.length > 0 && (
           <div className="rounded-2xl bg-white/70 border border-white/60 shadow-sm p-3">
-            <p className="text-xs font-semibold text-ink-600 mb-2">Prognos</p>
+            <p className="text-xs font-semibold text-ink-700 mb-2">Prognos</p>
             <ChartBlock
               chart={{ chartType: 'line', datasets: [{ label: 'Prognos', data: msg.forecast }] }}
               height={130}
@@ -245,20 +245,20 @@ function Bubble({ msg, onNavigate }: { msg: AiMessage; onNavigate: (to: string) 
           </div>
         )}
         {msg.actions && msg.actions.length > 0 && (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             {msg.actions.map((a, i) => (
               <button
                 key={i}
                 onClick={() => onNavigate('/actions')}
-                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/70 border border-white/60 shadow-sm hover:bg-brand-50/70 hover:border-brand-200 transition-colors text-left group w-full"
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 border border-white/60 shadow-sm hover:bg-brand-50/70 hover:border-brand-200 transition-colors text-left group w-full"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                    <p className="text-xs font-semibold text-ink-800 group-hover:text-brand-700 transition-colors leading-snug">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <p className="text-xs font-semibold text-ink-900 group-hover:text-brand-700 transition-colors leading-snug">
                       {a.title}
                     </p>
                     {a.priority && (
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${PRIO_BADGE[a.priority] ?? PRIO_BADGE.medium}`}>
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full shrink-0 ${PRIO_BADGE[a.priority] ?? PRIO_BADGE.medium}`}>
                         {PRIO_LABEL[a.priority] ?? a.priority}
                       </span>
                     )}
@@ -419,7 +419,7 @@ export default function AiAssistant() {
         onClick={() => setOpen(o => !o)}
         aria-label="Öppna AI-assistent"
         aria-expanded={open}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-brand-900/30 transition-[transform,box-shadow,background-color,border-color,color] duration-200 hover:scale-105 active:scale-95 bg-gradient-to-br from-brand-600 to-brand-700"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-[transform,box-shadow,background-color,border-color,color] duration-200 hover:scale-105 active:scale-95 bg-gradient-to-br from-brand-600 to-brand-700"
       >
         {/* Pulse ring */}
         <span
@@ -435,14 +435,14 @@ export default function AiAssistant() {
         <div
           role="dialog"
           aria-label="AI-assistent"
-          className="fixed bottom-[88px] right-6 z-50 w-[calc(100vw-48px)] sm:w-[400px] max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl shadow-brand-900/20 border border-white/50 bg-white/60 backdrop-blur-3xl"
+          className="fixed bottom-[88px] right-6 z-50 w-[calc(100vw-48px)] sm:w-[400px] max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-lg border border-white/50 bg-white/60 backdrop-blur-3xl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4.5 bg-gradient-to-r from-brand-700 to-brand-700 shrink-0">
-            <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-brand-700 to-brand-700 shrink-0">
+            <div className="flex items-center gap-3">
               <Sparkles className="w-4 h-4 text-white/80" aria-hidden="true" />
               <span className="text-white font-semibold text-sm tracking-tight">AI-assistent</span>
-              <span className="text-xs font-medium text-brand-200 bg-brand-950/30 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-brand-200 bg-brand-950/30 px-2 py-1 rounded-full">
                 {CTX_LABEL[ctx]}
               </span>
               {memoryEnabled && (
@@ -456,14 +456,14 @@ export default function AiAssistant() {
                 onClick={clearHistory}
                 aria-label="Rensa konversation"
                 title="Rensa"
-                className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-2 rounded-2xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Stäng AI-assistent"
-                className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-2 rounded-2xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -474,7 +474,7 @@ export default function AiAssistant() {
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0">
             {/* One-time memory-off notice */}
             {history.length === 0 && !loading && memoryEnabled === false && noticeVisible && (
-              <div className="bg-brand-50/80 border border-brand-100 rounded-xl px-4 py-3 mb-1">
+              <div className="bg-brand-50/80 border border-brand-100 rounded-2xl px-4 py-3 mb-1">
                 <p className="text-xs text-brand-700 leading-relaxed mb-2">
                   Vill du att jag ska komma ihåg våra samtal?{' '}
                   <button
@@ -489,7 +489,7 @@ export default function AiAssistant() {
                     localStorage.setItem(MEMORY_NOTICE_KEY, '1')
                     setNoticeVisible(false)
                   }}
-                  className="text-[10px] text-brand-400 hover:text-brand-600 transition-colors"
+                  className="text-xs text-brand-400 hover:text-brand-600 transition-colors"
                 >
                   Visa inte igen
                 </button>
@@ -497,15 +497,15 @@ export default function AiAssistant() {
             )}
 
             {history.length === 0 && !loading && (
-              <div className="flex flex-col gap-1.5 mt-1">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-400 px-1 mb-1">
+              <div className="flex flex-col gap-2 mt-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-ink-400 px-1 mb-1">
                   Snabbfrågor
                 </p>
                 {QUICK_QS[ctx].map(q => (
                   <button
                     key={q}
                     onClick={() => send(q)}
-                    className="text-xs text-left border border-white/60 bg-white/50 rounded-xl px-3 py-2.5 hover:bg-white/80 hover:border-brand-200 hover:text-brand-700 transition-[transform,box-shadow,background-color,border-color,color,opacity] text-ink-700 font-medium min-h-[44px]"
+                    className="text-xs text-left border border-white/60 bg-white/50 rounded-2xl px-3 py-3 hover:bg-white/80 hover:border-brand-200 hover:text-brand-700 transition-[transform,box-shadow,background-color,border-color,color,opacity] text-ink-700 font-medium min-h-[44px]"
                   >
                     {q} →
                   </button>
@@ -541,13 +541,13 @@ export default function AiAssistant() {
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }}
               placeholder="Fråga vad som helst om din ekonomi..."
               disabled={loading}
-              className="flex-1 text-sm bg-white/60 border border-white/60 rounded-xl px-3.5 py-2.5 outline-none focus:border-brand-400 focus:bg-white/80 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 placeholder-ink-400 min-h-[44px]"
+              className="flex-1 text-sm bg-white/60 border border-white/60 rounded-2xl px-4 py-3 outline-none focus:border-brand-400 focus:bg-white/80 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 placeholder-ink-400 min-h-[44px]"
             />
             <button
               onClick={() => void send()}
               disabled={loading || !input.trim()}
               aria-label="Skicka"
-              className="px-4 bg-gradient-to-br from-brand-600 to-brand-700 text-white rounded-xl hover:opacity-90 disabled:opacity-40 active:scale-95 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+              className="px-4 bg-gradient-to-br from-brand-600 to-brand-700 text-white rounded-2xl hover:opacity-90 disabled:opacity-40 active:scale-95 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>

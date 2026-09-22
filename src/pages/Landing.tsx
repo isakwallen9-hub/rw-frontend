@@ -170,7 +170,7 @@ export default function Landing() {
   const cashflow = useCountUp(124500)
 
   return (
-    <div className="relative min-h-screen font-sans overflow-x-hidden">
+    <div className="relative min-h-screen font-sans overflow-x-hidden serif-headings">
 
       {/* ── Nav ──────────────────────────────────────────────────────── */}
       <nav className="sticky top-0 z-30 bg-white/55 backdrop-blur-xl border-b border-white/50">
@@ -183,7 +183,7 @@ export default function Landing() {
             {loggedIn ? (
               <Link
                 to="/dashboard"
-                className="group inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-lg shadow-md shadow-brand-900/15 hover:shadow-lg hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px]"
+                className="group inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px]"
               >
                 Gå till dashboard
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -192,13 +192,13 @@ export default function Landing() {
               <>
                 <Link
                   to="/login"
-                  className="text-sm font-semibold text-ink-600 hover:text-ink-900 transition-colors px-3 py-2 rounded-lg hover:bg-white/60 min-h-[44px] flex items-center"
+                  className="text-sm font-semibold text-ink-700 hover:text-ink-900 transition-colors px-3 py-2 rounded-xl hover:bg-white/60 min-h-[44px] flex items-center"
                 >
                   Logga in
                 </Link>
                 <Link
                   to="/register"
-                  className="text-sm font-semibold text-white bg-primary px-4 py-2 rounded-lg shadow-md shadow-brand-900/15 hover:shadow-lg hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px] flex items-center"
+                  className="text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px] flex items-center"
                 >
                   Kom igång gratis
                 </Link>
@@ -243,7 +243,7 @@ export default function Landing() {
                 {loggedIn ? (
                   <Link
                     to="/dashboard"
-                    className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
+                    className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-7 py-4 rounded-xl shadow-lg hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                   >
                     Gå till dashboard
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -252,7 +252,7 @@ export default function Landing() {
                   <>
                     <Link
                       to="/register"
-                      className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
+                      className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-7 py-4 rounded-xl shadow-lg hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                     >
                       Kom igång gratis
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -286,12 +286,12 @@ export default function Landing() {
               <div className="relative">
                 {/* brand glow */}
                 <div
-                  className="absolute -inset-6 sm:-inset-8 bg-gradient-to-tr from-brand-400/25 via-brand-300/15 to-transparent blur-3xl rounded-[2.5rem] pointer-events-none"
+                  className="absolute -inset-6 sm:-inset-8 bg-gradient-to-tr from-brand-400/25 via-brand-300/15 to-transparent blur-3xl rounded-xl pointer-events-none"
                   aria-hidden="true"
                 />
 
                 {/* primary panel */}
-                <div className="relative glass-kpi rounded-3xl p-5 sm:p-7 shadow-xl">
+                <div className="relative glass-kpi rounded-xl p-5 sm:p-7 shadow-lg">
                   <div className="flex items-center justify-between mb-5">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-400">Kassaflöde · Juli</p>
@@ -319,19 +319,19 @@ export default function Landing() {
                   </div>
 
                   {/* AI insight row — the product's voice */}
-                  <div className="mt-4 flex items-start gap-3 rounded-2xl bg-gradient-to-r from-brand-50/90 to-brand-50/60 border border-brand-100/70 px-4 py-3">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="mt-4 flex items-start gap-3 rounded-xl bg-gradient-to-r from-brand-50/90 to-brand-50/60 border border-brand-100/70 px-4 py-3">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0 shadow-sm">
                       <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden="true" />
                     </div>
-                    <p className="text-[13px] text-ink-600 leading-snug">
-                      <span className="font-semibold text-ink-800">Din AI-coach:</span>{' '}
+                    <p className="text-[13px] text-ink-700 leading-snug">
+                      <span className="font-semibold text-ink-900">Din AI-coach:</span>{' '}
                       Intäkterna ökade 18% mot juni. Starkast från återkommande kunder.
                     </p>
                   </div>
                 </div>
 
                 {/* offset secondary card — layered depth (lg only) */}
-                <div className="hidden lg:block absolute -bottom-9 -left-10 w-48 glass rounded-2xl p-4 shadow-lg">
+                <div className="hidden lg:block absolute -bottom-9 -left-10 w-48 glass rounded-xl p-4 shadow-lg">
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-400">Runway</p>
                   <p className="mt-1.5 text-2xl font-extrabold text-ink-900 tabular-nums tracking-tight">8,4 <span className="text-base font-bold text-ink-400">mån</span></p>
                   <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-brand-600">
@@ -348,7 +348,7 @@ export default function Landing() {
       {/* ── Metrics band — editorial, hairline-divided ───────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-8 pb-4">
         <FadeIn>
-          <div className="glass rounded-2xl overflow-hidden">
+          <div className="glass rounded-xl overflow-hidden">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-ink-200/45">
               {[
                 { big: '90', unit: 'dagar', label: 'Kassaflödesprognos' },
@@ -384,11 +384,11 @@ export default function Landing() {
 
           {/* Focal cell — AI coach (spans 2) */}
           <FadeIn className="lg:col-span-2">
-            <div className="group relative h-full glass rounded-3xl p-7 sm:p-8 overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
+            <div className="group relative h-full glass rounded-xl p-7 sm:p-8 overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
               <div className="absolute -top-10 -right-10 w-48 h-48 bg-gradient-to-br from-brand-400/15 to-brand-400/10 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
               <div className="relative flex flex-col sm:flex-row sm:items-start gap-6">
                 <div className="flex-1 min-w-0">
-                  <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 shadow-md shadow-brand-500/25 mb-5">
+                  <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 shadow-md mb-5">
                     <Brain className="w-5 h-5 text-white" aria-hidden="true" />
                   </div>
                   <h3 className="text-2xl font-bold text-ink-900 tracking-tight">Din AI-ekonomicoach</h3>
@@ -406,7 +406,7 @@ export default function Landing() {
                     <div key={m.t} className="flex items-start gap-2.5 rounded-xl bg-white/60 border border-white/70 px-3.5 py-3 shadow-sm">
                       <Sparkles className="w-3.5 h-3.5 text-brand-500 mt-0.5 shrink-0" aria-hidden="true" />
                       <div className="min-w-0">
-                        <p className="text-[13px] font-semibold text-ink-800 leading-tight">{m.t}</p>
+                        <p className="text-[13px] font-semibold text-ink-900 leading-tight">{m.t}</p>
                         <p className="text-[11px] text-ink-400 mt-0.5">{m.s}</p>
                       </div>
                     </div>
@@ -418,8 +418,8 @@ export default function Landing() {
 
           {/* Kassaflöde — with sparkline */}
           <FadeIn delay={80}>
-            <div className="group h-full glass rounded-3xl p-7 flex flex-col hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
-              <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 mb-5">
+            <div className="group h-full glass rounded-xl p-7 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
+              <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-brand-50 border border-brand-100 mb-5">
                 <BarChart2 className="w-5 h-5 text-brand-600" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-ink-900 tracking-tight">Kassaflödesanalys</h3>
@@ -430,15 +430,15 @@ export default function Landing() {
 
           {/* Budget — with bar */}
           <FadeIn delay={120}>
-            <div className="group h-full glass rounded-3xl p-7 flex flex-col hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
-              <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-caution-50 border border-caution-100 mb-5">
-                <Target className="w-5 h-5 text-caution-600" aria-hidden="true" />
+            <div className="group h-full glass rounded-xl p-7 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
+              <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-caution-50 border border-caution-100 mb-5">
+                <Target className="w-5 h-5 text-caution-700" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-ink-900 tracking-tight">Budgetuppföljning</h3>
               <p className="mt-2 text-sm text-ink-500 leading-relaxed">Sätt mål per kategori, följ utfall mot plan i realtid.</p>
               <div className="mt-auto pt-5">
                 <div className="flex items-center justify-between text-[11px] font-semibold text-ink-400 mb-1.5">
-                  <span>Utfall</span><span className="tabular-nums text-ink-600">92%</span>
+                  <span>Utfall</span><span className="tabular-nums text-ink-700">92%</span>
                 </div>
                 <div className="h-2 rounded-full bg-ink-100 overflow-hidden">
                   <div className="h-full rounded-full bg-positive-500" style={{ width: '92%' }} />
@@ -449,8 +449,8 @@ export default function Landing() {
 
           {/* Simulering */}
           <FadeIn delay={80}>
-            <div className="group h-full glass rounded-3xl p-7 hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
-              <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 mb-5">
+            <div className="group h-full glass rounded-xl p-7 hover:-translate-y-1 hover:shadow-lg transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
+              <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-brand-50 border border-brand-100 mb-5">
                 <TrendingUp className="w-5 h-5 text-brand-600" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-ink-900 tracking-tight">Scenariosimulering</h3>
@@ -460,9 +460,9 @@ export default function Landing() {
 
           {/* Kundanalys */}
           <FadeIn delay={120}>
-            <div className="group h-full glass rounded-3xl p-7 hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
-              <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-cyan-50 border border-cyan-100 mb-5">
-                <Users className="w-5 h-5 text-cyan-600" aria-hidden="true" />
+            <div className="group h-full glass rounded-xl p-7 hover:-translate-y-1 hover:shadow-lg transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
+              <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-brand-50 border border-brand-100 mb-5">
+                <Users className="w-5 h-5 text-brand-600" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-ink-900 tracking-tight">Kundanalys</h3>
               <p className="mt-2 text-sm text-ink-500 leading-relaxed">Se vilka kunder som driver lönsamheten, och vilka som kostar.</p>
@@ -471,9 +471,9 @@ export default function Landing() {
 
           {/* Export — wide slim */}
           <FadeIn delay={160} className="lg:col-span-3">
-            <div className="group glass rounded-3xl p-7 flex flex-col sm:flex-row sm:items-center gap-5 hover:-translate-y-1 hover:shadow-xl transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
-              <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-ink-100 border border-ink-200/70 shrink-0">
-                <FileText className="w-5 h-5 text-ink-600" aria-hidden="true" />
+            <div className="group glass rounded-xl p-7 flex flex-col sm:flex-row sm:items-center gap-5 hover:-translate-y-1 hover:shadow-lg transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500">
+              <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-ink-100 border border-ink-200/70 shrink-0">
+                <FileText className="w-5 h-5 text-ink-700" aria-hidden="true" />
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-ink-900 tracking-tight">Export & rapporter</h3>
@@ -493,7 +493,7 @@ export default function Landing() {
       {/* ── Closing — editorial, not another gradient box ────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-8 pb-24">
         <FadeIn>
-          <div className="relative glass rounded-[2rem] overflow-hidden px-6 py-14 sm:px-16 sm:py-20">
+          <div className="relative glass rounded-xl overflow-hidden px-6 py-14 sm:px-16 sm:py-20">
             {/* faint instrument echo */}
             <Sparkline
               series={HERO_SERIES}
@@ -511,7 +511,7 @@ export default function Landing() {
                 {loggedIn ? (
                   <Link
                     to="/dashboard"
-                    className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
+                    className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                   >
                     Gå till dashboard
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -520,7 +520,7 @@ export default function Landing() {
                   <>
                     <Link
                       to="/register"
-                      className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg shadow-brand-900/15 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
+                      className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[52px]"
                     >
                       Skapa gratis konto
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -542,7 +542,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-9 flex flex-col sm:flex-row items-center justify-between gap-5">
           <div className="flex items-center gap-2.5">
             <RWLogo className="h-7 w-auto" />
-            <span className="font-bold text-ink-800 tracking-tight text-sm">RW Systems</span>
+            <span className="font-bold text-ink-900 tracking-tight text-sm">RW Systems</span>
           </div>
           <a
             href="mailto:rhodinwallensystems@gmail.com"

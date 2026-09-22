@@ -5,6 +5,8 @@ import {
 } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import { useCountUp } from '../components/CountUp'
+import { EmptyState } from '../components/EmptyState'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const LS_DIAGNOSIS_KEY = 'rw_diagnosis_history'
@@ -56,9 +58,9 @@ interface AiDiagnosisCache {
 
 function scoreConfig(score: number) {
   if (score >= 80) return { grade: 'A', stroke: '#0A7D55', textColor: 'text-positive-600', label: 'Utmärkt',  bg: 'bg-positive-50'  }
-  if (score >= 65) return { grade: 'B', stroke: '#0E9C6B', textColor: 'text-lime-600',  label: 'Bra',       bg: 'bg-lime-50'   }
-  if (score >= 50) return { grade: 'C', stroke: '#A66916', textColor: 'text-caution-600',label: 'Godkänt',  bg: 'bg-caution-50' }
-  if (score >= 35) return { grade: 'D', stroke: '#C9821F', textColor: 'text-caution-600',label: 'Svagt',    bg: 'bg-caution-50' }
+  if (score >= 65) return { grade: 'B', stroke: '#0E9C6B', textColor: 'text-positive-600',  label: 'Bra',       bg: 'bg-positive-50'   }
+  if (score >= 50) return { grade: 'C', stroke: '#A66916', textColor: 'text-caution-700',label: 'Godkänt',  bg: 'bg-caution-50' }
+  if (score >= 35) return { grade: 'D', stroke: '#C9821F', textColor: 'text-caution-700',label: 'Svagt',    bg: 'bg-caution-50' }
   return               { grade: 'F', stroke: '#AE3838', textColor: 'text-negative-600',    label: 'Kritiskt', bg: 'bg-negative-50'    }
 }
 
@@ -350,11 +352,11 @@ export default function Diagnosis() {
           {/* Card header */}
           <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-base font-semibold text-ink-800">Låt AI:n undersöka ditt företags hälsa</p>
+                <p className="text-base font-semibold text-ink-900">Låt AI:n undersöka ditt företags hälsa</p>
                 {lastRunTime && (
                   <p className="text-xs text-ink-400 mt-0.5">Senast körd: {formatRunTime(lastRunTime)}</p>
                 )}
@@ -363,7 +365,7 @@ export default function Diagnosis() {
             {(aiDiagnosis !== null) && !aiLoading && (
               <button
                 onClick={() => void runAiDiagnosis()}
-                className="flex items-center gap-1.5 text-sm text-ink-500 hover:text-brand-600 border border-ink-200 hover:border-brand-300 rounded-xl px-3 py-2 transition-colors shrink-0 min-h-[44px]"
+                className="flex items-center gap-2 text-sm text-ink-500 hover:text-brand-600 border border-ink-200 hover:border-brand-300 rounded-2xl px-3 py-2 transition-colors shrink-0 min-h-[44px]"
               >
                 <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
                 Kör igen
@@ -378,10 +380,10 @@ export default function Diagnosis() {
                 <Activity className="w-8 h-8 text-white animate-pulse" aria-hidden="true" />
               </div>
               <div className="text-center">
-                <p className="text-base font-semibold text-ink-800">AI:n undersöker ditt företag...</p>
+                <p className="text-base font-semibold text-ink-900">AI:n undersöker ditt företag...</p>
                 <p className="text-sm text-ink-500 mt-1">Analyserar kassaflöde, marginaler och risker</p>
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 {[0, 1, 2, 3].map(i => (
                   <div
                     key={i}
@@ -401,7 +403,7 @@ export default function Diagnosis() {
               </p>
               <button
                 onClick={() => void runAiDiagnosis()}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors min-h-[44px]"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-semibold rounded-2xl hover:bg-brand-700 transition-colors min-h-[44px]"
               >
                 <Sparkles className="w-4 h-4" aria-hidden="true" />
                 Kör AI-diagnos →
@@ -414,7 +416,7 @@ export default function Diagnosis() {
             <div className="flex flex-col gap-5">
 
               {/* Assessment */}
-              <p className="text-lg font-medium text-ink-800 leading-relaxed">
+              <p className="text-base font-medium text-ink-900 leading-relaxed">
                 {aiDiagnosis.assessment}
               </p>
 
@@ -422,12 +424,12 @@ export default function Diagnosis() {
               {(aiDiagnosis.strengths.length > 0 || aiDiagnosis.problems.length > 0) && (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {aiDiagnosis.strengths.length > 0 && (
-                    <div className="bg-positive-50/70 border border-positive-200/70 rounded-xl p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-positive-700 mb-3 flex items-center gap-1.5">
+                    <div className="bg-positive-50/70 border border-positive-200/70 rounded-2xl p-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-positive-700 mb-3 flex items-center gap-2">
                         <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
                         Styrkor
                       </p>
-                      <div className="flex flex-col gap-2.5">
+                      <div className="flex flex-col gap-3">
                         {aiDiagnosis.strengths.map((s, i) => (
                           <div key={i} className="flex items-start gap-2">
                             <CheckCircle className="w-4 h-4 text-positive-500 shrink-0 mt-0.5" aria-hidden="true" />
@@ -438,12 +440,12 @@ export default function Diagnosis() {
                     </div>
                   )}
                   {aiDiagnosis.problems.length > 0 && (
-                    <div className="bg-negative-50/70 border border-negative-200/70 rounded-xl p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-negative-700 mb-3 flex items-center gap-1.5">
+                    <div className="bg-negative-50/70 border border-negative-200/70 rounded-2xl p-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-negative-700 mb-3 flex items-center gap-2">
                         <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
                         Problem
                       </p>
-                      <div className="flex flex-col gap-2.5">
+                      <div className="flex flex-col gap-3">
                         {aiDiagnosis.problems.map((p, i) => (
                           <div key={i} className="flex items-start gap-2">
                             <XCircle
@@ -461,8 +463,8 @@ export default function Diagnosis() {
 
               {/* Weekly action */}
               {aiDiagnosis.action && (
-                <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 flex gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-brand-100 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="bg-brand-50 border border-brand-200 rounded-2xl p-4 flex gap-3">
+                  <div className="w-8 h-8 rounded-2xl bg-brand-100 flex items-center justify-center shrink-0 mt-0.5">
                     <Lightbulb className="w-4 h-4 text-brand-600" aria-hidden="true" />
                   </div>
                   <div>
@@ -484,7 +486,7 @@ export default function Diagnosis() {
                     <button
                       key={q}
                       onClick={() => openAiWith(q)}
-                      className="bg-white border border-ink-200 rounded-xl px-3.5 py-2 flex items-center gap-2 text-sm font-medium text-ink-600 hover:bg-white/80 hover:border-brand-300 hover:text-brand-700 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px]"
+                      className="bg-white border border-ink-200 rounded-2xl px-4 py-2 flex items-center gap-2 text-sm font-medium text-ink-700 hover:bg-white/80 hover:border-brand-300 hover:text-brand-700 transition-[transform,box-shadow,background-color,border-color,color,opacity] min-h-[44px]"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-brand-400 shrink-0" aria-hidden="true" />
                       {q}
@@ -499,7 +501,7 @@ export default function Diagnosis() {
         {/* ── Technical section toggle ───────────────────────────────────── */}
         <button
           onClick={handleOpenTech}
-          className="flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-700 transition-colors self-start"
+          className="flex items-center gap-2 text-sm text-ink-500 hover:text-ink-700 transition-colors self-start"
         >
           <span className={`transition-transform inline-block ${techOpen ? 'rotate-90' : ''}`}>›</span>
           {techOpen ? 'Dölj teknisk diagnos' : 'Eller se den tekniska diagnosen →'}
@@ -515,7 +517,7 @@ export default function Diagnosis() {
               <button
                 onClick={() => fetchData(true)}
                 disabled={refreshing || loading}
-                className="flex items-center gap-2 text-sm font-medium text-accent border border-accent/30 px-4 py-2.5 rounded-xl hover:bg-brand-50 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 text-sm font-medium text-accent border border-accent/30 px-4 py-3 rounded-2xl hover:bg-brand-50 transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 Uppdatera
@@ -529,7 +531,11 @@ export default function Diagnosis() {
                 <div className="h-40 skeleton rounded-2xl" />
               </div>
             ) : !diagnosis || !cfg ? (
-              <div className="text-center text-ink-400 text-sm py-16">Ingen diagnosdata tillgänglig.</div>
+              <EmptyState
+                icon={<Activity />}
+                title="Ingen diagnosdata ännu"
+                hint="Kör en diagnos så visas din hälsopoäng och de komponenter som påverkar den här."
+              />
             ) : (
               <>
                 {/* Score + Component breakdown */}
@@ -551,7 +557,7 @@ export default function Diagnosis() {
 
                     {/* Component bars */}
                     <div className="flex flex-col gap-5">
-                      <h2 className="text-lg text-ink-700">Komponent-breakdown</h2>
+                      <h2 className="text-base text-ink-700">Komponent-breakdown</h2>
                       {components.map(c => {
                         const meta = COMPONENT_META[c.name] ?? { label: c.label ?? c.name, icon: <Activity className="w-4 h-4" /> }
                         const label = c.label ?? meta.label
@@ -587,7 +593,7 @@ export default function Diagnosis() {
 
                 {/* Root causes */}
                 <div>
-                  <h2 className="text-2xl text-ink-800 mb-4">Rotorsaker</h2>
+                  <h2 className="text-2xl text-ink-900 mb-4">Rotorsaker</h2>
                   {loadingRC ? (
                     <div className="grid sm:grid-cols-2 gap-4">
                       {[...Array(3)].map((_, i) => (
@@ -595,8 +601,12 @@ export default function Diagnosis() {
                       ))}
                     </div>
                   ) : rootCauses.length === 0 ? (
-                    <div className="glass rounded-2xl p-8 text-center text-ink-400 text-sm">
-                      Inga rotorsaker identifierade. Din ekonomi ser bra ut!
+                    <div className="glass rounded-2xl">
+                      <EmptyState
+                        icon={<CheckCircle />}
+                        title="Inga rotorsaker hittades"
+                        hint="Din ekonomi ser bra ut just nu — vi hittade inga tydliga problem att åtgärda."
+                      />
                     </div>
                   ) : (
                     <div className="grid sm:grid-cols-2 gap-4">
@@ -611,7 +621,7 @@ export default function Diagnosis() {
                 {historyChartData.length >= 2 && (
                   <div className="glass rounded-2xl shadow-sm p-6">
                     <div className="flex items-center justify-between mb-5">
-                      <h2 className="text-2xl text-ink-800">Hälsoscorehistorik</h2>
+                      <h2 className="text-2xl text-ink-900">Hälsoscorehistorik</h2>
                       <span className="text-xs text-ink-400">{historyChartData.length} mätpunkter</span>
                     </div>
                     <ResponsiveContainer width="100%" height={160}>
@@ -627,7 +637,7 @@ export default function Diagnosis() {
                         <Tooltip
                           content={({ active, payload, label }) =>
                             active && payload?.length ? (
-                              <div className="glass rounded-xl shadow px-3 py-2 text-xs">
+                              <div className="glass rounded-2xl shadow-sm px-3 py-2 text-xs">
                                 <p className="text-ink-500 mb-0.5">{label}</p>
                                 <p className="font-bold text-ink-900">Score: {payload[0].value}</p>
                               </div>
@@ -649,7 +659,7 @@ export default function Diagnosis() {
 
                 {historyChartData.length === 1 && (
                   <div className="glass rounded-2xl shadow-sm px-6 py-5">
-                    <h2 className="text-2xl text-ink-800 mb-1">Hälsoscorehistorik</h2>
+                    <h2 className="text-2xl text-ink-900 mb-1">Hälsoscorehistorik</h2>
                     <p className="text-xs text-ink-400">
                       Historiken byggs upp automatiskt varje dag du besöker sidan. Kom tillbaka imorgon för att se din trend.
                     </p>
@@ -669,6 +679,7 @@ export default function Diagnosis() {
 
 function CircularScore({ score }: { score: number }) {
   const cfg = scoreConfig(score)
+  const shownScore = useCountUp(score, 700)
   const r = 75
   const circ = 2 * Math.PI * r
   const offset = circ * (1 - Math.max(0, Math.min(100, score)) / 100)
@@ -688,12 +699,12 @@ function CircularScore({ score }: { score: number }) {
         style={{ transition: 'stroke-dashoffset 1.2s ease' }}
       />
       <text x="90" y="82" textAnchor="middle" fontSize="38" fontWeight="700" fill="#1A1920" fontFamily="system-ui,sans-serif">
-        {score}
+        {Math.round(shownScore)}
       </text>
       <text x="90" y="112" textAnchor="middle" fontSize="20" fontWeight="700" fill={cfg.stroke} fontFamily="system-ui,sans-serif">
         {cfg.grade}
       </text>
-      <text x="90" y="130" textAnchor="middle" fontSize="11" fill="#8B8A93" fontFamily="system-ui,sans-serif">
+      <text x="90" y="130" textAnchor="middle" fontSize="11" fill="#72717C" fontFamily="system-ui,sans-serif">
         av 100
       </text>
     </svg>
@@ -711,18 +722,18 @@ function RootCauseCard({ rc }: { rc: RootCause }) {
           <Icon className={`w-4 h-4 ${sev.text}`} />
         </div>
         <div>
-          <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${sev.text}`}>
+          <p className={`text-xs font-bold uppercase tracking-widest mb-0.5 ${sev.text}`}>
             {sev.label} prioritet
           </p>
           <h3 className={`font-semibold text-sm leading-snug ${sev.text}`}>{rc.title}</h3>
         </div>
       </div>
       {rc.description && (
-        <p className="text-xs text-ink-600 leading-relaxed">{rc.description}</p>
+        <p className="text-xs text-ink-700 leading-relaxed">{rc.description}</p>
       )}
       {rc.action && (
-        <div className="bg-white/70 rounded-xl px-3 py-2.5 border border-white/80">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400 mb-0.5">Rekommenderad åtgärd</p>
+        <div className="bg-white/70 rounded-2xl px-3 py-3 border border-white/80">
+          <p className="text-xs font-bold uppercase tracking-wide text-ink-400 mb-0.5">Rekommenderad åtgärd</p>
           <p className="text-xs text-ink-700 font-medium leading-snug">{rc.action}</p>
         </div>
       )}

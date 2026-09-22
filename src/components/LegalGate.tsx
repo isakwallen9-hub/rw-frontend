@@ -93,17 +93,17 @@ export default function LegalGate({ children }: { children: ReactNode }) {
       {children}
       {needsAcceptance && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-ink-900/25 backdrop-blur-md">
-          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(26,25,32,0.18)] w-full max-w-lg p-7 animate-in" role="alertdialog" aria-modal="true">
+          <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg p-6 animate-in" role="alertdialog" aria-modal="true">
             <h2 className="text-2xl text-ink-900 mb-4">Innan du fortsätter</h2>
 
-            <p className="text-sm text-ink-600 leading-relaxed">{renderConsent()}</p>
+            <p className="text-sm text-ink-700 leading-relaxed">{renderConsent()}</p>
 
             <label className="flex items-start gap-3 mt-5 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={checked}
                 onChange={e => setChecked(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-ink-300 text-brand-600 focus:ring-brand-500/40 shrink-0"
+                className="mt-0.5 w-4 h-4 rounded-md border-ink-300 text-brand-600 focus:ring-brand-500/40 shrink-0"
               />
               <span className="text-sm text-ink-700">Jag har läst och accepterar villkoren ovan.</span>
             </label>
@@ -114,7 +114,7 @@ export default function LegalGate({ children }: { children: ReactNode }) {
               <button
                 onClick={() => void accept()}
                 disabled={!checked || submitting || !docs}
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-2xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {submitting && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {submitting ? 'Sparar…' : 'Acceptera och fortsätt'}

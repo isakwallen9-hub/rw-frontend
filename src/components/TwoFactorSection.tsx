@@ -104,8 +104,8 @@ export default function TwoFactorSection() {
 
   return (
     <div>
-      <h2 className="text-2xl text-ink-800 mb-4">Tvåfaktorsautentisering</h2>
-      <div className="glass rounded-xl p-5">
+      <h2 className="text-2xl text-ink-900 mb-4">Tvåfaktorsautentisering</h2>
+      <div className="glass rounded-2xl p-5">
         {loading ? (
           <SkeletonCard className="h-16 w-full" />
 
@@ -113,28 +113,28 @@ export default function TwoFactorSection() {
         ) : phase === 'codes' && recovery ? (
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <KeyRound className="w-5 h-5 text-caution-600 shrink-0" aria-hidden="true" />
+              <KeyRound className="w-5 h-5 text-caution-700 shrink-0" aria-hidden="true" />
               <h3 className="text-base font-semibold text-ink-900">Dina återställningskoder</h3>
             </div>
-            <div className="bg-caution-50 border border-caution-200 rounded-xl p-4 mb-4">
+            <div className="bg-caution-50 border border-caution-200 rounded-2xl p-4 mb-4">
               <p className="text-sm text-caution-800 leading-relaxed">{recovery.warning}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 mb-4">
               {recovery.codes.map((c, i) => (
-                <div key={i} className="font-mono text-sm text-ink-800 bg-ink-50 border border-ink-100 rounded-lg px-3 py-2 text-center tracking-wider select-all">{c}</div>
+                <div key={i} className="font-mono text-sm text-ink-900 bg-ink-50 border border-ink-100 rounded-2xl px-3 py-2 text-center tracking-wider select-all">{c}</div>
               ))}
             </div>
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
               <button
                 onClick={() => void copyCodes()}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors min-h-[44px]"
+                className="inline-flex items-center gap-2 text-sm font-medium text-ink-700 hover:text-ink-900 transition-colors min-h-[44px]"
               >
                 {copied ? <Check className="w-4 h-4 text-positive-600" /> : <Copy className="w-4 h-4" />}
                 {copied ? 'Kopierat' : 'Kopiera alla'}
               </button>
               <button
                 onClick={confirmSavedCodes}
-                className="inline-flex items-center justify-center min-h-[44px] px-5 rounded-xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150"
+                className="inline-flex items-center justify-center min-h-[44px] px-5 rounded-2xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150"
               >
                 Jag har sparat koderna
               </button>
@@ -149,12 +149,12 @@ export default function TwoFactorSection() {
               Skanna QR-koden med din autentiseringsapp (t.ex. Google Authenticator eller Authy), eller ange nyckeln manuellt. Skriv sedan in den sexsiffriga koden.
             </p>
             <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
-              <div className="border border-ink-100 rounded-xl p-2 bg-white shrink-0">
+              <div className="border border-ink-100 rounded-2xl p-2 bg-white shrink-0">
                 <QrCode value={setup.otpauthUrl} size={168} />
               </div>
               <div className="flex-1 w-full min-w-0">
                 <label className="block text-xs font-medium text-ink-500 mb-1">Nyckel för manuell inmatning</label>
-                <p className="font-mono text-xs text-ink-800 bg-ink-50 border border-ink-100 rounded-lg px-3 py-2 mb-4 break-all select-all">{setup.secret}</p>
+                <p className="font-mono text-xs text-ink-900 bg-ink-50 border border-ink-100 rounded-2xl px-3 py-2 mb-4 break-all select-all">{setup.secret}</p>
 
                 <label className="block text-xs font-medium text-ink-500 mb-1">Sexsiffrig kod</label>
                 <input
@@ -165,19 +165,19 @@ export default function TwoFactorSection() {
                   onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
                   onKeyDown={e => e.key === 'Enter' && void verify()}
                   placeholder="123456"
-                  className="w-full border border-ink-200 rounded-lg px-4 py-2.5 text-sm tracking-[0.3em] font-mono outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-colors"
+                  className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm tracking-[0.3em] font-mono outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors"
                 />
                 {err && <p className="text-negative-600 text-sm mt-2">{err}</p>}
                 <div className="flex items-center gap-3 mt-4">
                   <button
                     onClick={() => void verify()}
                     disabled={busy || code.length !== 6}
-                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150 disabled:opacity-40"
+                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-2xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150 disabled:opacity-40"
                   >
                     {busy && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                     Verifiera och aktivera
                   </button>
-                  <button onClick={() => { setPhase('idle'); setSetup(null); setErr('') }} className="text-sm font-medium text-ink-500 hover:text-ink-800 transition-colors min-h-[44px]">Avbryt</button>
+                  <button onClick={() => { setPhase('idle'); setSetup(null); setErr('') }} className="text-sm font-medium text-ink-500 hover:text-ink-900 transition-colors min-h-[44px]">Avbryt</button>
                 </div>
               </div>
             </div>
@@ -191,7 +191,7 @@ export default function TwoFactorSection() {
                 <ShieldCheck className="w-5 h-5 text-positive-600" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-ink-800">Aktiverad</p>
+                <p className="text-sm font-semibold text-ink-900">Aktiverad</p>
                 <p className="text-xs text-ink-400 mt-0.5">
                   Ditt konto skyddas med en engångskod vid inloggning.
                   {typeof status.recoveryCodesRemaining === 'number' && ` ${status.recoveryCodesRemaining} återställningskoder kvar.`}
@@ -200,7 +200,7 @@ export default function TwoFactorSection() {
             </div>
             <button
               onClick={() => { setDisableErr(''); setDisablePassword(''); setDisableCode(''); setDisableOpen(true) }}
-              className="text-sm font-semibold text-negative-600 border border-negative-200 rounded-xl px-4 py-2 hover:bg-negative-50 active:scale-[0.98] transition-[transform,background-color] duration-150 min-h-[44px] shrink-0"
+              className="text-sm font-semibold text-negative-600 border border-negative-200 rounded-2xl px-4 py-2 hover:bg-negative-50 active:scale-[0.98] transition-[transform,background-color] duration-150 min-h-[44px] shrink-0"
             >
               Stäng av
             </button>
@@ -214,7 +214,7 @@ export default function TwoFactorSection() {
                 <KeyRound className="w-5 h-5 text-ink-500" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-ink-800">Inte aktiverad</p>
+                <p className="text-sm font-semibold text-ink-900">Inte aktiverad</p>
                 <p className="text-xs text-ink-400 mt-0.5 leading-relaxed">Lägg till ett extra lager säkerhet med en engångskod från en app i telefonen.</p>
                 {err && <p className="text-negative-600 text-sm mt-1">{err}</p>}
               </div>
@@ -222,7 +222,7 @@ export default function TwoFactorSection() {
             <button
               onClick={() => void startSetup()}
               disabled={busy}
-              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150 disabled:opacity-40 shrink-0"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-2xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150 disabled:opacity-40 shrink-0"
             >
               {busy && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               Aktivera
@@ -234,8 +234,8 @@ export default function TwoFactorSection() {
       {/* ── Disable modal (password + TOTP) ───────────────────────────── */}
       {disableOpen && (
         <div className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={disableBusy ? undefined : () => setDisableOpen(false)}>
-          <div className="glass rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-base font-bold text-ink-900 mb-1">Stäng av tvåfaktorsautentisering?</h3>
+          <div className="glass rounded-2xl p-6 max-w-sm w-full shadow-lg" onClick={e => e.stopPropagation()}>
+            <h3 className="text-sm font-bold text-ink-900 mb-1">Stäng av tvåfaktorsautentisering?</h3>
             <p className="text-sm text-ink-500 leading-relaxed mb-4">Bekräfta med ditt lösenord och en aktuell kod från appen.</p>
             <div className="flex flex-col gap-3">
               <input
@@ -244,7 +244,7 @@ export default function TwoFactorSection() {
                 onChange={e => setDisablePassword(e.target.value)}
                 placeholder="Lösenord"
                 autoComplete="current-password"
-                className="w-full border border-ink-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-colors"
+                className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors"
               />
               <input
                 inputMode="numeric"
@@ -254,13 +254,13 @@ export default function TwoFactorSection() {
                 onChange={e => setDisableCode(e.target.value.replace(/\D/g, ''))}
                 onKeyDown={e => e.key === 'Enter' && void disable()}
                 placeholder="Sexsiffrig kod"
-                className="w-full border border-ink-200 rounded-lg px-4 py-2.5 text-sm tracking-[0.3em] font-mono outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-colors"
+                className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm tracking-[0.3em] font-mono outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors"
               />
               {disableErr && <p className="text-negative-600 text-sm">{disableErr}</p>}
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setDisableOpen(false)} disabled={disableBusy} className="flex-1 py-2.5 border border-ink-200 rounded-xl text-sm font-medium text-ink-700 hover:bg-ink-50 transition-colors min-h-[44px] disabled:opacity-50">Avbryt</button>
-              <button onClick={() => void disable()} disabled={disableBusy} className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 bg-negative-600 text-white rounded-xl text-sm font-semibold hover:bg-negative-700 transition-colors min-h-[44px] disabled:opacity-50">
+              <button onClick={() => setDisableOpen(false)} disabled={disableBusy} className="flex-1 py-3 border border-ink-200 rounded-2xl text-sm font-medium text-ink-700 hover:bg-ink-50 transition-colors min-h-[44px] disabled:opacity-50">Avbryt</button>
+              <button onClick={() => void disable()} disabled={disableBusy} className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-negative-600 text-white rounded-2xl text-sm font-semibold hover:bg-negative-700 transition-colors min-h-[44px] disabled:opacity-50">
                 {disableBusy && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 Stäng av
               </button>

@@ -17,7 +17,7 @@ export function EmptyState({
 }) {
   return (
     <div className={`flex flex-col items-center justify-center text-center px-6 py-12 animate-in ${className}`}>
-      <div className="text-ink-300 mb-3 [&>svg]:w-8 [&>svg]:h-8" aria-hidden="true">{icon}</div>
+      <div className="text-ink-400 mb-3 [&>svg]:w-8 [&>svg]:h-8" aria-hidden="true">{icon}</div>
       <p className="text-sm font-semibold text-ink-700">{title}</p>
       {hint && <p className="text-sm text-ink-400 mt-1 max-w-xs leading-relaxed">{hint}</p>}
       {action && <div className="mt-4">{action}</div>}

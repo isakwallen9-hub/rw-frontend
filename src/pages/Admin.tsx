@@ -1,13 +1,16 @@
 ﻿import { useEffect, useState, useMemo, Fragment } from 'react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { useUser } from '../contexts/UserContext'
+import { Building2, Users } from 'lucide-react'
 import { SkeletonCard } from '../components/Skeleton'
+import CountUp from '../components/CountUp'
+import { EmptyState } from '../components/EmptyState'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
 const INDUSTRY_BADGE: Record<string, { label: string; cls: string }> = {
   restaurant: { label: 'Restaurang', cls: 'bg-caution-50 text-caution-700 border border-caution-100' },
-  salon:      { label: 'Frisör',     cls: 'bg-purple-50 text-purple-700 border border-purple-100' },
+  salon:      { label: 'Frisör',     cls: 'bg-brand-50 text-brand-700 border border-brand-100' },
   retail:     { label: 'Butik',      cls: 'bg-brand-50 text-brand-700 border border-brand-100' },
   cafe:       { label: 'Café',       cls: 'bg-caution-50 text-caution-800 border border-caution-100' },
   gym:        { label: 'Gym',        cls: 'bg-positive-50 text-positive-700 border border-positive-100' },
@@ -167,7 +170,7 @@ export default function Admin() {
   if (!isAdmin) {
     return (
       <div className="font-sans">
-        <div className="max-w-md mx-auto px-4 py-24 flex flex-col items-center text-center gap-4">
+        <div className="max-w-md mx-auto px-4 py-16 flex flex-col items-center text-center gap-4">
           <div className="w-14 h-14 rounded-full bg-negative-50 flex items-center justify-center text-2xl">🔒</div>
           <h1 className="text-2xl text-ink-900">Åtkomst nekad</h1>
           <p className="text-ink-400 text-sm">Du har inte behörighet att visa den här sidan.</p>
@@ -193,7 +196,7 @@ export default function Admin() {
         </div>
 
         {error && (
-          <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">
+          <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-2xl px-5 py-4 text-sm">
             {error}
           </div>
         )}
@@ -203,10 +206,12 @@ export default function Admin() {
           {loadingStats
             ? [...Array(4)].map((_, i) => <SkeletonCard key={i} className="h-24" />)
             : STAT_CARDS.map(card => (
-              <div key={card.label} className="glass rounded-xl px-5 py-5 shadow-sm">
+              <div key={card.label} className="glass rounded-2xl px-5 py-5 shadow-sm">
                 <div className="text-2xl mb-2">{card.icon}</div>
                 <div className="text-4xl font-bold text-ink-900 tabular">
-                  {typeof card.value === 'number' ? card.value.toLocaleString('sv-SE') : card.value}
+                  {typeof card.value === 'number'
+                    ? <CountUp value={card.value} format={(n) => Math.round(n).toLocaleString('sv-SE')} />
+                    : card.value}
                 </div>
                 <div className="text-xs text-ink-400 mt-1">{card.label}</div>
               </div>
@@ -217,7 +222,7 @@ export default function Admin() {
         {/* Organisations */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl text-ink-800">Organisationer</h2>
+            <h2 className="text-2xl text-ink-900">Organisationer</h2>
             {!loadingOrgs && orgs.length > 0 && (
               <SearchInput value={orgSearch} onChange={setOrgSearch} placeholder="Sök organisation..." />
             )}
@@ -225,11 +230,13 @@ export default function Admin() {
           {loadingOrgs ? (
             <div className="flex flex-col gap-2">{[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-12" />)}</div>
           ) : orgs.length === 0 ? (
-            <div className="glass rounded-xl px-5 py-8 text-center text-ink-400 text-sm">Inga organisationer.</div>
+            <div className="glass rounded-2xl">
+              <EmptyState icon={<Building2 />} title="Inga organisationer ännu" hint="När företag registrerar sig i systemet dyker de upp här." />
+            </div>
           ) : (
-            <div className="glass rounded-xl overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-base min-w-[700px]">
+                <table className="w-full text-sm min-w-[700px]">
                   <thead>
                     <tr className="border-b border-ink-100 text-sm text-ink-400 uppercase tracking-wide">
                       <th className="text-left px-5 py-4 font-semibold">Namn</th>
@@ -243,7 +250,7 @@ export default function Admin() {
                   </thead>
                   <tbody>
                     {filteredOrgs.length === 0 ? (
-                      <tr><td colSpan={7} className="px-5 py-6 text-center text-ink-400 text-sm">Inga träffar.</td></tr>
+                      <tr><td colSpan={7} className="px-5 py-6 text-center text-ink-400 text-sm">Inga träffar för din sökning.</td></tr>
                     ) : filteredOrgs.map((org, i) => {
                       const expanded = expandedOrgId === org.id
                       const orgUsers = users.filter(u =>
@@ -265,17 +272,17 @@ export default function Admin() {
                             </td>
                             <td className="px-5 py-4">
                               {badge
-                                ? <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.cls}`}>{badge.label}</span>
-                                : <span className="text-ink-300 text-xs">—</span>}
+                                ? <span className={`text-xs font-semibold px-3 py-1 rounded-full ${badge.cls}`}>{badge.label}</span>
+                                : <span className="text-ink-400 text-xs">—</span>}
                             </td>
-                            <td className="px-5 py-4 text-right text-ink-700">{org.userCount ?? 0}</td>
-                            <td className="px-5 py-4 text-right text-ink-700">{(org.transactionCount ?? 0).toLocaleString('sv-SE')}</td>
+                            <td className="px-5 py-4 text-right text-ink-700 tabular-nums whitespace-nowrap">{org.userCount ?? 0}</td>
+                            <td className="px-5 py-4 text-right text-ink-700 tabular-nums whitespace-nowrap">{(org.transactionCount ?? 0).toLocaleString('sv-SE')}</td>
                             <td className="px-5 py-4 text-ink-500 whitespace-nowrap">{fmtDate(org.createdAt)}</td>
                             <td className="px-5 py-4 text-ink-500 whitespace-nowrap">{timeAgo(org.lastActiveAt)}</td>
                             <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
                               <button
                                 onClick={() => setDeleteConfirm({ id: org.id, name: cap(org.name) })}
-                                className="text-xs font-semibold text-negative-600 border border-negative-200 rounded-lg px-3 py-1.5 hover:bg-negative-50 transition-colors whitespace-nowrap"
+                                className="text-xs font-semibold text-negative-600 border border-negative-200 rounded-2xl px-3 py-2 hover:bg-negative-50 transition-colors whitespace-nowrap"
                               >
                                 Ta bort
                               </button>
@@ -286,13 +293,13 @@ export default function Admin() {
                               <td colSpan={7} className="px-5 py-4 bg-brand-50/30">
                                 <div className="flex flex-wrap gap-6 mb-3 text-sm">
                                   {org.totalInflow != null && (
-                                    <div><span className="text-xs text-ink-400 block">Totalt inflöde</span><span className="font-semibold text-ink-800">{fmt(org.totalInflow)}</span></div>
+                                    <div><span className="text-xs text-ink-400 block">Totalt inflöde</span><span className="font-semibold text-ink-900">{fmt(org.totalInflow)}</span></div>
                                   )}
                                   {org.lastTransactionAt && (
-                                    <div><span className="text-xs text-ink-400 block">Senaste transaktion</span><span className="font-semibold text-ink-800">{timeAgo(org.lastTransactionAt)}</span></div>
+                                    <div><span className="text-xs text-ink-400 block">Senaste transaktion</span><span className="font-semibold text-ink-900">{timeAgo(org.lastTransactionAt)}</span></div>
                                   )}
                                   {badge && (
-                                    <div><span className="text-xs text-ink-400 block">Bransch</span><span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.cls}`}>{badge.label}</span></div>
+                                    <div><span className="text-xs text-ink-400 block">Bransch</span><span className={`text-xs font-semibold px-3 py-1 rounded-full ${badge.cls}`}>{badge.label}</span></div>
                                   )}
                                 </div>
                                 {orgUsers.length > 0 ? (
@@ -300,9 +307,9 @@ export default function Admin() {
                                     <p className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-2">Användare ({orgUsers.length})</p>
                                     <div className="flex flex-wrap gap-2">
                                       {orgUsers.map(u => (
-                                        <span key={u.id} className="flex items-center gap-1.5 text-xs bg-white border border-ink-200 rounded-lg px-3 py-1.5">
+                                        <span key={u.id} className="flex items-center gap-2 text-xs bg-white border border-ink-200 rounded-2xl px-3 py-2">
                                           {u.email}
-                                          {u.isAdmin && <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">Admin</span>}
+                                          {u.isAdmin && <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded-full">Admin</span>}
                                         </span>
                                       ))}
                                     </div>
@@ -326,7 +333,7 @@ export default function Admin() {
         {/* Users */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl text-ink-800">Användare</h2>
+            <h2 className="text-2xl text-ink-900">Användare</h2>
             {!loadingUsers && users.length > 0 && (
               <SearchInput value={userSearch} onChange={setUserSearch} placeholder="Sök email..." />
             )}
@@ -334,11 +341,13 @@ export default function Admin() {
           {loadingUsers ? (
             <div className="flex flex-col gap-2">{[...Array(3)].map((_, i) => <SkeletonCard key={i} className="h-12" />)}</div>
           ) : users.length === 0 ? (
-            <div className="glass rounded-xl px-5 py-8 text-center text-ink-400 text-sm">Inga användare.</div>
+            <div className="glass rounded-2xl">
+              <EmptyState icon={<Users />} title="Inga användare ännu" hint="Registrerade användare och deras roller listas här." />
+            </div>
           ) : (
-            <div className="glass rounded-xl overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-base min-w-[560px]">
+                <table className="w-full text-sm min-w-[560px]">
                   <thead>
                     <tr className="border-b border-ink-100 text-sm text-ink-400 uppercase tracking-wide">
                       <th className="text-left px-5 py-4 font-semibold">Email</th>
@@ -350,16 +359,16 @@ export default function Admin() {
                   </thead>
                   <tbody>
                     {filteredUsers.length === 0 ? (
-                      <tr><td colSpan={5} className="px-5 py-6 text-center text-ink-400 text-sm">Inga träffar.</td></tr>
+                      <tr><td colSpan={5} className="px-5 py-6 text-center text-ink-400 text-sm">Inga träffar för din sökning.</td></tr>
                     ) : filteredUsers.map((user, i) => {
                       const orgName = user.organisationName ?? user.organisation?.name ?? user.orgName
                       return (
                         <tr key={user.id} className={`${i !== 0 ? 'border-t border-ink-50' : ''} hover:bg-ink-50/60 transition-colors`}>
                           <td className="px-5 py-4 text-ink-900 font-medium">{user.email}</td>
-                          <td className="px-5 py-4 text-ink-500">{orgName ? cap(orgName) : <span className="text-ink-300">—</span>}</td>
+                          <td className="px-5 py-4 text-ink-500">{orgName ? cap(orgName) : <span className="text-ink-400">—</span>}</td>
                           <td className="px-5 py-4">
                             {user.isAdmin
-                              ? <span className="text-xs font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full">Admin</span>
+                              ? <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1 rounded-full">Admin</span>
                               : <span className="text-xs text-ink-400">Användare</span>}
                           </td>
                           <td className="px-5 py-4 text-ink-500 whitespace-nowrap">{fmtDate(user.createdAt)}</td>
@@ -381,7 +390,7 @@ export default function Admin() {
       {/* Delete confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/20 backdrop-blur-md" onClick={() => setDeleteConfirm(null)}>
-          <div className="bg-white/60 backdrop-blur-3xl border border-ink-200/60 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white/60 backdrop-blur-3xl border border-ink-200/60 rounded-2xl shadow-lg w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-negative-50 flex items-center justify-center text-2xl shrink-0">🗑️</div>
               <div>
@@ -389,12 +398,12 @@ export default function Admin() {
                 <p className="text-sm text-ink-400 mt-0.5">Detta går inte att ångra.</p>
               </div>
             </div>
-            <p className="text-sm text-ink-700 bg-ink-50 rounded-xl px-4 py-3 mb-5 font-medium">{deleteConfirm.name}</p>
+            <p className="text-sm text-ink-700 bg-ink-50 rounded-2xl px-4 py-3 mb-5 font-medium">{deleteConfirm.name}</p>
             <div className="flex gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 text-sm font-semibold text-ink-600 bg-ink-100 rounded-xl hover:bg-ink-200 transition-colors">
+              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 text-sm font-semibold text-ink-700 bg-ink-100 rounded-2xl hover:bg-ink-200 transition-colors">
                 Avbryt
               </button>
-              <button onClick={deleteOrg} disabled={deleting} className="flex-1 py-2.5 text-sm font-semibold text-white bg-negative-600 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={deleteOrg} disabled={deleting} className="flex-1 py-3 text-sm font-semibold text-white bg-negative-600 rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
                 {deleting && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {deleting ? 'Tar bort...' : 'Ta bort'}
               </button>
@@ -417,7 +426,7 @@ function SearchInput({ value, onChange, placeholder }: { value: string; onChange
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="pl-8 pr-4 py-2 text-sm border border-ink-200 rounded-lg outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors bg-white w-52"
+        className="pl-8 pr-4 py-2 text-sm border border-ink-200 rounded-2xl outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors bg-white w-52"
       />
     </div>
   )
@@ -431,7 +440,7 @@ function AdminToggle({ checked, onChange }: { checked: boolean; onChange: () => 
       onClick={onChange}
       className={`relative inline-flex w-10 h-5 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${checked ? 'bg-primary' : 'bg-ink-200'}`}
     >
-      <span className={`inline-block w-4 h-4 rounded-full bg-white shadow transform transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+      <span className={`inline-block w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
     </button>
   )
 }

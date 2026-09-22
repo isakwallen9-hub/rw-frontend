@@ -159,7 +159,7 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
       {/* Overlay — full dark bg for no-target steps, transparent for spotlight steps */}
       {!rect ? (
         <div
-          className="fixed inset-0 bg-black/60 z-[9997]"
+          className="fixed inset-0 bg-ink-900/60 z-[9997]"
           onClick={e => e.stopPropagation()}
         />
       ) : (
@@ -184,10 +184,10 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
       {/* Tooltip */}
       <div
         style={{ ...tooltipStyle, position: 'fixed', width: TOOLTIP_W, zIndex: 9999 }}
-        className="bg-white rounded-2xl shadow-2xl p-6 pointer-events-auto"
+        className="bg-white rounded-2xl shadow-lg p-6 pointer-events-auto"
       >
         {/* Step dots */}
-        <div className="flex items-center gap-1.5 mb-4">
+        <div className="flex items-center gap-2 mb-4">
           {STEPS.map((_, i) => (
             <div
               key={i}
@@ -202,7 +202,7 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
           ))}
         </div>
 
-        <h3 className="text-base font-bold text-ink-900 mb-2 leading-snug">{current.title}</h3>
+        <h3 className="text-sm font-bold text-ink-900 mb-2 leading-snug">{current.title}</h3>
         <p className="text-sm text-ink-500 leading-relaxed mb-5">{current.body}</p>
 
         <div className="flex items-center justify-between gap-2">
@@ -210,7 +210,7 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
             {step > 0 && (
               <button
                 onClick={prev}
-                className="px-3 py-2 text-sm text-ink-500 border border-ink-200 rounded-lg hover:border-ink-300 transition-colors min-h-[36px]"
+                className="px-3 py-2 text-sm text-ink-500 border border-ink-200 rounded-2xl hover:border-ink-300 transition-colors min-h-[36px]"
               >
                 ← Föregående
               </button>
@@ -218,7 +218,7 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
             {step === 0 && (
               <button
                 onClick={onComplete}
-                className="text-sm text-ink-400 hover:text-ink-600 transition-colors py-2 min-h-[36px]"
+                className="text-sm text-ink-400 hover:text-ink-700 transition-colors py-2 min-h-[36px]"
               >
                 Hoppa över
               </button>
@@ -226,7 +226,7 @@ export default function Tour({ onComplete }: { onComplete: () => void }) {
           </div>
           <button
             onClick={next}
-            className="px-5 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity min-h-[36px]"
+            className="px-5 py-2 bg-accent text-white text-sm font-semibold rounded-2xl hover:opacity-90 transition-opacity min-h-[36px]"
           >
             {step === STEPS.length - 1 ? 'Kom igång! →' : 'Nästa →'}
           </button>

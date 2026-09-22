@@ -170,10 +170,10 @@ function normalizeToDatasets(chartData: DataPoint[] | ChartDataV2 | null | undef
 function Skeleton() {
   return (
     <div className="flex flex-col gap-3 animate-pulse">
-      <div className="h-4 bg-ink-200/80 rounded-lg w-3/4" />
-      <div className="h-4 bg-ink-200/80 rounded-lg w-full" />
-      <div className="h-4 bg-ink-200/80 rounded-lg w-5/6" />
-      <div className="h-4 bg-ink-200/80 rounded-lg w-2/3" />
+      <div className="h-4 bg-ink-200/80 rounded-2xl w-3/4" />
+      <div className="h-4 bg-ink-200/80 rounded-2xl w-full" />
+      <div className="h-4 bg-ink-200/80 rounded-2xl w-5/6" />
+      <div className="h-4 bg-ink-200/80 rounded-2xl w-2/3" />
     </div>
   )
 }
@@ -293,12 +293,12 @@ function InsightCard({ insight, formatAmount }: { insight: Insight; formatAmount
           <s.Icon className={`w-4 h-4 shrink-0 ${s.iconColor}`} aria-hidden="true" />
           <h3 className="font-bold text-ink-900 tracking-tight text-sm leading-snug">{insight.title}</h3>
         </div>
-        <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${s.badge}`}>
+        <span className={`shrink-0 text-xs font-semibold px-3 py-1 rounded-full ${s.badge}`}>
           {s.label}
         </span>
       </div>
 
-      <p className="text-sm text-ink-600 leading-relaxed mb-3">{insight.description}</p>
+      <p className="text-sm text-ink-700 leading-relaxed mb-3">{insight.description}</p>
 
       {insight.impact?.amount != null && (
         <p className="text-sm font-semibold text-ink-700 tabular-nums mb-3">
@@ -319,7 +319,7 @@ function InsightCard({ insight, formatAmount }: { insight: Insight; formatAmount
       )}
 
       {insight.suggestedAction && (
-        <div className="bg-brand-50/60 border border-brand-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
+        <div className="bg-brand-50/60 border border-brand-100 rounded-2xl px-4 py-3 flex items-start gap-3">
           <Lightbulb className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <p className="text-xs font-semibold text-brand-700 mb-0.5">Rekommenderad åtgärd</p>
@@ -401,7 +401,7 @@ export default function Insights() {
 
         {/* ── Page header ── */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-brand-50/80 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-2xl bg-brand-50/80 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-primary" aria-hidden="true" />
           </div>
           <div>
@@ -422,13 +422,13 @@ export default function Insights() {
               onKeyDown={e => e.key === 'Enter' && handleGenerate()}
               placeholder="t.ex. visa Olaplex vs Redken senaste 6 månaderna"
               disabled={generating}
-              className="flex-1 border border-ink-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors disabled:opacity-50 bg-white/80 min-h-[44px]"
+              className="flex-1 border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors disabled:opacity-50 bg-white/80 min-h-[44px]"
             />
             <button
               onClick={handleGenerate}
               disabled={!query.trim() || generating}
               aria-label="Generera graf"
-              className="px-4 py-3 bg-primary text-white rounded-xl shadow-md shadow-brand-500/20 hover:opacity-90 active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-40 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="px-4 py-3 bg-primary text-white rounded-2xl shadow-md hover:opacity-90 active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-40 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               {generating ? (
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -449,7 +449,7 @@ export default function Insights() {
           )}
 
           {generateError && (
-            <div className="mt-3 bg-negative-50 border border-negative-100 rounded-xl px-4 py-3">
+            <div className="mt-3 bg-negative-50 border border-negative-100 rounded-2xl px-4 py-3">
               <p className="text-sm font-semibold text-negative-700 mb-1">{String(generateError.error)}</p>
               {generateError.suggestions?.length ? (
                 <ul className="text-xs text-negative-600 list-disc list-inside space-y-0.5">
@@ -476,7 +476,7 @@ export default function Insights() {
               <button
                 onClick={() => setGeneratedChart(null)}
                 aria-label="Stäng graf"
-                className="p-2 rounded-lg text-ink-400 hover:text-ink-700 hover:bg-white/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 rounded-2xl text-ink-400 hover:text-ink-700 hover:bg-white/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -494,7 +494,7 @@ export default function Insights() {
         {/* ── AI Summary ── */}
         <div className="glass rounded-2xl p-5 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-md shadow-brand-500/20">
+            <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-md">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <h2 className="text-2xl text-ink-900 tracking-tight">Läget just nu</h2>
@@ -530,11 +530,11 @@ export default function Insights() {
         {/* Loading skeletons for charts */}
         {loading && (
           <section>
-            <div className="h-5 skeleton rounded-lg w-40 mb-4" />
+            <div className="h-5 skeleton rounded-2xl w-40 mb-4" />
             {[0, 1].map(i => (
               <div key={i} className="glass rounded-2xl p-5 mb-5 shadow-sm">
-                <div className="h-4 skeleton rounded-lg w-48 mb-4" />
-                <div className="h-56 skeleton rounded-xl" />
+                <div className="h-4 skeleton rounded-2xl w-48 mb-4" />
+                <div className="h-56 skeleton rounded-2xl" />
               </div>
             ))}
           </section>
@@ -545,7 +545,7 @@ export default function Insights() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl text-ink-900 tracking-tight">Insikter</h2>
-              <span className="text-xs font-semibold text-ink-400 bg-ink-100 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-semibold text-ink-500 bg-ink-100 px-3 py-1 rounded-full">
                 {sortedInsights.length} st
               </span>
             </div>
@@ -560,16 +560,16 @@ export default function Insights() {
         {/* Loading skeletons for insights */}
         {loading && (
           <section>
-            <div className="h-5 skeleton rounded-lg w-28 mb-4" />
+            <div className="h-5 skeleton rounded-2xl w-28 mb-4" />
             {[0, 1, 2].map(i => (
               <div key={i} className="glass border-l-4 border-l-ink-200 rounded-2xl p-5 mb-4 shadow-sm animate-pulse">
                 <div className="flex justify-between mb-3">
-                  <div className="h-4 bg-ink-200/80 rounded-lg w-48" />
+                  <div className="h-4 bg-ink-200/80 rounded-2xl w-48" />
                   <div className="h-5 bg-ink-200/80 rounded-full w-16" />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="h-3 bg-ink-200/80 rounded-lg w-full" />
-                  <div className="h-3 bg-ink-200/80 rounded-lg w-5/6" />
+                  <div className="h-3 bg-ink-200/80 rounded-2xl w-full" />
+                  <div className="h-3 bg-ink-200/80 rounded-2xl w-5/6" />
                 </div>
               </div>
             ))}
@@ -584,7 +584,7 @@ export default function Insights() {
               title="Inga insikter ännu"
               hint="Importera mer data så aktiverar AI:n automatiska insikter och grafer."
               action={
-                <a href="/import" className="inline-flex items-center min-h-[40px] px-4 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150">
+                <a href="/import" className="inline-flex items-center min-h-[40px] px-4 rounded-2xl bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150">
                   Importera data
                 </a>
               }

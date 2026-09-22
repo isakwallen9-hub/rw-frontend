@@ -80,7 +80,7 @@ export default function Runway() {
             <div className="h-[300px] skeleton rounded-2xl" />
           </>
         ) : error ? (
-          <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">
+          <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-2xl px-5 py-4 text-sm">
             {error}
           </div>
         ) : !data ? (

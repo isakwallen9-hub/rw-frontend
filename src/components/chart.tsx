@@ -88,9 +88,9 @@ export function ChartTooltip({ active, payload, label, format, hideLabel }: Tool
   const fmt = (v: number | string | undefined) =>
     format ? format(Number(v ?? 0)) : Number(v ?? 0).toLocaleString('sv-SE')
   return (
-    <div className="bg-white rounded-xl border border-ink-100 shadow-[0_8px_24px_rgba(26,25,32,0.12)] px-3.5 py-2.5 min-w-[8rem]">
+    <div className="bg-white rounded-2xl border border-ink-100 shadow-md px-4 py-3 min-w-[8rem]">
       {!hideLabel && label != null && label !== '' && (
-        <div className="text-xs font-semibold text-ink-800 mb-1.5">{label}</div>
+        <div className="text-xs font-semibold text-ink-900 mb-1.5">{label}</div>
       )}
       <div className="flex flex-col gap-1">
         {payload.map((p, i) => (
@@ -100,7 +100,7 @@ export function ChartTooltip({ active, payload, label, format, hideLabel }: Tool
               style={{ background: p.color || p.stroke || p.fill || '#3A5CD8' }}
             />
             {p.name != null && <span className="text-ink-500">{p.name}</span>}
-            <span className="ml-auto font-semibold text-ink-800 tabular">{fmt(p.value)}</span>
+            <span className="ml-auto font-semibold text-ink-900 tabular">{fmt(p.value)}</span>
           </div>
         ))}
       </div>

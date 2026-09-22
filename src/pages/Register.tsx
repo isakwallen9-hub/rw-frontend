@@ -83,36 +83,36 @@ export default function Register() {
               <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-ink-600 mb-1">Förnamn</label>
+                    <label className="block text-xs font-medium text-ink-700 mb-1">Förnamn</label>
                     <input type="text" placeholder="Anna" value={form.firstName} onChange={set('firstName')}
-                      className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                      className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-ink-600 mb-1">Efternamn</label>
+                    <label className="block text-xs font-medium text-ink-700 mb-1">Efternamn</label>
                     <input type="text" placeholder="Svensson" value={form.lastName} onChange={set('lastName')}
-                      className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                      className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink-600 mb-1">E-post</label>
+                  <label className="block text-xs font-medium text-ink-700 mb-1">E-post</label>
                   <input type="email" placeholder="du@foretaget.se" value={form.email} onChange={set('email')}
-                    className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                    className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink-600 mb-1">Lösenord</label>
+                  <label className="block text-xs font-medium text-ink-700 mb-1">Lösenord</label>
                   <input type="password" placeholder="••••••••" value={form.password} onChange={set('password')}
-                    className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                    className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink-600 mb-1">Organisationsnamn</label>
+                  <label className="block text-xs font-medium text-ink-700 mb-1">Organisationsnamn</label>
                   <input type="text" placeholder="Acme AB" value={form.organisationName} onChange={set('organisationName')}
-                    className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                    className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink-600 mb-1">Workspace (slug)</label>
+                  <label className="block text-xs font-medium text-ink-700 mb-1">Workspace (slug)</label>
                   <input type="text" placeholder="acme-ab" value={form.organisationSlug} onChange={set('organisationSlug')}
                     onKeyDown={(e) => e.key === 'Enter' && setStep(2)}
-                    className="w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" />
+                    className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors" />
                 </div>
 
                 {error && <p className="text-negative-600 text-sm">{error}</p>}
@@ -133,7 +133,7 @@ export default function Register() {
                     setError('')
                     setStep(2)
                   }}
-                  className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:opacity-90 transition-opacity text-sm mt-1">
+                  className="w-full bg-primary text-white font-semibold py-3 rounded-2xl hover:opacity-90 transition-opacity text-sm mt-1">
                   Nästa steg →
                 </button>
 
@@ -147,7 +147,7 @@ export default function Register() {
             </>
           ) : (
             <>
-              <button onClick={() => setStep(1)} className="flex items-center gap-1 text-sm text-ink-400 hover:text-ink-600 mb-6 -ml-1 transition-colors">
+              <button onClick={() => setStep(1)} className="flex items-center gap-1 text-sm text-ink-400 hover:text-ink-700 mb-6 -ml-1 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                 Tillbaka
               </button>
@@ -163,7 +163,7 @@ export default function Register() {
                     key={ind.value}
                     onClick={() => handleRegister(ind.value)}
                     disabled={loading}
-                    className="flex flex-col items-center justify-center gap-2 border-2 border-ink-100 rounded-xl py-5 px-3 hover:border-accent hover:bg-accent/5 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 group"
+                    className="flex flex-col items-center justify-center gap-2 border-2 border-ink-100 rounded-2xl py-5 px-3 hover:border-accent hover:bg-accent/5 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 group"
                   >
                     <span className="text-3xl">{ind.icon}</span>
                     <span className="text-sm font-medium text-ink-700 group-hover:text-accent text-center leading-tight">{ind.label}</span>

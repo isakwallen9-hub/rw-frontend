@@ -6,7 +6,7 @@ import RWLogo from '../assets/RWLogo'
 const API_URL = import.meta.env.VITE_API_URL as string
 
 const inputClass =
-  'w-full border border-ink-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors'
+  'w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -145,7 +145,7 @@ export default function Login() {
           <div className="lg:hidden mb-8 flex items-center gap-3">
             <RWLogo className="w-12 h-auto" />
             <div>
-              <p className="font-bold text-lg text-primary tracking-tight leading-tight">RW Systems</p>
+              <p className="font-bold text-sm text-primary tracking-tight leading-tight">RW Systems</p>
               <p className="text-xs text-ink-400">The system for you</p>
             </div>
           </div>
@@ -157,22 +157,22 @@ export default function Login() {
               <p className="text-ink-500 text-sm mb-8">Välkommen tillbaka till RW Systems</p>
               <div className="flex flex-col gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-ink-600 mb-1">Workspace</label>
+                  <label className="block text-xs font-medium text-ink-700 mb-1">Workspace</label>
                   <input type="text" placeholder="ditt-foretag" value={slug} onChange={(e) => setSlug(e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink-600 mb-1">E-post</label>
+                  <label className="block text-xs font-medium text-ink-700 mb-1">E-post</label>
                   <input type="email" placeholder="du@foretaget.se" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink-600 mb-1">Lösenord</label>
+                  <label className="block text-xs font-medium text-ink-700 mb-1">Lösenord</label>
                   <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} className={inputClass} />
                 </div>
 
                 {successMessage && <p className="text-positive-600 text-sm">{successMessage}</p>}
                 {error && <p className="text-negative-600 text-sm">{error}</p>}
 
-                <button onClick={handleLogin} disabled={loading} className="w-full bg-accent text-white font-semibold py-3 rounded-lg shadow-md shadow-brand-500/20 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm mt-1 flex items-center justify-center gap-2 min-h-[44px]">
+                <button onClick={handleLogin} disabled={loading} className="w-full bg-accent text-white font-semibold py-3 rounded-2xl shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 text-sm mt-1 flex items-center justify-center gap-2 min-h-[44px]">
                   {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   {loading ? 'Loggar in...' : 'Logga in'}
                 </button>
@@ -198,7 +198,7 @@ export default function Login() {
               <div className="flex flex-col gap-4">
                 {useRecovery ? (
                   <div>
-                    <label className="block text-xs font-medium text-ink-600 mb-1">Återställningskod</label>
+                    <label className="block text-xs font-medium text-ink-700 mb-1">Återställningskod</label>
                     <input
                       value={recoveryCode}
                       onChange={(e) => setRecoveryCode(e.target.value)}
@@ -210,7 +210,7 @@ export default function Login() {
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-medium text-ink-600 mb-1">Sexsiffrig kod</label>
+                    <label className="block text-xs font-medium text-ink-700 mb-1">Sexsiffrig kod</label>
                     <input
                       inputMode="numeric"
                       autoComplete="one-time-code"
@@ -219,14 +219,14 @@ export default function Login() {
                       onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
                       onKeyDown={(e) => e.key === 'Enter' && void submitTwoFactor()}
                       placeholder="123456"
-                      className={`${inputClass} font-mono tracking-[0.4em] text-center text-lg`}
+                      className={`${inputClass} font-mono tracking-[0.4em] text-center text-sm`}
                     />
                   </div>
                 )}
 
                 {twoFaError && <p className="text-negative-600 text-sm">{twoFaError}</p>}
 
-                <button onClick={() => void submitTwoFactor()} disabled={twoFaLoading} className="w-full bg-accent text-white font-semibold py-3 rounded-lg shadow-md shadow-brand-500/20 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm mt-1 flex items-center justify-center gap-2 min-h-[44px]">
+                <button onClick={() => void submitTwoFactor()} disabled={twoFaLoading} className="w-full bg-accent text-white font-semibold py-3 rounded-2xl shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 text-sm mt-1 flex items-center justify-center gap-2 min-h-[44px]">
                   {twoFaLoading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   {twoFaLoading ? 'Verifierar...' : 'Verifiera och logga in'}
                 </button>
@@ -252,16 +252,16 @@ export default function Login() {
           {step === 'recovered' && (
             <>
               <div className="w-12 h-12 rounded-full bg-caution-50 flex items-center justify-center mb-4">
-                <ShieldCheck className="w-6 h-6 text-caution-600" aria-hidden="true" />
+                <ShieldCheck className="w-6 h-6 text-caution-700" aria-hidden="true" />
               </div>
               <h1 className="text-3xl tracking-tight text-ink-900 mb-2">Tvåfaktor avstängd</h1>
-              <div className="bg-caution-50 border border-caution-200 rounded-xl px-4 py-3 mb-4">
+              <div className="bg-caution-50 border border-caution-200 rounded-2xl px-4 py-3 mb-4">
                 <p className="text-sm text-caution-800 leading-relaxed">{recoveredNotice}</p>
               </div>
               <p className="text-sm text-ink-500 leading-relaxed mb-6">
                 Du kan aktivera tvåfaktorsautentisering på nytt när som helst under <span className="font-medium text-ink-700">Profil</span>.
               </p>
-              <button onClick={() => navigate('/dashboard')} className="w-full bg-accent text-white font-semibold py-3 rounded-lg shadow-md shadow-brand-500/20 hover:opacity-90 transition-opacity text-sm flex items-center justify-center gap-2 min-h-[44px]">
+              <button onClick={() => navigate('/dashboard')} className="w-full bg-accent text-white font-semibold py-3 rounded-2xl shadow-md hover:opacity-90 transition-opacity text-sm flex items-center justify-center gap-2 min-h-[44px]">
                 Fortsätt till dashboard
               </button>
             </>

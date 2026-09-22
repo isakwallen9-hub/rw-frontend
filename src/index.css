@@ -35,12 +35,10 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Display headings — Instrument Serif (400 roman; 400 italic available for quotes).
-     Section/page titles opt into the serif here; body, KPIs, tables, nav stay on
-     General Sans. Uppercase micro-labels that happen to be <h2> opt back out via font-sans. */
+  /* Headings share the single app typeface (Geist, inherited from the body).
+     Weight 600 so a sans heading carries the visual weight the old serif had. */
   h1, h2 {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: -0.01em;
     line-height: 1.08;
   }
@@ -48,8 +46,18 @@
     letter-spacing: -0.022em;
     line-height: 1.25;
   }
-  /* Serif italic for pull-quotes / emphasis */
-  blockquote, .quote {
+
+  /* Landing keeps its dramatic Instrument Serif display type — scoped to the
+     Landing root only via `.serif-headings`. `:where()` keeps specificity at zero
+     so an explicit `font-sans` utility still wins (Landing's uppercase micro-labels
+     that opt back out of the serif). */
+  :where(.serif-headings) h1,
+  :where(.serif-headings) h2 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400; /* keep Landing's serif at its own (single) weight */
+  }
+  :where(.serif-headings) blockquote,
+  :where(.serif-headings) .quote {
     font-family: 'Instrument Serif', Georgia, serif;
     font-style: italic;
     font-weight: 400;
@@ -93,6 +101,16 @@
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1;
+  }
+
+  /* ── Standard transition ──────────────────────────────────────────────────
+     One shared micro-transition for hover / focus / active state changes on
+     buttons, cards, links and table rows. Short (150ms) and soft — things glide
+     to their new state, never jump. Disabled under reduced-motion (below). */
+  .transition-base {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
   }
 
   /* ── Entrance: fade in + rise 8px, 400ms ease-out ─────────────────────── */

@@ -214,7 +214,7 @@ export default function Cashflow() {
         {alerts.length > 0 && (
           <div className="flex flex-col gap-2">
             {alerts.map((a, i) => (
-              <div key={i} className={`flex items-start gap-3 px-4 py-3.5 rounded-xl border ${
+              <div key={i} className={`flex items-start gap-3 px-4 py-4 rounded-2xl border ${
                 a.severity === 'high'
                   ? 'bg-negative-50 border-negative-200'
                   : 'bg-caution-50 border-caution-200'
@@ -224,7 +224,7 @@ export default function Cashflow() {
                 }`}>
                   {a.severity === 'high'
                     ? <AlertTriangle className="w-3.5 h-3.5 text-negative-600" />
-                    : <AlertCircle className="w-3.5 h-3.5 text-caution-600" />}
+                    : <AlertCircle className="w-3.5 h-3.5 text-caution-700" />}
                 </div>
                 <div>
                   <p className={`text-sm font-semibold mb-0.5 ${a.severity === 'high' ? 'text-negative-700' : 'text-caution-700'}`}>
@@ -243,12 +243,12 @@ export default function Cashflow() {
         )}
 
         {/* Tab bar */}
-        <div className="flex gap-1 bg-ink-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 bg-ink-100 p-1 rounded-2xl w-fit">
           {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-150 ${
+              className={`px-5 py-2 rounded-2xl text-sm font-medium transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-150 ${
                 tab === t.key ? 'bg-white shadow-sm text-ink-900' : 'text-ink-500 hover:text-ink-700'
               }`}
             >
@@ -269,31 +269,31 @@ export default function Cashflow() {
                 {/* 3 main KPI cards */}
                 <div className="grid sm:grid-cols-3 gap-4">
                   {/* Current balance */}
-                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(58,92,216,0.12)]">
-                    <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-4">
+                  <div className="glass rounded-2xl p-6 shadow-sm">
+                    <div className="w-10 h-10 rounded-2xl bg-brand-50 flex items-center justify-center mb-4">
                       <Banknote className="w-5 h-5 text-brand-600" />
                     </div>
-                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-widest mb-1">Aktuellt saldo</p>
+                    <p className="text-xs font-semibold text-ink-400 uppercase tracking-widest mb-1">Aktuellt saldo</p>
                     <p className="text-3xl font-bold tabular text-ink-900">{fmt(runwayData?.currentBalance ?? 0)}</p>
                     <p className="text-xs text-ink-400 mt-2">{runwayData?.runwayDays ?? 0} dagar runway</p>
                   </div>
 
                   {/* Monthly inflow */}
-                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(14,156,107,0.12)]">
-                    <div className="w-10 h-10 rounded-xl bg-positive-50 flex items-center justify-center mb-4">
+                  <div className="glass rounded-2xl p-6 shadow-sm">
+                    <div className="w-10 h-10 rounded-2xl bg-positive-50 flex items-center justify-center mb-4">
                       <ArrowUpRight className="w-5 h-5 text-positive-600" />
                     </div>
-                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-widest mb-1">Månadsintäkter</p>
+                    <p className="text-xs font-semibold text-ink-400 uppercase tracking-widest mb-1">Månadsintäkter</p>
                     <p className="text-3xl font-bold tabular text-positive-600">{fmt(monthlyInflow)}</p>
                     <p className="text-xs text-ink-400 mt-2">Senaste 30 dagarna</p>
                   </div>
 
                   {/* Monthly outflow */}
-                  <div className="glass rounded-2xl p-6 shadow-[0_4px_28px_rgba(206,70,70,0.12)]">
-                    <div className="w-10 h-10 rounded-xl bg-negative-50 flex items-center justify-center mb-4">
+                  <div className="glass rounded-2xl p-6 shadow-sm">
+                    <div className="w-10 h-10 rounded-2xl bg-negative-50 flex items-center justify-center mb-4">
                       <ArrowDownRight className="w-5 h-5 text-negative-600" />
                     </div>
-                    <p className="text-[11px] font-semibold text-ink-400 uppercase tracking-widest mb-1">Månadsutgifter</p>
+                    <p className="text-xs font-semibold text-ink-400 uppercase tracking-widest mb-1">Månadsutgifter</p>
                     <p className="text-3xl font-bold tabular text-negative-600">{fmt(monthlyOutflow)}</p>
                     <p className="text-xs text-ink-400 mt-2">Burn rate {fmt(runwayData?.monthlyBurnRate ?? monthlyOutflow)}/mån</p>
                   </div>
@@ -316,10 +316,10 @@ export default function Cashflow() {
                   <div className="glass rounded-2xl shadow-sm px-6 py-5">
                     <p className="text-xs text-ink-400 mb-2">Kostnadskvot (utgifter / intäkter)</p>
                     <div className="flex items-end gap-3">
-                      <p className={`text-2xl font-bold ${burnRatio > 90 ? 'text-negative-600' : burnRatio > 70 ? 'text-caution-600' : 'text-positive-600'}`}>
+                      <p className={`text-2xl font-bold ${burnRatio > 90 ? 'text-negative-600' : burnRatio > 70 ? 'text-caution-700' : 'text-positive-600'}`}>
                         {burnRatio.toLocaleString('sv-SE', { maximumFractionDigits: 1 })}%
                       </p>
-                      <span className={`text-xs font-medium mb-0.5 ${burnRatio > 90 ? 'text-negative-600' : burnRatio > 70 ? 'text-caution-600' : 'text-positive-600'}`}>
+                      <span className={`text-xs font-medium mb-0.5 ${burnRatio > 90 ? 'text-negative-600' : burnRatio > 70 ? 'text-caution-700' : 'text-positive-600'}`}>
                         {burnRatio > 90 ? 'Kritisk' : burnRatio > 70 ? 'Bevaka' : 'Bra'}
                       </span>
                     </div>
@@ -345,10 +345,10 @@ export default function Cashflow() {
                 <button
                   key={p.value}
                   onClick={() => setPreset(p.value)}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                  className={`px-4 py-2 rounded-2xl text-sm font-medium border transition-colors ${
                     preset === p.value
                       ? 'bg-accent text-white border-accent'
-                      : 'bg-white text-ink-600 border-ink-200 hover:border-ink-300'
+                      : 'bg-white text-ink-700 border-ink-200 hover:border-ink-300'
                   }`}
                 >
                   {p.label}
@@ -358,11 +358,11 @@ export default function Cashflow() {
                 <div className="flex items-center gap-2 ml-1">
                   <input type="date" value={customFrom} max={customTo}
                     onChange={e => setCustomFrom(e.target.value)}
-                    className="border border-ink-200 rounded-lg px-3 py-1.5 text-sm text-ink-700 outline-none focus:border-accent" />
+                    className="border border-ink-200 rounded-2xl px-3 py-2 text-sm text-ink-700 outline-none focus:border-brand-400" />
                   <span className="text-ink-400 text-sm">—</span>
                   <input type="date" value={customTo} min={customFrom} max={today}
                     onChange={e => setCustomTo(e.target.value)}
-                    className="border border-ink-200 rounded-lg px-3 py-1.5 text-sm text-ink-700 outline-none focus:border-accent" />
+                    className="border border-ink-200 rounded-2xl px-3 py-2 text-sm text-ink-700 outline-none focus:border-brand-400" />
                 </div>
               )}
             </div>
@@ -370,17 +370,17 @@ export default function Cashflow() {
             {/* Summary pills */}
             {!loadingSeries && (
               <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 glass rounded-xl px-4 py-2.5 shadow-sm">
+                <div className="flex items-center gap-2 glass rounded-2xl px-4 py-3 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-brand-500" />
                   <span className="text-xs text-ink-500">Inflöde</span>
                   <span className="text-sm font-bold text-brand-600">{fmt(periodSummary.totalInflow)}</span>
                 </div>
-                <div className="flex items-center gap-2 glass rounded-xl px-4 py-2.5 shadow-sm">
+                <div className="flex items-center gap-2 glass rounded-2xl px-4 py-3 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-negative-500" />
                   <span className="text-xs text-ink-500">Utflöde</span>
                   <span className="text-sm font-bold text-negative-600">{fmt(periodSummary.totalOutflow)}</span>
                 </div>
-                <div className={`flex items-center gap-2 bg-white border rounded-xl px-4 py-2.5 shadow-sm ${
+                <div className={`flex items-center gap-2 bg-white border rounded-2xl px-4 py-3 shadow-sm ${
                   periodSummary.net >= 0 ? 'border-positive-100' : 'border-negative-100'
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${periodSummary.net >= 0 ? 'bg-positive-500' : 'bg-negative-500'}`} />
@@ -395,10 +395,10 @@ export default function Cashflow() {
             {/* Area chart */}
             <div className="glass rounded-2xl shadow-sm p-6">
               {loadingSeries ? (
-                <div className="h-72 skeleton rounded-xl" />
+                <div className="h-72 skeleton rounded-2xl" />
               ) : historyChartData.length === 0 ? (
                 <div className="h-72 flex flex-col items-center justify-center text-center gap-2 text-ink-400">
-                  <TrendingUp className="w-8 h-8 text-ink-300" aria-hidden="true" />
+                  <TrendingUp className="w-8 h-8 text-ink-400" aria-hidden="true" />
                   <p className="text-sm">Ingen data för vald period. Välj ett annat intervall ovan.</p>
                 </div>
               ) : (
@@ -441,7 +441,7 @@ export default function Cashflow() {
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="glass rounded-2xl shadow-sm px-5 py-4">
                   <p className="text-xs text-ink-400 mb-1">Runway</p>
-                  <p className={`text-2xl font-bold ${runwayData.runwayDays < 30 ? 'text-negative-600' : runwayData.runwayDays < 60 ? 'text-caution-600' : 'text-positive-600'}`}>
+                  <p className={`text-2xl font-bold ${runwayData.runwayDays < 30 ? 'text-negative-600' : runwayData.runwayDays < 60 ? 'text-caution-700' : 'text-positive-600'}`}>
                     {runwayData.runwayDays} dagar
                   </p>
                   <p className="text-xs text-ink-400 mt-1">{runwayData.runwayDays < 30 ? 'Kritiskt lågt' : runwayData.runwayDays < 60 ? 'Bevaka noggrant' : 'Bra likviditet'}</p>
@@ -470,7 +470,7 @@ export default function Cashflow() {
 
             {/* Zero-crossing alert */}
             {zeroCrossing && (
-              <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border bg-negative-50 border-negative-200">
+              <div className="flex items-start gap-3 px-4 py-4 rounded-2xl border bg-negative-50 border-negative-200">
                 <div className="w-7 h-7 rounded-full bg-negative-100 flex items-center justify-center shrink-0 mt-0.5">
                   <AlertTriangle className="w-3.5 h-3.5 text-negative-600" />
                 </div>
@@ -486,10 +486,10 @@ export default function Cashflow() {
             <div className="glass rounded-2xl shadow-sm p-6">
               <h3 className="text-sm font-bold text-ink-700 mb-5">90-dagars saldoprognos</h3>
               {loadingRunway ? (
-                <div className="h-72 skeleton rounded-xl" />
+                <div className="h-72 skeleton rounded-2xl" />
               ) : forecastData.length === 0 ? (
                 <div className="h-72 flex flex-col items-center justify-center text-center gap-2 text-ink-400">
-                  <TrendingUp className="w-8 h-8 text-ink-300" aria-hidden="true" />
+                  <TrendingUp className="w-8 h-8 text-ink-400" aria-hidden="true" />
                   <p className="text-sm">Ingen prognosdata tillgänglig ännu.</p>
                 </div>
               ) : (
@@ -510,7 +510,7 @@ export default function Cashflow() {
                     <Tooltip
                       content={({ active, payload, label }) =>
                         active && payload?.length ? (
-                          <div className="glass rounded-xl shadow px-3 py-2 text-xs">
+                          <div className="glass rounded-2xl shadow-sm px-3 py-2 text-xs">
                             <p className="text-ink-500 mb-0.5">{label}</p>
                             <p className="font-bold text-ink-900">{fmt(Number(payload[0].value ?? 0))}</p>
                           </div>
@@ -537,13 +537,13 @@ function CashflowTooltip({ active, payload, label }: {
 }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white rounded-xl border border-ink-100 shadow-[0_8px_24px_rgba(26,25,32,0.12)] px-3.5 py-2.5 text-xs min-w-[9rem]">
-      <p className="font-semibold text-ink-800 mb-1.5">{label}</p>
+    <div className="bg-white rounded-2xl border border-ink-100 shadow-md px-4 py-3 text-xs min-w-[9rem]">
+      <p className="font-semibold text-ink-900 mb-1.5">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
           <span className="text-ink-500">{p.name}</span>
-          <span className="ml-auto font-semibold text-ink-800 tabular">
+          <span className="ml-auto font-semibold text-ink-900 tabular">
             {p.value.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </span>
         </div>

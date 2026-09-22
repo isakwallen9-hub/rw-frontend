@@ -1,9 +1,10 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, FileDown, Sheet, PackageOpen, Info } from 'lucide-react'
+import { Banknote, AlertCircle, BarChart2, Clock, TrendingUp, FileDown, Sheet, PackageOpen, Info, Sparkles } from 'lucide-react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
 import { SkeletonKpiCards, SkeletonChart, SkeletonList } from './components/Skeleton'
 import { EmptyState } from './components/EmptyState'
+import CountUp from './components/CountUp'
 import Tour from './components/Tour'
 import { fetchWithAuth } from './utils/fetchWithAuth'
 import { isTourCompleted, markTourCompleted } from './utils/tourStorage'
@@ -633,7 +634,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <button
               onClick={exportExcel}
               disabled={exportingExcel}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-ink-700 bg-white/60 backdrop-blur border border-ink-200/60 px-4 py-2.5 rounded-lg hover:bg-white/40 hover:shadow-md active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color] duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-ink-700 bg-white/60 backdrop-blur border border-ink-200/60 px-4 py-3 rounded-2xl hover:bg-white/40 hover:shadow-md active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color] duration-200 disabled:opacity-60 shadow-sm min-h-[44px]"
             >
               {exportingExcel ? (
                 <>
@@ -651,7 +652,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <button
               onClick={downloadReport}
               disabled={downloadingPdf}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-white bg-primary shadow-md shadow-brand-500/20 px-4 py-2.5 rounded-lg hover:opacity-90 active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color] duration-200 disabled:opacity-60 min-h-[44px]"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-white bg-primary shadow-md px-4 py-3 rounded-2xl hover:opacity-90 active:scale-[0.98] transition-[transform,box-shadow,background-color,border-color,color] duration-200 disabled:opacity-60 min-h-[44px]"
             >
               {downloadingPdf ? (
                 <>
@@ -671,7 +672,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
         {/* Export error */}
         {exportError && (
-          <div className="bg-negative-50 border border-negative-100 text-negative-600 text-sm rounded-xl px-4 py-3">
+          <div className="bg-negative-50 border border-negative-100 text-negative-600 text-sm rounded-2xl px-4 py-3">
             {exportError}
           </div>
         )}
@@ -686,7 +687,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               </p>
             </div>
             <a href="/onboarding"
-              className="shrink-0 bg-white text-primary font-bold text-sm px-6 py-3 rounded-xl hover:bg-brand-50 transition-colors shadow-sm whitespace-nowrap">
+              className="shrink-0 bg-white text-primary font-bold text-sm px-6 py-3 rounded-2xl hover:bg-brand-50 transition-colors shadow-sm whitespace-nowrap">
               Starta onboarding →
             </a>
           </div>
@@ -699,7 +700,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               const cfg = ALERT_CONFIG[alert.severity ?? 'low']
               const key = alert.id ?? alert.message ?? String(i)
               return (
-                <div key={key} className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-[transform,box-shadow,background-color,border-color,color] duration-200 ${cfg.bg} ${cfg.border}`}>
+                <div key={key} className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-[transform,box-shadow,background-color,border-color,color] duration-200 ${cfg.bg} ${cfg.border}`}>
                   <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${cfg.iconBg} ${cfg.text}`}>
                     {cfg.icon}
                   </span>
@@ -800,7 +801,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <KpiCard
                 icon={<Banknote className="w-5 h-5" />}
                 label="Likvida medel"
-                value={fmt(kpi.liquidAssets)}
+                value={<CountUp value={kpi.liquidAssets} format={fmt} />}
                 subtitle="Totalt inflöde"
                 trend={STATUS_TREND[liquidStatus]}
                 trendLabel={liquidLabel}
@@ -811,7 +812,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <KpiCard
                 icon={<AlertCircle className="w-5 h-5" />}
                 label="Förfallna fakturor"
-                value={`${kpi.overdueInvoices} st`}
+                value={<CountUp value={kpi.overdueInvoices} format={(n) => `${Math.round(n)} st`} />}
                 subtitle="Kräver uppföljning"
                 trend={STATUS_TREND[overdueStatus]}
                 trendLabel={overdueLabel}
@@ -823,7 +824,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <KpiCard
                 icon={<BarChart2 className="w-5 h-5" />}
                 label="Break-even"
-                value={fmt(kpi.breakEven)}
+                value={<CountUp value={kpi.breakEven} format={fmt} />}
                 subtitle="Totalt utflöde"
                 trend={STATUS_TREND[breakEvenStatus]}
                 trendLabel={breakEvenLabel}
@@ -834,7 +835,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <KpiCard
                 icon={<Clock className="w-5 h-5" />}
                 label="Runway"
-                value={runwayValue}
+                value={runwayNull ? runwayValue : <CountUp value={rd} format={(n) => `${Math.round(n)} dagar`} />}
                 subtitle={runwaySubtitleVal}
                 trend={STATUS_TREND[runwayStatus]}
                 trendLabel={runwayLabel}
@@ -847,7 +848,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
               <KpiCard
                 icon={<TrendingUp className="w-5 h-5" />}
                 label="Bruttomarginal"
-                value={gmValue}
+                value={gmUncomputable ? gmValue : <CountUp value={gm ?? 0} format={(n) => `${n.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`} />}
                 subtitle={gmSubtitle}
                 trend={STATUS_TREND[gmStatus]}
                 trendLabel={gmLabel}
@@ -871,17 +872,17 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             stable: { label: '→ Stabil',    cls: 'text-ink-500 bg-ink-100' },
           }[ct.direction]
           return (
-            <div className="glass rounded-xl px-5 py-4 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <div className="glass rounded-2xl px-5 py-4 shadow-sm flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               <span className="text-ink-400 font-medium">Kostnadsutveckling</span>
-              <span className="text-ink-300">·</span>
+              <span className="text-ink-400">·</span>
               <span className="text-ink-700">
                 Denna period <span className="font-semibold">{fmt(ct.currentPeriod!)}</span>
               </span>
-              <span className="text-ink-300">vs</span>
+              <span className="text-ink-400">vs</span>
               <span className="text-ink-500">
                 Förra perioden <span className="font-medium">{fmt(ct.previousPeriod!)}</span>
               </span>
-              <span className={`ml-auto text-xs font-semibold px-2.5 py-0.5 rounded-full ${dirConfig.cls}`}>
+              <span className={`ml-auto text-xs font-semibold px-3 py-1 rounded-full ${dirConfig.cls}`}>
                 {dirConfig.label}{ct.changePercent != null ? ` ${Math.abs(ct.changePercent).toLocaleString('sv-SE', { maximumFractionDigits: 1 })}%` : ''}
               </span>
             </div>
@@ -891,16 +892,16 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {/* Snabb-statistik */}
         {!loadingCashflow && cashflowDays.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="glass rounded-xl px-3 sm:px-5 py-4 sm:py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
-              <p className="text-2xl sm:text-3xl font-bold tabular text-ink-900 tracking-tight">{quickStats.totalTx}</p>
+            <div className="glass rounded-2xl px-3 sm:px-5 py-4 sm:py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
+              <p className="text-2xl sm:text-3xl font-bold tabular text-ink-900 tracking-tight"><CountUp value={quickStats.totalTx} /></p>
               <p className="text-xs text-ink-400 mt-1">Aktiva dagar</p>
             </div>
-            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
-              <p className="text-3xl font-bold tabular text-ink-900 tracking-tight">{fmt(Math.round(quickStats.avgInflow))}</p>
+            <div className="glass rounded-2xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
+              <p className="text-3xl font-bold tabular text-ink-900 tracking-tight"><CountUp value={quickStats.avgInflow} format={(n) => fmt(Math.round(n))} /></p>
               <p className="text-xs text-ink-400 mt-1">Genomsnittligt dagligt inflöde</p>
             </div>
-            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
-              <p className="text-3xl font-bold tabular text-ink-900 tracking-tight">{fmt(quickStats.bestDay?.inflow ?? 0)}</p>
+            <div className="glass rounded-2xl px-5 py-4 shadow-sm text-center hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200">
+              <p className="text-3xl font-bold tabular text-ink-900 tracking-tight"><CountUp value={quickStats.bestDay?.inflow ?? 0} format={fmt} /></p>
               <p className="text-xs text-ink-400 mt-1">
                 Bästa dag{quickStats.bestDay?.date ? `: ${new Date(quickStats.bestDay.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}` : ''}
               </p>
@@ -912,36 +913,36 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         {loadingCashflow ? (
           <SkeletonChart />
         ) : cashflowError ? (
-          <div className="glass rounded-xl p-6 text-center text-negative-400 text-sm">
+          <div className="glass rounded-2xl p-6 text-center text-negative-400 text-sm">
             {cashflowError}
           </div>
         ) : cashflowDays.length > 0 ? (
           <div data-tour="cashflow-chart" className="glass rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg text-ink-700 mb-0.5 tracking-tight">Kassaflöde{periodHeading ? `: ${periodHeading}` : ''}</h2>
+                <h2 className="text-base text-ink-700 mb-0.5 tracking-tight">Kassaflöde{periodHeading ? `: ${periodHeading}` : ''}</h2>
                 {periodLabel && <p className="text-xs text-ink-400">{periodLabel}</p>}
               </div>
               <div className="flex flex-wrap items-center gap-2 justify-end">
                 {/* Period */}
-                <div className="flex items-center bg-ink-100 rounded-lg p-0.5 text-xs font-semibold">
+                <div className="flex items-center bg-ink-100 rounded-2xl p-1 text-xs font-semibold">
                   {CASHFLOW_PERIODS.map(p => (
                     <button
                       key={p.value}
                       onClick={() => { setCashflowPeriod(p.value); setCashflowView(granularityFor(p.value)) }}
-                      className={`px-2.5 py-1.5 rounded-md transition-colors whitespace-nowrap ${cashflowPeriod === p.value ? 'bg-white text-ink-800 shadow-sm' : 'text-ink-500 hover:text-ink-700'}`}
+                      className={`px-3 py-2 rounded-2xl transition-colors whitespace-nowrap ${cashflowPeriod === p.value ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-700'}`}
                     >
                       {p.label}
                     </button>
                   ))}
                 </div>
                 {/* Granularity */}
-                <div className="flex items-center bg-ink-100 rounded-lg p-0.5 text-xs font-semibold">
+                <div className="flex items-center bg-ink-100 rounded-2xl p-1 text-xs font-semibold">
                   {(['day', 'week', 'month'] as const).map(v => (
                     <button
                       key={v}
                       onClick={() => setCashflowView(v)}
-                      className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap ${cashflowView === v ? 'bg-white text-ink-800 shadow-sm' : 'text-ink-500 hover:text-ink-700'}`}
+                      className={`px-3 py-2 rounded-2xl transition-colors whitespace-nowrap ${cashflowView === v ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-700'}`}
                     >
                       {v === 'day' ? 'Dag' : v === 'week' ? 'Vecka' : 'Månad'}
                     </button>
@@ -949,7 +950,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
                 <button
                   onClick={() => explainThis('cashflow', { cashflow: cashflowDays })}
-                  className="flex items-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors"
+                  className="flex items-center gap-2 text-xs font-medium text-accent border border-accent/30 px-3 py-2 rounded-2xl hover:bg-brand-50 transition-colors"
                 >
                   <SparkleIcon /> Förklara detta
                 </button>
@@ -980,8 +981,17 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="glass rounded-xl p-6 text-center text-ink-400 text-sm">
-            Ingen kassaflödesdata tillgänglig. Importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
+          <div className="glass rounded-2xl">
+            <EmptyState
+              icon={<BarChart2 />}
+              title="Ingen kassaflödesdata ännu"
+              hint="Importera din bankdata så ritar vi upp ditt kassaflöde här."
+              action={
+                <a href="/onboarding" className="inline-flex items-center min-h-[40px] px-4 rounded-2xl bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150">
+                  Importera data
+                </a>
+              }
+            />
           </div>
         )}
 
@@ -991,7 +1001,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           {/* Rekommendationer */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-2xl text-ink-800 tracking-tight shrink-0">Rekommenderade åtgärder</h2>
+              <h2 className="text-2xl text-ink-900 tracking-tight shrink-0">Rekommenderade åtgärder</h2>
               <div className="h-px bg-ink-200/70 flex-1" />
             </div>
             {loadingRec ? (
@@ -1003,8 +1013,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 ))}
               </div>
             ) : (
-              <div className="glass rounded-xl p-6 text-center text-ink-400 text-sm">
-                Inga rekommendationer just nu.
+              <div className="glass rounded-2xl">
+                <EmptyState
+                  icon={<Sparkles />}
+                  title="Inga rekommendationer just nu"
+                  hint="När vi hittar något att förbättra dyker konkreta åtgärder upp här."
+                />
               </div>
             )}
           </div>
@@ -1012,7 +1026,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
           {/* Senaste transaktioner */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-2xl text-ink-800 tracking-tight shrink-0">Senaste transaktioner</h2>
+              <h2 className="text-2xl text-ink-900 tracking-tight shrink-0">Senaste transaktioner</h2>
               <div className="h-px bg-ink-200/70 flex-1" />
             </div>
             {loadingOverview ? (
@@ -1023,7 +1037,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                   {(() => {
                     const hasCategory = recentTransactionRows.some(t => t.category !== null)
                     return (
-                      <table className="w-full text-base min-w-[420px]">
+                      <table className="w-full text-sm min-w-[420px]">
                         <thead>
                           <tr className="border-b border-ink-100 bg-ink-50/40">
                             <th className="text-left px-5 py-4 text-xs font-semibold uppercase tracking-wide text-ink-500">Datum</th>
@@ -1035,19 +1049,19 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                         </thead>
                         <tbody>
                           {recentTransactionRows.map((t, i) => (
-                            <tr key={i} className={`${i !== 0 ? 'border-t border-ink-100' : ''} ${i % 2 === 1 ? 'bg-ink-50/30' : ''} hover:bg-white/50 transition-colors`}>
+                            <tr key={i} className={`${i % 2 === 1 ? 'bg-ink-50/40' : ''} hover:bg-white/50 transition-colors`}>
                               <td className="px-5 py-4 text-ink-400 whitespace-nowrap">{t.label}</td>
                               <td className="px-5 py-4 text-ink-700">
-                                {t.description ?? <span className="text-ink-300">—</span>}
+                                {t.description ?? <span className="text-ink-400">—</span>}
                               </td>
                               {hasCategory && (
                                 <td className="px-5 py-4">
                                   {t.category
-                                    ? <span className="text-xs font-medium bg-ink-100 text-ink-600 border border-ink-200 px-2 py-0.5 rounded-full whitespace-nowrap">{t.category}</span>
-                                    : <span className="text-ink-300">—</span>}
+                                    ? <span className="text-xs font-medium bg-ink-100 text-ink-700 border border-ink-200 px-2 py-1 rounded-full whitespace-nowrap">{t.category}</span>
+                                    : <span className="text-ink-400">—</span>}
                                 </td>
                               )}
-                              <td className="px-5 py-4 text-ink-600 whitespace-nowrap">{t.typeLabel}</td>
+                              <td className="px-5 py-4 text-ink-700 whitespace-nowrap">{t.typeLabel}</td>
                               <td className={`px-5 py-4 text-right font-medium whitespace-nowrap tabular-nums ${t.amount < 0 ? 'text-negative-600' : 'text-positive-600'}`}>
                                 {fmt(t.amount)}
                               </td>
@@ -1062,7 +1076,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             ) : recentCashflowRows.length > 0 ? (
               <div className="glass rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-base min-w-[320px]">
+                  <table className="w-full text-sm min-w-[320px]">
                     <thead>
                       <tr className="border-b border-ink-100 bg-ink-50/40">
                         <th className="text-left px-5 py-4 text-xs font-semibold uppercase tracking-wide text-ink-500">Datum</th>
@@ -1072,7 +1086,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                     </thead>
                     <tbody>
                       {recentCashflowRows.map((t, i) => (
-                        <tr key={i} className={`${i !== 0 ? 'border-t border-ink-100' : ''} ${i % 2 === 1 ? 'bg-ink-50/30' : ''} hover:bg-white/50 transition-colors`}>
+                        <tr key={i} className={`${i % 2 === 1 ? 'bg-ink-50/40' : ''} hover:bg-white/50 transition-colors`}>
                           <td className="px-5 py-4 text-ink-400 whitespace-nowrap">{t.label}</td>
                           <td className="px-5 py-4 text-ink-700">{t.type}</td>
                           <td className={`px-5 py-4 text-right font-medium whitespace-nowrap tabular-nums ${t.amount < 0 ? 'text-negative-600' : 'text-positive-600'}`}>
@@ -1085,8 +1099,17 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                 </div>
               </div>
             ) : (
-              <div className="glass rounded-xl p-6 text-center text-ink-400 text-sm">
-                Inga transaktioner. Importera bankdata i <a href="/onboarding" className="text-accent underline">onboarding</a>.
+              <div className="glass rounded-2xl">
+                <EmptyState
+                  icon={<PackageOpen />}
+                  title="Inga transaktioner ännu"
+                  hint="Importera din bankdata så listas dina senaste transaktioner här."
+                  action={
+                    <a href="/onboarding" className="inline-flex items-center min-h-[40px] px-4 rounded-2xl bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150">
+                      Importera data
+                    </a>
+                  }
+                />
               </div>
             )}
           </div>
@@ -1099,7 +1122,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             {/* Toppprodukter */}
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-2xl text-ink-800 tracking-tight shrink-0">Toppprodukter</h2>
+                <h2 className="text-2xl text-ink-900 tracking-tight shrink-0">Toppprodukter</h2>
                 <div className="h-px bg-ink-200/70 flex-1" />
                 <AskAiButton question="Analysera mina toppprodukter och kategorier. Vad driver intäkterna?" />
               </div>
@@ -1109,11 +1132,11 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             {/* Toppkunder */}
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-2xl text-ink-800 tracking-tight shrink-0">Toppkunder</h2>
+                <h2 className="text-2xl text-ink-900 tracking-tight shrink-0">Toppkunder</h2>
                 <div className="h-px bg-ink-200/70 flex-1" />
                 <AskAiButton question="Analysera mina toppkunder. Vem bör jag prioritera och varför?" />
               </div>
-              <RankList items={topCustomers} emptyText="Importera data för att se dina toppkunder." rowLabel="Kund" barColor="bg-purple-50" />
+              <RankList items={topCustomers} emptyText="Importera data för att se dina toppkunder." rowLabel="Kund" barColor="bg-brand-50" />
             </div>
 
           </div>
@@ -1124,7 +1147,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
 
       {/* Quick-add toast */}
       {quickAddToast && (
-        <div role="status" aria-live="polite" className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-positive-700 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg">
+        <div role="status" aria-live="polite" className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-positive-700 text-white text-sm font-semibold px-4 py-3 rounded-2xl shadow-lg">
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
@@ -1135,23 +1158,23 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       {/* Quick-add modal */}
       {quickAddOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/20 backdrop-blur-md" onClick={() => setQuickAddOpen(false)}>
-          <div className="bg-white/60 backdrop-blur-3xl border border-ink-200/60 rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white/60 backdrop-blur-3xl border border-ink-200/60 rounded-2xl shadow-lg w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-2xl text-ink-900">Ny transaktion</h2>
-              <button onClick={() => setQuickAddOpen(false)} className="text-ink-400 hover:text-ink-600 text-2xl leading-none">&times;</button>
+              <button onClick={() => setQuickAddOpen(false)} className="text-ink-400 hover:text-ink-700 text-2xl leading-none">&times;</button>
             </div>
 
             {/* Type toggle */}
-            <div className="flex rounded-xl border border-ink-200 overflow-hidden mb-4">
+            <div className="flex rounded-2xl border border-ink-200 overflow-hidden mb-4">
               <button
                 onClick={() => setQuickForm(f => ({ ...f, type: 'income' }))}
-                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${quickForm.type === 'income' ? 'bg-positive-600 text-white' : 'text-ink-500 hover:bg-ink-50'}`}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ${quickForm.type === 'income' ? 'bg-positive-600 text-white' : 'text-ink-500 hover:bg-ink-50'}`}
               >
                 Inkomst
               </button>
               <button
                 onClick={() => setQuickForm(f => ({ ...f, type: 'expense' }))}
-                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${quickForm.type === 'expense' ? 'bg-negative-500 text-white' : 'text-ink-500 hover:bg-ink-50'}`}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ${quickForm.type === 'expense' ? 'bg-negative-500 text-white' : 'text-ink-500 hover:bg-ink-50'}`}
               >
                 Utgift
               </button>
@@ -1164,7 +1187,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                   type="date"
                   value={quickForm.date}
                   onChange={e => setQuickForm(f => ({ ...f, date: e.target.value }))}
-                  className="w-full border border-ink-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors"
                 />
               </div>
               <div>
@@ -1176,7 +1199,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                   placeholder="0"
                   value={quickForm.amount}
                   onChange={e => setQuickForm(f => ({ ...f, amount: e.target.value }))}
-                  className="w-full border border-ink-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors"
                 />
               </div>
               <div>
@@ -1186,18 +1209,18 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
                   placeholder="T.ex. Hyra, Kundbetalning..."
                   value={quickForm.description}
                   onChange={e => setQuickForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full border border-ink-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-ink-500 mb-1">Kategori <span className="text-ink-300">(valfri)</span></label>
+                <label className="block text-xs font-medium text-ink-500 mb-1">Kategori <span className="text-ink-400">(valfri)</span></label>
                 <input
                   type="text"
                   placeholder="T.ex. Hyra, Lön..."
                   value={quickForm.category}
                   onChange={e => setQuickForm(f => ({ ...f, category: e.target.value }))}
                   onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd() }}
-                  className="w-full border border-ink-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors"
                 />
               </div>
             </div>
@@ -1205,14 +1228,14 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             <div className="flex gap-2 mt-5">
               <button
                 onClick={() => setQuickAddOpen(false)}
-                className="flex-1 py-2.5 text-sm font-semibold text-ink-600 bg-ink-100 rounded-xl hover:bg-ink-200 transition-colors"
+                className="flex-1 py-3 text-sm font-semibold text-ink-700 bg-ink-100 rounded-2xl hover:bg-ink-200 transition-colors"
               >
                 Avbryt
               </button>
               <button
                 onClick={handleQuickAdd}
                 disabled={quickAddSaving || !quickForm.description.trim() || !quickForm.amount}
-                className="flex-1 py-2.5 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-3 text-sm font-semibold text-white bg-primary rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {quickAddSaving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {quickAddSaving ? 'Sparar...' : 'Spara'}
@@ -1225,12 +1248,12 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
       {/* AI Explain Modal */}
       {explainOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/20 backdrop-blur-md" onClick={() => setExplainOpen(false)}>
-          <div className="bg-white/60 backdrop-blur-3xl border border-ink-200/60 rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white/60 backdrop-blur-3xl border border-ink-200/60 rounded-2xl shadow-lg max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-primary font-semibold">
                 <SparkleIcon className="w-4 h-4 text-accent" /> AI-förklaring
               </div>
-              <button onClick={() => setExplainOpen(false)} className="text-ink-400 hover:text-ink-600 text-2xl leading-none">&times;</button>
+              <button onClick={() => setExplainOpen(false)} className="text-ink-400 hover:text-ink-700 text-2xl leading-none">&times;</button>
             </div>
             {explainLoading ? (
               <div className="flex items-center gap-3 py-6 text-ink-400 text-sm">
@@ -1242,7 +1265,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
             ) : (
               <p className="text-ink-700 text-sm leading-relaxed">{explainMessage}</p>
             )}
-            <button onClick={() => setExplainOpen(false)} className="mt-5 w-full text-sm font-medium bg-ink-100 hover:bg-ink-200 text-ink-700 py-2.5 rounded-lg transition-colors">
+            <button onClick={() => setExplainOpen(false)} className="mt-5 w-full text-sm font-medium bg-ink-100 hover:bg-ink-200 text-ink-700 py-3 rounded-2xl transition-colors">
               Stäng
             </button>
           </div>
@@ -1255,7 +1278,7 @@ export default function Dashboard({ onLogout: _onLogout }: { onLogout?: () => vo
         title="Lägg till transaktion"
         aria-label="Lägg till transaktion"
       >
-        <span className="text-3xl font-light leading-none pb-0.5" aria-hidden="true">+</span>
+        <span className="text-3xl font-light leading-none pb-1" aria-hidden="true">+</span>
       </button>
 
       {/* Onboarding tour */}
@@ -1279,13 +1302,13 @@ function CashflowTooltip({ active, payload, label }: {
   const { formatAmount: fmt } = useCurrency()
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white rounded-xl border border-ink-100 shadow-[0_8px_24px_rgba(26,25,32,0.12)] px-3.5 py-2.5 text-xs min-w-[9rem]">
-      <p className="font-semibold text-ink-800 mb-1.5">{label}</p>
+    <div className="bg-white rounded-2xl border border-ink-100 shadow-md px-4 py-3 text-xs min-w-[9rem]">
+      <p className="font-semibold text-ink-900 mb-1.5">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
           <span className="text-ink-500">{p.name}</span>
-          <span className="ml-auto font-semibold text-ink-800 tabular">{fmt(p.value)}</span>
+          <span className="ml-auto font-semibold text-ink-900 tabular">{fmt(p.value)}</span>
         </div>
       ))}
     </div>
@@ -1298,7 +1321,7 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
   const p = PRIORITY_CONFIG[r.priority ?? 'medium']
 
   return (
-    <div className="group glass rounded-2xl overflow-hidden hover:bg-white/82 hover:shadow-[0_12px_40px_rgba(26,25,32,0.09)] transition-[transform,box-shadow,background-color,border-color,color] duration-200 cursor-default">
+    <div className="group glass rounded-2xl overflow-hidden hover:bg-white/82 hover:shadow-md transition-[transform,box-shadow,background-color,border-color,color] duration-200 cursor-default">
       {/* Urgency strip */}
       <div className="h-1 w-full bg-ink-100">
         <div className={`h-full ${p.bar} transition-[width] duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)]`} style={{ width: `${p.urgencyPct}%` }} />
@@ -1308,7 +1331,7 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
-            <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border mb-1.5 ${p.badge}`}>
+            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full border mb-1.5 ${p.badge}`}>
               <span className="font-mono">{p.symbol}</span> {p.label}
             </span>
             <h3 className="font-semibold text-ink-900 text-sm leading-snug">{r.title}</h3>
@@ -1327,11 +1350,11 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
 
         {/* Potential value */}
         {(r.estimatedValue ?? 0) > 0 && (
-          <div className="flex items-center gap-3 bg-positive-50 border border-positive-100 rounded-xl px-3 py-2.5 mb-4">
+          <div className="flex items-center gap-3 bg-positive-50 border border-positive-100 rounded-2xl px-3 py-3 mb-4">
             <span className="text-positive-500 text-2xl font-bold leading-none">↑</span>
             <div>
-              <p className="text-[10px] font-bold text-positive-600 uppercase tracking-widest">Möjlig förbättring</p>
-              <p className="text-base font-bold text-positive-700 leading-tight">{fmt(r.estimatedValue)}</p>
+              <p className="text-xs font-bold text-positive-600 uppercase tracking-widest">Möjlig förbättring</p>
+              <p className="text-sm font-bold text-positive-700 leading-tight">{fmt(r.estimatedValue)}</p>
             </div>
           </div>
         )}
@@ -1341,27 +1364,27 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
           <div className="mb-4">
             <button
               onClick={() => setExpanded(v => !v)}
-              className="text-xs text-accent font-semibold flex items-center gap-1.5 hover:underline"
+              className="text-xs text-accent font-semibold flex items-center gap-2 hover:underline"
             >
-              <span className="text-[9px]">{expanded ? '▼' : '▶'}</span> Hur gör jag?
+              <span className="text-xs">{expanded ? '▼' : '▶'}</span> Hur gör jag?
             </button>
             {expanded && (
-              <p className="text-ink-600 text-sm mt-2 leading-relaxed border-l-2 border-accent/30 pl-3">{r.how}</p>
+              <p className="text-ink-700 text-sm mt-2 leading-relaxed border-l-2 border-accent/30 pl-3">{r.how}</p>
             )}
           </div>
         )}
 
         {/* Targets */}
         {r.targets && r.targets.length > 0 && (
-          <div className="mb-4 border border-ink-100 rounded-xl overflow-hidden">
+          <div className="mb-4 border border-ink-100 rounded-2xl overflow-hidden">
             {r.targets.slice(0, 3).map((t, i) => (
               <div key={t.id ?? i} className={`flex items-center justify-between px-3 py-2 text-xs ${i !== 0 ? 'border-t border-ink-50' : ''}`}>
-                <span className="text-ink-600 font-medium truncate mr-2">{t.label}</span>
-                <span className="font-semibold text-ink-800 shrink-0">{fmt(t.value)}</span>
+                <span className="text-ink-700 font-medium truncate mr-2">{t.label}</span>
+                <span className="font-semibold text-ink-900 shrink-0">{fmt(t.value)}</span>
               </div>
             ))}
             {r.targets.length > 3 && (
-              <div className="px-3 py-1.5 text-xs text-ink-400 border-t border-ink-50 bg-ink-50">
+              <div className="px-3 py-2 text-xs text-ink-500 border-t border-ink-50 bg-ink-50">
                 +{r.targets.length - 3} till
               </div>
             )}
@@ -1372,11 +1395,11 @@ function RecommendationCard({ r, onExplain }: { r: Recommendation; onExplain: ()
         <div className="flex gap-2">
           <button
             onClick={onExplain}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-accent border border-accent/30 px-3 py-2 rounded-lg hover:bg-brand-50 transition-[transform,box-shadow,background-color,border-color,color] duration-200"
+            className="flex-1 flex items-center justify-center gap-2 text-xs font-medium text-accent border border-accent/30 px-3 py-2 rounded-2xl hover:bg-brand-50 transition-[transform,box-shadow,background-color,border-color,color] duration-200"
           >
             <SparkleIcon className="w-3 h-3" /> Förklara
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-white bg-accent px-3 py-2 rounded-lg hover:bg-brand-700 active:scale-95 transition-[transform,box-shadow,background-color,border-color,color] duration-200">
+          <button className="flex-1 flex items-center justify-center gap-2 text-xs font-medium text-white bg-accent px-3 py-2 rounded-2xl hover:bg-brand-700 active:scale-95 transition-[transform,box-shadow,background-color,border-color,color] duration-200">
             Åtgärda <span className="text-sm leading-none">→</span>
           </button>
         </div>
@@ -1398,9 +1421,9 @@ const STATUS_ACCENT: Record<KpiStatus, KpiAccent> = { good: 'green', attention: 
 const STATUS_TREND:  Record<KpiStatus, KpiTrend>  = { good: 'up',    attention: 'down', neutral: 'neutral' }
 
 const ACCENT_STYLES: Record<KpiAccent, { shadow: string; shadowHover: string; iconBg: string; iconText: string; accentBorder: string }> = {
-  blue:   { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(58,92,216,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(58,92,216,0.16)]',   iconBg: 'bg-brand-50   border border-brand-100',   iconText: 'text-brand-600',   accentBorder: 'border-l-brand-500'   },
-  green:  { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(14,156,107,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(14,156,107,0.16)]',   iconBg: 'bg-positive-50  border border-positive-100',  iconText: 'text-positive-600',  accentBorder: 'border-l-positive-500'  },
-  red:    { shadow: 'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_16px_rgba(0,0,0,0.04),0_4px_28px_rgba(206,70,70,0.12)]',   shadowHover: 'hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.06),0_8px_36px_rgba(206,70,70,0.16)]',   iconBg: 'bg-negative-50    border border-negative-100',    iconText: 'text-negative-600',    accentBorder: 'border-l-negative-500'    },
+  blue:   { shadow: 'shadow-sm',   shadowHover: 'hover:shadow-md',   iconBg: 'bg-brand-50   border border-brand-100',   iconText: 'text-brand-600',   accentBorder: 'border-l-brand-500'   },
+  green:  { shadow: 'shadow-sm',   shadowHover: 'hover:shadow-md',   iconBg: 'bg-positive-50  border border-positive-100',  iconText: 'text-positive-600',  accentBorder: 'border-l-positive-500'  },
+  red:    { shadow: 'shadow-sm',   shadowHover: 'hover:shadow-md',   iconBg: 'bg-negative-50    border border-negative-100',    iconText: 'text-negative-600',    accentBorder: 'border-l-negative-500'    },
 }
 
 const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }> = {
@@ -1414,7 +1437,7 @@ const TREND_STYLES: Record<KpiTrend, { arrow: string; text: string; bg: string }
 function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'blue', isPlaceholder = false, onExplain, onClick, reminder }: {
   icon: React.ReactNode
   label: string
-  value: string
+  value: React.ReactNode
   subtitle?: string
   trend?: KpiTrend
   trendLabel?: string
@@ -1434,7 +1457,7 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
     >
       {/* Icon row */}
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.iconBg} ${c.iconText}`}>
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${c.iconBg} ${c.iconText}`}>
           {icon}
         </div>
         {onExplain && (
@@ -1461,9 +1484,9 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
       </div>
 
       {/* Footer — chip and subtitle stacked so neither is clipped mid-word. */}
-      <div className="mt-auto flex flex-col items-start gap-1.5">
+      <div className="mt-auto flex flex-col items-start gap-2">
         {t && trendLabel && (
-          <span className={`inline-flex items-start gap-1 max-w-full text-[10.5px] font-semibold px-2 py-0.5 rounded-md tracking-wide ${t.text} ${t.bg}`}>
+          <span className={`inline-flex items-start gap-1 max-w-full text-xs font-semibold px-2 py-1 rounded-2xl tracking-wide ${t.text} ${t.bg}`}>
             <span aria-hidden="true" className="leading-tight">{t.arrow}</span>
             <span className="break-words leading-tight">{trendLabel}</span>
           </span>
@@ -1476,9 +1499,9 @@ function KpiCard({ icon, label, value, subtitle, trend, trendLabel, accent = 'bl
         <a
           href={reminder.href}
           onClick={e => e.stopPropagation()}
-          className="mt-3 pt-2.5 border-t border-ink-100/80 flex items-start gap-1.5 text-[11px] leading-snug text-ink-400 hover:text-brand-600 transition-colors group/reminder"
+          className="mt-3 pt-3 border-t border-ink-100/80 flex items-start gap-2 text-xs leading-snug text-ink-400 hover:text-brand-600 transition-colors group/reminder"
         >
-          <Info className="w-3 h-3 mt-0.5 shrink-0 text-ink-300 group-hover/reminder:text-brand-500 transition-colors" aria-hidden="true" />
+          <Info className="w-3 h-3 mt-0.5 shrink-0 text-ink-400 group-hover/reminder:text-brand-500 transition-colors" aria-hidden="true" />
           <span>{reminder.text}</span>
         </a>
       )}
@@ -1501,7 +1524,7 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
           title={emptyText}
           hint="Importera din bank- eller försäljningsfil så rankas dina bästa här."
           action={
-            <a href="/import" className="inline-flex items-center min-h-[40px] px-4 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150">
+            <a href="/import" className="inline-flex items-center min-h-[40px] px-4 rounded-2xl bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-[transform,background-color] duration-150">
               Importera data
             </a>
           }
@@ -1526,7 +1549,7 @@ function RankList({ items, emptyText, rowLabel, barColor }: {
             return (
               <div key={i} className={`relative grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 hover:bg-white/40 transition-colors ${i !== 0 ? 'border-t border-ink-100/60' : ''}`}>
                 <div className={`absolute inset-y-0 left-0 ${barColor} transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-500`} style={{ width: `${barPct}%` }} />
-                <span className="relative text-sm font-semibold text-ink-800 truncate pr-4">{p.label}</span>
+                <span className="relative text-sm font-semibold text-ink-900 truncate pr-4">{p.label}</span>
                 <span className="relative text-sm font-semibold text-ink-900 text-right pr-6 whitespace-nowrap tabular-nums">{fmt(p.totalInflow)}</span>
                 <span className="relative text-sm text-ink-400 text-right pr-6 whitespace-nowrap tabular-nums">{p.transactionCount} st</span>
                 <span className="relative text-sm text-ink-500 text-right whitespace-nowrap tabular-nums">{fmt(avg)}</span>
@@ -1594,17 +1617,17 @@ function WeeklyFocusSection() {
   return (
     <div className="glass rounded-2xl p-5">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-brand-600 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0">
           <SparkleIcon className="w-4 h-4 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider mb-0.5">Veckans fokus</p>
+          <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-0.5">Veckans fokus</p>
           <p className="text-sm font-bold text-ink-900 tracking-tight">Vad bör du prioritera denna vecka?</p>
         </div>
         {items.length > 0 && !loading && (
           <button
             onClick={() => void load()}
-            className="text-xs text-ink-400 hover:text-ink-600 transition-colors shrink-0"
+            className="text-xs text-ink-400 hover:text-ink-700 transition-colors shrink-0"
           >
             Uppdatera
           </button>
@@ -1613,7 +1636,7 @@ function WeeklyFocusSection() {
 
       {loading && (
         <div className="flex items-center gap-3 py-2 text-ink-500">
-          <span className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin shrink-0" />
+          <span className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin shrink-0" />
           <p className="text-sm">AI:n förbereder...</p>
         </div>
       )}
@@ -1625,7 +1648,7 @@ function WeeklyFocusSection() {
       {!loading && !error && items.length === 0 && (
         <button
           onClick={() => void load()}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white text-sm font-semibold rounded-xl hover:bg-purple-700 transition-colors min-h-[44px]"
+          className="inline-flex items-center gap-2 px-4 py-3 bg-brand-600 text-white text-sm font-semibold rounded-2xl hover:bg-brand-700 transition-colors min-h-[44px]"
         >
           <SparkleIcon className="w-4 h-4 text-white" />
           Vad ska jag fokusera på denna vecka?
@@ -1633,10 +1656,10 @@ function WeeklyFocusSection() {
       )}
 
       {!loading && items.length > 0 && (
-        <ol className="flex flex-col gap-3.5">
+        <ol className="flex flex-col gap-4">
           {items.map((item, i) => (
             <li key={i} className="flex gap-3">
-              <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+              <span className="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {i + 1}
               </span>
               <div className="flex-1 min-w-0">
@@ -1652,7 +1675,7 @@ function WeeklyFocusSection() {
                   </div>
                   <button
                     onClick={() => openAiWith(`Berätta mer om detta fokusområde: ${item.title}`)}
-                    className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-brand-600 border border-brand-200 rounded-lg px-2.5 py-1 hover:bg-brand-50 transition-colors whitespace-nowrap mt-0.5"
+                    className="shrink-0 flex items-center gap-1 text-xs font-semibold text-brand-600 border border-brand-200 rounded-2xl px-3 py-1 hover:bg-brand-50 transition-colors whitespace-nowrap mt-0.5"
                   >
                     <SparkleIcon className="w-3 h-3" />
                     Fråga AI om detta
@@ -1684,7 +1707,7 @@ function AskAiButton({ question }: { question: string }) {
   return (
     <button
       onClick={() => openAiWith(question)}
-      className="flex items-center gap-1.5 text-xs font-medium text-ink-400 hover:text-brand-600 transition-colors px-2 py-1 rounded-lg hover:bg-brand-50/60 min-h-[32px]"
+      className="flex items-center gap-2 text-xs font-medium text-ink-400 hover:text-brand-600 transition-colors px-2 py-1 rounded-2xl hover:bg-brand-50/60 min-h-[32px]"
     >
       <SparkleIcon className="w-3 h-3" />
       Fråga AI
@@ -1712,7 +1735,7 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500/20 to-brand-500/20 flex items-center justify-center shrink-0">
           <SparkleIcon className="w-4 h-4 text-brand-500 animate-pulse" />
         </div>
-        <div className="flex flex-col gap-1.5 flex-1">
+        <div className="flex flex-col gap-2 flex-1">
           <div className="h-3.5 skeleton rounded-full w-48" />
           <div className="h-3 skeleton rounded-full w-80 max-w-full" />
           <div className="h-3 skeleton rounded-full w-64 max-w-full" />
@@ -1730,7 +1753,7 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
     .slice(0, 2)
 
   return (
-    <div className="relative rounded-2xl p-[1px] bg-gradient-to-r from-brand-400/40 via-brand-300/30 to-purple-300/20">
+    <div className="relative rounded-2xl p-[1px] bg-gradient-to-r from-brand-400/40 via-brand-300/30 to-brand-300/20">
       <div className="bg-white/70 backdrop-blur-2xl rounded-2xl px-6 py-5 flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
@@ -1740,7 +1763,7 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
             </div>
             <div>
               <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-0.5">AI-sammanfattning</p>
-              <p className="text-base font-bold text-ink-900 tracking-tight">{getGreeting()}, här är läget</p>
+              <p className="text-sm font-bold text-ink-900 tracking-tight">{getGreeting()}, här är läget</p>
             </div>
           </div>
           <button
@@ -1753,7 +1776,7 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
 
         {/* Summary */}
         {data?.summary && (
-          <p className="text-sm text-ink-600 leading-relaxed border-l-2 border-brand-200 pl-3">
+          <p className="text-sm text-ink-700 leading-relaxed border-l-2 border-brand-200 pl-3">
             {data.summary}
           </p>
         )}
@@ -1767,7 +1790,7 @@ function AiBriefing({ data, loading, onNavigate, formatAmount: fmt }: {
                 <button
                   key={i}
                   onClick={() => onNavigate('/insights')}
-                  className={`flex items-start gap-3 px-3.5 py-3 rounded-xl border text-left transition-[transform,box-shadow,background-color,border-color,color,opacity] hover:shadow-sm active:scale-[0.99] ${cfg.bg} ${cfg.border}`}
+                  className={`flex items-start gap-3 px-4 py-3 rounded-2xl border text-left transition-[transform,box-shadow,background-color,border-color,color,opacity] hover:shadow-sm active:scale-[0.99] ${cfg.bg} ${cfg.border}`}
                 >
                   <span className={`w-2 h-2 rounded-full ${cfg.dot} shrink-0 mt-1.5`} />
                   <div className="min-w-0 flex-1">

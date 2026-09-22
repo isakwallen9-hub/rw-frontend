@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trash2 } from 'lucide-react'
+import { Trash2, MessageSquare } from 'lucide-react'
+import { EmptyState } from '../components/EmptyState'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { SkeletonCard } from '../components/Skeleton'
 import TwoFactorSection from '../components/TwoFactorSection'
@@ -262,15 +263,15 @@ export default function Profile() {
         <div>
           <h1 className="text-3xl text-primary mb-4">Profil</h1>
           {loading ? (
-            <div className="glass rounded-xl p-6 flex flex-col gap-4">
+            <div className="glass rounded-2xl p-6 flex flex-col gap-4">
               {[...Array(5)].map((_, i) => (
                 <SkeletonCard key={i} className="h-8 w-full" />
               ))}
             </div>
           ) : error ? (
-            <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">{error}</div>
+            <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-2xl px-5 py-4 text-sm">{error}</div>
           ) : profile ? (
-            <div className="glass rounded-xl overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden">
               <ProfileRow label="Förnamn" value={profile.firstName} />
               <ProfileRow label="Efternamn" value={profile.lastName} />
               <ProfileRow label="E-post" value={profile.email} />
@@ -279,7 +280,7 @@ export default function Profile() {
               <div className="flex items-center justify-between px-5 py-4">
                 <span className="text-xs font-medium text-ink-400 uppercase tracking-wide w-32 shrink-0">Bransch</span>
                 {currentIndustry ? (
-                  <span className="flex items-center gap-1.5 text-sm text-ink-800">
+                  <span className="flex items-center gap-2 text-sm text-ink-900">
                     <span>{currentIndustry.icon}</span>
                     {currentIndustry.label}
                   </span>
@@ -293,8 +294,8 @@ export default function Profile() {
 
         {/* Industry picker */}
         <div>
-          <h2 className="text-2xl text-ink-800 mb-4">Bransch</h2>
-          <div className="glass rounded-xl p-4">
+          <h2 className="text-2xl text-ink-900 mb-4">Bransch</h2>
+          <div className="glass rounded-2xl p-4">
             {loading ? (
               <SkeletonCard className="h-40 w-full" />
             ) : (
@@ -304,14 +305,14 @@ export default function Profile() {
                     key={ind.value}
                     onClick={() => saveIndustry(ind.value)}
                     disabled={industrySaving}
-                    className={`flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-2 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 ${
+                    className={`flex flex-col items-center gap-2 border-2 rounded-2xl py-3 px-2 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 ${
                       industry === ind.value
                         ? 'border-accent bg-accent/5'
                         : 'border-ink-100 hover:border-accent/50 hover:bg-ink-50'
                     }`}
                   >
                     <span className="text-2xl">{ind.icon}</span>
-                    <span className={`text-xs font-medium text-center leading-tight ${industry === ind.value ? 'text-accent' : 'text-ink-600'}`}>
+                    <span className={`text-xs font-medium text-center leading-tight ${industry === ind.value ? 'text-accent' : 'text-ink-700'}`}>
                       {ind.label}
                     </span>
                   </button>
@@ -323,8 +324,8 @@ export default function Profile() {
 
         {/* Currency picker */}
         <div>
-          <h2 className="text-2xl text-ink-800 mb-4">Valuta</h2>
-          <div className="glass rounded-xl p-4">
+          <h2 className="text-2xl text-ink-900 mb-4">Valuta</h2>
+          <div className="glass rounded-2xl p-4">
             {loading ? (
               <SkeletonCard className="h-16 w-full" />
             ) : (
@@ -334,14 +335,14 @@ export default function Profile() {
                     key={c.code}
                     onClick={() => saveCurrency(c.code)}
                     disabled={currencySaving}
-                    className={`flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 ${
+                    className={`flex flex-col items-center gap-2 border-2 rounded-2xl py-3 transition-[transform,box-shadow,background-color,border-color,color,opacity] disabled:opacity-50 ${
                       currency === c.code
                         ? 'border-accent bg-accent/5'
                         : 'border-ink-100 hover:border-accent/50 hover:bg-ink-50'
                     }`}
                   >
                     <span className="text-2xl">{c.flag}</span>
-                    <span className={`text-xs font-bold ${currency === c.code ? 'text-accent' : 'text-ink-600'}`}>
+                    <span className={`text-xs font-bold ${currency === c.code ? 'text-accent' : 'text-ink-700'}`}>
                       {c.code}
                     </span>
                   </button>
@@ -353,21 +354,21 @@ export default function Profile() {
 
         {/* Notification settings */}
         <div>
-          <h2 className="text-2xl text-ink-800 mb-4">Notifikationer</h2>
+          <h2 className="text-2xl text-ink-900 mb-4">Notifikationer</h2>
 
           {notifLoading ? (
-            <div className="glass rounded-xl p-6 flex flex-col gap-4">
+            <div className="glass rounded-2xl p-6 flex flex-col gap-4">
               {[...Array(4)].map((_, i) => (
                 <SkeletonCard key={i} className="h-8 w-full" />
               ))}
             </div>
           ) : (
-            <div className="glass rounded-xl overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden">
 
               {/* Master enable/disable */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-ink-50">
                 <div>
-                  <p className="text-sm font-semibold text-ink-800">Aktivera notifikationer</p>
+                  <p className="text-sm font-semibold text-ink-900">Aktivera notifikationer</p>
                   <p className="text-xs text-ink-400 mt-0.5">Slår på eller av alla notifikationer</p>
                 </div>
                 <Toggle
@@ -379,7 +380,7 @@ export default function Profile() {
 
               {/* Email input */}
               <div className="px-5 py-4 border-b border-ink-50">
-                <label className="block text-sm font-semibold text-ink-800 mb-1">Notifikations-email</label>
+                <label className="block text-sm font-semibold text-ink-900 mb-1">Notifikations-email</label>
                 <p className="text-xs text-ink-400 mb-3">Alerts skickas till denna adress</p>
                 <div className="flex gap-2">
                   <input
@@ -389,12 +390,12 @@ export default function Profile() {
                     onKeyDown={e => e.key === 'Enter' && handleEmailSave()}
                     placeholder="du@foretaget.se"
                     disabled={!notif.enabled}
-                    className="flex-1 border border-ink-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors disabled:opacity-50 disabled:bg-ink-50"
+                    className="flex-1 border border-ink-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition-colors disabled:opacity-50 disabled:bg-ink-50"
                   />
                   <button
                     onClick={handleEmailSave}
                     disabled={saving || !notif.enabled}
-                    className="px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg shadow-md shadow-brand-500/20 hover:opacity-90 transition-opacity disabled:opacity-50 min-h-[44px]"
+                    className="px-4 py-3 bg-primary text-white text-sm font-semibold rounded-2xl shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 min-h-[44px]"
                   >
                     Spara
                   </button>
@@ -429,7 +430,7 @@ export default function Profile() {
 
           {/* Save confirmation */}
           {savedMsg && (
-            <div className="mt-3 flex items-center gap-2 text-positive-700 bg-positive-50 border border-positive-100 rounded-xl px-4 py-3 text-sm font-medium">
+            <div className="mt-3 flex items-center gap-2 text-positive-700 bg-positive-50 border border-positive-100 rounded-2xl px-4 py-3 text-sm font-medium">
               <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
@@ -443,18 +444,18 @@ export default function Profile() {
 
         {/* AI-minne */}
         <div>
-          <h2 className="text-2xl text-ink-800 mb-4">AI-minne</h2>
+          <h2 className="text-2xl text-ink-900 mb-4">AI-minne</h2>
 
           {memoryLoading ? (
-            <div className="glass rounded-xl p-6 flex flex-col gap-4">
+            <div className="glass rounded-2xl p-6 flex flex-col gap-4">
               <SkeletonCard className="h-8 w-full" />
             </div>
           ) : (
-            <div className="glass rounded-xl overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden">
               {/* Main toggle */}
               <div className="flex items-start justify-between px-5 py-4 border-b border-ink-50">
                 <div className="flex-1 pr-4">
-                  <p className="text-sm font-semibold text-ink-800">Låt AI:n komma ihåg våra samtal</p>
+                  <p className="text-sm font-semibold text-ink-900">Låt AI:n komma ihåg våra samtal</p>
                   <p className="text-xs text-ink-400 mt-1.5 leading-relaxed">
                     När minnet är på kan AI-assistenten referera till tidigare frågor och ge mer träffsäkra svar över tid.
                     Dina samtal sparas krypterat och används aldrig för att träna AI-modeller.
@@ -473,13 +474,13 @@ export default function Profile() {
                 <div className="px-5 py-4 flex gap-8 bg-positive-50/50">
                   {memoryStatus.activatedAt && (
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Aktiverat sedan</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-ink-400">Aktiverat sedan</p>
                       <p className="text-xs text-ink-700 mt-0.5">{fmtDate(memoryStatus.activatedAt)}</p>
                     </div>
                   )}
                   {memoryStatus.conversationCount !== undefined && (
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Sparade samtal</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-ink-400">Sparade samtal</p>
                       <p className="text-xs text-ink-700 mt-0.5">{memoryStatus.conversationCount}</p>
                     </div>
                   )}
@@ -492,22 +493,26 @@ export default function Profile() {
           {!memoryLoading && memoryStatus?.enabled && (
             <div className="mt-4">
               {convsLoading ? (
-                <div className="glass rounded-xl p-5">
+                <div className="glass rounded-2xl p-5">
                   <SkeletonCard className="h-16 w-full" />
                 </div>
               ) : conversations.length === 0 ? (
-                <div className="glass rounded-xl px-5 py-8 text-center text-sm text-ink-400">
-                  Inga sparade samtal ännu
+                <div className="glass rounded-2xl">
+                  <EmptyState
+                    icon={<MessageSquare />}
+                    title="Inga sparade samtal ännu"
+                    hint="När du chattar med AI-assistenten sparas dina samtal här så att du kan gå tillbaka till dem."
+                  />
                 </div>
               ) : (
-                <div className="glass rounded-xl overflow-hidden">
+                <div className="glass rounded-2xl overflow-hidden">
                   {conversations.map((conv, i) => (
                     <div
                       key={conv.id}
-                      className={`flex items-center gap-3 px-5 py-4.5 ${i !== 0 ? 'border-t border-ink-50' : ''}`}
+                      className={`flex items-center gap-3 px-5 py-4 ${i !== 0 ? 'border-t border-ink-50' : ''}`}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-ink-800 truncate">
+                        <p className="text-sm text-ink-900 truncate">
                           {conv.summary ?? conv.firstQuestion ?? 'Samtal'}
                         </p>
                         <p className="text-xs text-ink-400 mt-0.5">{fmtDate(conv.createdAt)}</p>
@@ -516,7 +521,7 @@ export default function Profile() {
                         onClick={() => void deleteConversation(conv.id)}
                         disabled={deletingConvId === conv.id}
                         aria-label="Radera samtal"
-                        className="p-1.5 rounded-lg text-ink-400 hover:text-negative-600 hover:bg-negative-50 transition-colors disabled:opacity-40 shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        className="p-2 rounded-2xl text-ink-400 hover:text-negative-600 hover:bg-negative-50 transition-colors disabled:opacity-40 shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -539,7 +544,7 @@ export default function Profile() {
 
         <button
           onClick={handleLogout}
-          className="w-full border border-negative-200 text-negative-600 font-semibold py-3 rounded-xl hover:bg-negative-50 transition-colors text-sm min-h-[44px]"
+          className="w-full border border-negative-200 text-negative-600 font-semibold py-3 rounded-2xl hover:bg-negative-50 transition-colors text-sm min-h-[44px]"
         >
           Logga ut
         </button>
@@ -549,21 +554,21 @@ export default function Profile() {
     {/* ── Confirm: turn off memory ──────────────────────────────────────── */}
     {confirmTurnOff && (
       <div className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="glass rounded-2xl p-6 max-w-sm w-full shadow-xl">
-          <h3 className="text-base font-bold text-ink-900 mb-2">Stäng av AI-minnet?</h3>
+        <div className="glass rounded-2xl p-6 max-w-sm w-full shadow-lg">
+          <h3 className="text-sm font-bold text-ink-900 mb-2">Stäng av AI-minnet?</h3>
           <p className="text-sm text-ink-500 leading-relaxed mb-6">
             All sparad samtalshistorik raderas permanent och kan inte återställas.
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => setConfirmTurnOff(false)}
-              className="flex-1 py-2.5 border border-ink-200 rounded-xl text-sm font-medium text-ink-700 hover:bg-ink-50 transition-colors min-h-[44px]"
+              className="flex-1 py-3 border border-ink-200 rounded-2xl text-sm font-medium text-ink-700 hover:bg-ink-50 transition-colors min-h-[44px]"
             >
               Avbryt
             </button>
             <button
               onClick={() => { setConfirmTurnOff(false); void applyMemoryConsent(false) }}
-              className="flex-1 py-2.5 bg-negative-600 text-white rounded-xl text-sm font-semibold hover:bg-negative-700 transition-colors min-h-[44px]"
+              className="flex-1 py-3 bg-negative-600 text-white rounded-2xl text-sm font-semibold hover:bg-negative-700 transition-colors min-h-[44px]"
             >
               Radera
             </button>
@@ -575,21 +580,21 @@ export default function Profile() {
     {/* ── Confirm: delete all conversations ────────────────────────────── */}
     {confirmDeleteAll && (
       <div className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="glass rounded-2xl p-6 max-w-sm w-full shadow-xl">
-          <h3 className="text-base font-bold text-ink-900 mb-2">Radera all historik?</h3>
+        <div className="glass rounded-2xl p-6 max-w-sm w-full shadow-lg">
+          <h3 className="text-sm font-bold text-ink-900 mb-2">Radera all historik?</h3>
           <p className="text-sm text-ink-500 leading-relaxed mb-6">
             Alla sparade samtal raderas permanent. AI-minnet förblir aktivt.
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => setConfirmDeleteAll(false)}
-              className="flex-1 py-2.5 border border-ink-200 rounded-xl text-sm font-medium text-ink-700 hover:bg-ink-50 transition-colors min-h-[44px]"
+              className="flex-1 py-3 border border-ink-200 rounded-2xl text-sm font-medium text-ink-700 hover:bg-ink-50 transition-colors min-h-[44px]"
             >
               Avbryt
             </button>
             <button
               onClick={() => void deleteAllConversations()}
-              className="flex-1 py-2.5 bg-negative-600 text-white rounded-xl text-sm font-semibold hover:bg-negative-700 transition-colors min-h-[44px]"
+              className="flex-1 py-3 bg-negative-600 text-white rounded-2xl text-sm font-semibold hover:bg-negative-700 transition-colors min-h-[44px]"
             >
               Radera allt
             </button>
@@ -609,7 +614,7 @@ function ProfileRow({ label, value, last }: { label: string; value: string; last
   return (
     <div className={`flex items-center justify-between px-5 py-4 ${!last ? 'border-b border-ink-50' : ''}`}>
       <span className="text-xs font-medium text-ink-400 uppercase tracking-wide w-32 shrink-0">{label}</span>
-      <span className="text-sm text-ink-800 text-right">{value}</span>
+      <span className="text-sm text-ink-900 text-right">{value}</span>
     </div>
   )
 }
@@ -627,7 +632,7 @@ function NotifRow({
   return (
     <div className={`flex items-center justify-between px-5 py-4 ${!last ? 'border-b border-ink-50' : ''} ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex-1 min-w-0 pr-4">
-        <p className="text-sm font-medium text-ink-800">{label}</p>
+        <p className="text-sm font-medium text-ink-900">{label}</p>
         <p className="text-xs text-ink-400 mt-0.5">{description}</p>
       </div>
       <Toggle checked={checked} onChange={onChange} disabled={disabled} />
@@ -642,12 +647,12 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
       aria-checked={checked}
       onClick={onChange}
       disabled={disabled}
-      className={`relative inline-flex w-11 h-6 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed ${
+      className={`relative inline-flex w-11 h-6 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed ${
         checked ? 'bg-accent' : 'bg-ink-200'
       }`}
     >
       <span
-        className={`inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+        className={`inline-block w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${
           checked ? 'translate-x-5' : 'translate-x-0'
         }`}
       />

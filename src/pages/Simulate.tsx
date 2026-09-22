@@ -2,6 +2,7 @@
 import { Sparkles } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { ChartTooltip, niceScale } from '../components/chart'
+import { EmptyState } from '../components/EmptyState'
 import {
   ResponsiveContainer,
   LineChart,
@@ -130,8 +131,8 @@ const SCENARIO_CONFIG: Record<ScenarioType, { icon: string; bg: string; border: 
   change_amount:           { icon: '%', bg: 'bg-brand-50',    border: 'border-brand-200',   iconBg: 'bg-brand-100 text-brand-600',   labelColor: 'text-brand-600' },
   add_revenue:             { icon: '+', bg: 'bg-positive-50',   border: 'border-positive-200',  iconBg: 'bg-positive-100 text-positive-600', labelColor: 'text-positive-600' },
   change_revenue_percent:  { icon: '↑', bg: 'bg-positive-50', border: 'border-positive-200', iconBg: 'bg-positive-100 text-positive-600', labelColor: 'text-positive-600' },
-  change_expenses_percent: { icon: '↓', bg: 'bg-caution-50',  border: 'border-caution-200', iconBg: 'bg-caution-100 text-caution-600', labelColor: 'text-caution-600' },
-  one_time_expense:        { icon: '−', bg: 'bg-purple-50',  border: 'border-purple-200', iconBg: 'bg-purple-100 text-purple-600', labelColor: 'text-purple-600' },
+  change_expenses_percent: { icon: '↓', bg: 'bg-caution-50',  border: 'border-caution-200', iconBg: 'bg-caution-100 text-caution-700', labelColor: 'text-caution-700' },
+  one_time_expense:        { icon: '−', bg: 'bg-brand-50',  border: 'border-brand-200', iconBg: 'bg-brand-100 text-brand-600', labelColor: 'text-brand-600' },
 }
 
 const FREQ_LABELS: Record<Frequency, string> = {
@@ -629,11 +630,11 @@ export default function Simulate() {
 
         {/* ── AI main card ─────────────────────────────────────────── */}
         <div className="glass rounded-2xl p-6 mb-4">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
-            <p className="text-base font-semibold text-ink-800">Beskriv vad du funderar på. AI:n simulerar åt dig</p>
+            <p className="text-base font-semibold text-ink-900">Beskriv vad du funderar på. AI:n simulerar åt dig</p>
           </div>
 
           <textarea
@@ -642,7 +643,7 @@ export default function Simulate() {
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void handleAiAsk() }}
             placeholder="T.ex. Vad händer om jag anställer en person för 25 000 kr i månaden?"
             rows={3}
-            className="w-full border border-ink-200 rounded-xl px-4 py-3 text-sm text-ink-800 placeholder-ink-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition resize-none bg-white/60"
+            className="w-full border border-ink-200 rounded-2xl px-4 py-3 text-sm text-ink-900 placeholder-ink-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 transition resize-none bg-white/60"
           />
 
           <div className="flex flex-wrap gap-2 mt-3 mb-4">
@@ -654,7 +655,7 @@ export default function Simulate() {
               <button
                 key={q}
                 onClick={() => setAiQuestion(q)}
-                className="text-xs font-medium text-ink-600 bg-white border border-ink-200 rounded-lg px-3 py-1.5 hover:border-brand-300 hover:text-brand-700 transition-colors"
+                className="text-xs font-medium text-ink-700 bg-white border border-ink-200 rounded-2xl px-3 py-2 hover:border-brand-300 hover:text-brand-700 transition-colors"
               >
                 {q}
               </button>
@@ -664,7 +665,7 @@ export default function Simulate() {
           <button
             onClick={() => void handleAiAsk()}
             disabled={!aiQuestion.trim() || aiLoading || loading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 min-h-[44px]"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-brand-600 text-white text-sm font-semibold rounded-2xl hover:bg-brand-700 transition-colors disabled:opacity-50 min-h-[44px]"
           >
             {aiLoading ? (
               <>
@@ -687,7 +688,7 @@ export default function Simulate() {
           )}
 
           {aiScenarioError && !result && !aiLoading && (
-            <div className="mt-4 p-4 bg-negative-50 border border-negative-200 rounded-xl">
+            <div className="mt-4 p-4 bg-negative-50 border border-negative-200 rounded-2xl">
               <p className="text-sm font-medium text-negative-800">{aiScenarioError.message}</p>
               {aiScenarioError.suggestions.length > 0 && (
                 <div className="mt-3">
@@ -697,7 +698,7 @@ export default function Simulate() {
                       <button
                         key={i}
                         onClick={() => setAiQuestion(s)}
-                        className="text-xs font-medium text-negative-800 bg-white border border-negative-200 rounded-lg px-3 py-1.5 hover:border-negative-400 transition-colors min-h-[36px]"
+                        className="text-xs font-medium text-negative-800 bg-white border border-negative-200 rounded-2xl px-3 py-2 hover:border-negative-400 transition-colors min-h-[36px]"
                       >
                         {s}
                       </button>
@@ -709,7 +710,7 @@ export default function Simulate() {
           )}
 
           {aiSimFailed && !result && !aiLoading && (
-            <div className="mt-4 p-4 bg-caution-50 border border-caution-200 rounded-xl">
+            <div className="mt-4 p-4 bg-caution-50 border border-caution-200 rounded-2xl">
               <p className="text-sm text-caution-800">
                 Kunde inte bygga ett scenario automatiskt.{' '}
                 <button
@@ -727,7 +728,7 @@ export default function Simulate() {
         {/* ── Manual mode toggle ───────────────────────────────────── */}
         <button
           onClick={() => setManualOpen(o => !o)}
-          className="flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-700 transition-colors mb-6"
+          className="flex items-center gap-2 text-sm text-ink-500 hover:text-ink-700 transition-colors mb-6"
         >
           <span className={`transition-transform inline-block ${manualOpen ? 'rotate-90' : ''}`}>›</span>
           {manualOpen ? 'Stäng manuellt läge' : 'Eller bygg scenariot själv →'}
@@ -740,20 +741,20 @@ export default function Simulate() {
             {aiSuggestions.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-4 h-4 text-purple-500" aria-hidden="true" />
-                  <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider">AI föreslår baserat på din data</p>
+                  <Sparkles className="w-4 h-4 text-brand-500" aria-hidden="true" />
+                  <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider">AI föreslår baserat på din data</p>
                 </div>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                   {aiSuggestions.map(s => (
                     <button
                       key={s.id}
                       onClick={() => applyAiSuggestion(s)}
-                      className="flex items-start gap-3 bg-white/40 backdrop-blur border border-purple-200/60 rounded-xl px-4 py-3 text-left hover:bg-purple-50/60 hover:border-purple-300 transition-[transform,box-shadow,background-color,border-color,color,opacity] cursor-pointer min-h-[44px] group"
+                      className="flex items-start gap-3 bg-white/40 backdrop-blur border border-brand-200/60 rounded-2xl px-4 py-3 text-left hover:bg-brand-50/60 hover:border-brand-300 transition-[transform,box-shadow,background-color,border-color,color,opacity] cursor-pointer min-h-[44px] group"
                     >
-                      <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5 group-hover:text-purple-600 transition-colors" aria-hidden="true" />
+                      <Sparkles className="w-4 h-4 text-brand-400 shrink-0 mt-0.5 group-hover:text-brand-600 transition-colors" aria-hidden="true" />
                       <div>
-                        <p className="text-sm font-semibold text-ink-800 leading-snug group-hover:text-purple-800 transition-colors">{s.label}</p>
-                        <p className="text-xs text-purple-500/80 mt-0.5">{s.subLabel}</p>
+                        <p className="text-sm font-semibold text-ink-900 leading-snug group-hover:text-brand-800 transition-colors">{s.label}</p>
+                        <p className="text-xs text-brand-500/80 mt-0.5">{s.subLabel}</p>
                       </div>
                     </button>
                   ))}
@@ -766,11 +767,11 @@ export default function Simulate() {
                 <p className="text-xs font-medium text-ink-500 mb-2">Sparade simuleringar</p>
                 <div className="flex flex-wrap gap-2">
                   {savedSims.map(sim => (
-                    <div key={sim.id} className="flex items-center gap-1 bg-white border border-ink-200 rounded-lg px-3 py-1.5 text-sm shadow-sm">
+                    <div key={sim.id} className="flex items-center gap-1 bg-white border border-ink-200 rounded-2xl px-3 py-2 text-sm shadow-sm">
                       <button onClick={() => handleLoadSim(sim)} className="text-ink-700 hover:text-brand-600 font-medium">
                         {sim.name}
                       </button>
-                      <button onClick={() => handleDeleteSim(sim.id)} className="text-ink-300 hover:text-negative-400 ml-1 leading-none">×</button>
+                      <button onClick={() => handleDeleteSim(sim.id)} className="text-ink-400 hover:text-negative-400 ml-1 leading-none">×</button>
                     </div>
                   ))}
                 </div>
@@ -791,11 +792,11 @@ export default function Simulate() {
                     { key: 'cut_costs' as const,       icon: '↓', label: 'Minska kostnader 15%', color: 'border-caution-200 hover:border-caution-400 hover:bg-caution-50' },
                   ]).map(t => (
                     <button key={t.key} onClick={() => applyTemplate(t.key)}
-                      className={`flex sm:flex-col items-center gap-2 sm:gap-1.5 px-4 sm:px-3 py-3 bg-white border rounded-xl sm:text-center transition-colors min-h-[44px] ${t.color}`}>
-                      <span className="text-lg font-bold text-ink-600">{t.icon}</span>
-                      <span className="text-xs font-medium text-ink-600 leading-tight">{t.label}</span>
+                      className={`flex sm:flex-col items-center gap-2 sm:gap-2 px-4 sm:px-3 py-3 bg-white border rounded-2xl sm:text-center transition-colors min-h-[44px] ${t.color}`}>
+                      <span className="text-sm font-bold text-ink-700">{t.icon}</span>
+                      <span className="text-xs font-medium text-ink-700 leading-tight">{t.label}</span>
                       {'sub' in t && t.sub && (
-                        <span className="text-[11px] font-semibold text-negative-700 leading-tight truncate max-w-full" title={t.sub}>{t.sub}</span>
+                        <span className="text-xs font-semibold text-negative-700 leading-tight truncate max-w-full" title={t.sub}>{t.sub}</span>
                       )}
                     </button>
                   ))}
@@ -808,7 +809,7 @@ export default function Simulate() {
                   <div className="w-full sm:w-auto">
                     <label className="block text-xs font-medium text-ink-500 mb-1.5">Typ</label>
                     <select value={addType} onChange={e => setAddType(e.target.value as ScenarioType)}
-                      className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white min-h-[44px]">
+                      className="w-full border border-ink-200 rounded-2xl px-3 py-3 text-sm text-ink-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 bg-white min-h-[44px]">
                       {(Object.entries(SCENARIO_LABELS) as [ScenarioType, string][]).map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
                       ))}
@@ -819,7 +820,7 @@ export default function Simulate() {
                     <div className="w-full sm:w-auto">
                       <label className="block text-xs font-medium text-ink-500 mb-1.5">Kategori</label>
                       <select value={addCategory} onChange={e => setAddCategory(e.target.value)}
-                        className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white min-h-[44px]">
+                        className="w-full border border-ink-200 rounded-2xl px-3 py-3 text-sm text-ink-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 bg-white min-h-[44px]">
                         {categories.length === 0
                           ? <option value="">Laddar...</option>
                           : categories.map(cat => <option key={cat} value={cat}>{cat}</option>)
@@ -833,7 +834,7 @@ export default function Simulate() {
                       <label className="block text-xs font-medium text-ink-500 mb-1.5">Förändring (%)</label>
                       <input type="number" value={addPercent} onChange={e => setAddPercent(e.target.value)}
                         placeholder="t.ex. -20"
-                        className="w-full sm:w-28 border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
+                        className="w-full sm:w-28 border border-ink-200 rounded-2xl px-3 py-3 text-sm text-ink-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 min-h-[44px]" />
                     </div>
                   )}
 
@@ -843,12 +844,12 @@ export default function Simulate() {
                         <label className="block text-xs font-medium text-ink-500 mb-1.5">Belopp (SEK)</label>
                         <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
                           placeholder="t.ex. 10000"
-                          className="w-full sm:w-32 border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
+                          className="w-full sm:w-32 border border-ink-200 rounded-2xl px-3 py-3 text-sm text-ink-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 min-h-[44px]" />
                       </div>
                       <div className="w-full sm:w-auto">
                         <label className="block text-xs font-medium text-ink-500 mb-1.5">Frekvens</label>
                         <select value={addFrequency} onChange={e => setAddFrequency(e.target.value as Frequency)}
-                          className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 bg-white min-h-[44px]">
+                          className="w-full border border-ink-200 rounded-2xl px-3 py-3 text-sm text-ink-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 bg-white min-h-[44px]">
                           <option value="daily">Dagligen</option>
                           <option value="weekly">Veckovis</option>
                           <option value="monthly">Månadsvis</option>
@@ -863,18 +864,18 @@ export default function Simulate() {
                         <label className="block text-xs font-medium text-ink-500 mb-1.5">Belopp (SEK)</label>
                         <input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)}
                           placeholder="t.ex. 5000"
-                          className="w-full sm:w-32 border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
+                          className="w-full sm:w-32 border border-ink-200 rounded-2xl px-3 py-3 text-sm text-ink-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 min-h-[44px]" />
                       </div>
                       <div className="w-full sm:w-auto">
                         <label className="block text-xs font-medium text-ink-500 mb-1.5">Datum</label>
                         <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)}
-                          className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-700 outline-none focus:border-brand-500 min-h-[44px]" />
+                          className="w-full border border-ink-200 rounded-2xl px-3 py-3 text-sm text-ink-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30 min-h-[44px]" />
                       </div>
                     </>
                   )}
 
                   <button onClick={handleAdd}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors min-h-[44px]">
+                    className="w-full sm:w-auto px-4 py-3 bg-brand-600 text-white text-sm font-semibold rounded-2xl hover:bg-brand-700 transition-colors min-h-[44px]">
                     + Lägg till
                   </button>
                 </div>
@@ -887,25 +888,25 @@ export default function Simulate() {
                     {scenarios.map(s => {
                       const cfg = SCENARIO_CONFIG[s.type]
                       return (
-                        <div key={s.id} className={`flex items-start gap-3 p-4 rounded-xl border ${cfg.bg} ${cfg.border}`}>
-                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${cfg.iconBg}`}>
+                        <div key={s.id} className={`flex items-start gap-3 p-4 rounded-2xl border ${cfg.bg} ${cfg.border}`}>
+                          <div className={`w-9 h-9 rounded-2xl flex items-center justify-center text-sm font-bold shrink-0 ${cfg.iconBg}`}>
                             {cfg.icon}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${cfg.labelColor}`}>
+                            <p className={`text-xs font-bold uppercase tracking-widest mb-0.5 ${cfg.labelColor}`}>
                               {SCENARIO_LABELS[s.type]}
                             </p>
-                            <p className="text-sm font-medium text-ink-800 leading-snug">{scenarioChip(s)}</p>
+                            <p className="text-sm font-medium text-ink-900 leading-snug">{scenarioChip(s)}</p>
                           </div>
                           <button onClick={() => handleRemove(s.id)}
-                            className="text-ink-300 hover:text-negative-400 text-lg leading-none shrink-0 mt-0.5"
+                            className="text-ink-400 hover:text-negative-400 text-sm leading-none shrink-0 mt-0.5"
                             title="Ta bort">×</button>
                         </div>
                       )
                     })}
                   </div>
                   <button onClick={handleSimulate} disabled={loading}
-                    className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50">
+                    className="w-full py-3 bg-brand-600 text-white text-sm font-semibold rounded-2xl hover:bg-brand-700 transition-colors disabled:opacity-50">
                     {loading ? 'Simulerar...' : 'Kör simulering →'}
                   </button>
                 </div>
@@ -915,7 +916,7 @@ export default function Simulate() {
         )}
 
         {error && (
-          <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm mb-6">
+          <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-2xl px-5 py-4 text-sm mb-6">
             {error}
           </div>
         )}
@@ -953,7 +954,7 @@ export default function Simulate() {
                 <div className="flex gap-1">
                   {(['day', 'week', 'month'] as Granularity[]).map(g => (
                     <button key={g} onClick={() => setGranularity(g)}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                      className={`px-3 py-1 rounded-2xl text-xs font-medium border transition-colors ${
                         granularity === g ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-ink-500 border-ink-200 hover:border-ink-300'
                       }`}>
                       {g === 'day' ? 'Dag' : g === 'week' ? 'Vecka' : 'Månad'}
@@ -963,8 +964,12 @@ export default function Simulate() {
               </div>
 
               {displayData.length === 0 ? (
-                <div className="h-[280px] flex items-center justify-center text-ink-400 text-sm">
-                  Ingen prognosdata returnerades.
+                <div className="h-[280px] flex items-center justify-center">
+                  <EmptyState
+                    icon={<Sparkles />}
+                    title="Ingen prognos att visa"
+                    hint="Vi kunde inte rita en prognos för det här scenariot. Prova att justera det och kör igen."
+                  />
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
@@ -976,14 +981,14 @@ export default function Simulate() {
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="#CE4646" strokeWidth={1} strokeDasharray="4 3"
                       label={{ value: 'Saldo noll', position: zeroLabelPos, fontSize: 10, fill: '#CE4646' }} />
-                    <Line type="monotone" dataKey="baseline" name="Utan ändring" stroke="#8B8A93" strokeWidth={2.5} dot={false} strokeDasharray="5 3" />
+                    <Line type="monotone" dataKey="baseline" name="Utan ändring" stroke="#72717C" strokeWidth={2.5} dot={false} strokeDasharray="5 3" />
                     <Line type="monotone" dataKey="simulated" name="Med scenario" stroke="#3A5CD8" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
 
               {breakEvenPoint && (
-                <div className="mt-4 flex items-start gap-2.5 bg-negative-50 border border-negative-100 rounded-xl px-4 py-3">
+                <div className="mt-4 flex items-start gap-3 bg-negative-50 border border-negative-100 rounded-2xl px-4 py-3">
                   <svg className="w-4 h-4 text-negative-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -1005,7 +1010,7 @@ export default function Simulate() {
               <div className="flex justify-center">
                 {!saveSimOpen ? (
                   <button onClick={() => setSaveSimOpen(true)}
-                    className="text-sm text-ink-500 hover:text-ink-700 border border-ink-200 rounded-xl px-4 py-2 hover:border-ink-300 transition-colors min-h-[44px]">
+                    className="text-sm text-ink-500 hover:text-ink-700 border border-ink-200 rounded-2xl px-4 py-2 hover:border-ink-300 transition-colors min-h-[44px]">
                     Spara simulering
                   </button>
                 ) : (
@@ -1013,13 +1018,13 @@ export default function Simulate() {
                     <input autoFocus value={saveSimName} onChange={e => setSaveSimName(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleSaveSim(); if (e.key === 'Escape') { setSaveSimOpen(false); setSaveSimName('') } }}
                       placeholder="Namn på simuleringen..."
-                      className="flex-1 border border-ink-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-brand-500" />
+                      className="flex-1 border border-ink-200 rounded-2xl px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30" />
                     <button onClick={handleSaveSim}
-                      className="px-3 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors">
+                      className="px-3 py-2 bg-brand-600 text-white text-sm font-semibold rounded-2xl hover:bg-brand-700 transition-colors">
                       Spara
                     </button>
                     <button onClick={() => { setSaveSimOpen(false); setSaveSimName('') }}
-                      className="text-ink-400 hover:text-ink-600 px-2 text-sm">
+                      className="text-ink-400 hover:text-ink-700 px-2 text-sm">
                       Avbryt
                     </button>
                   </div>

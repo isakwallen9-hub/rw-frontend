@@ -28,7 +28,7 @@ function LegalPage({ type }: { type: LegalDocType }) {
           <p className="mt-6 text-sm text-negative-600">Kunde inte hämta dokumentet just nu. Försök igen senare.</p>
         ) : !doc ? (
           <div className="mt-6 flex flex-col gap-3">
-            {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-4 rounded" style={{ width: `${90 - i * 8}%` }} />)}
+            {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-4 rounded-2xl" style={{ width: `${90 - i * 8}%` }} />)}
           </div>
         ) : (
           <>

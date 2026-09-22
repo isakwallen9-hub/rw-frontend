@@ -7,6 +7,25 @@ export default {
   theme: {
     extend: {
       colors: {
+        // ══════════════════════════════════════════════════════════════════
+        //  SEMANTIC PALETTE — the complete, closed set of colours in the app.
+        //  Colour is only used where something is interactive or signals a
+        //  state; never decoratively. Do NOT introduce new hues or shades —
+        //  map any new need to the nearest token below.
+        //
+        //   brand     → interactive: links, buttons, focus rings, active nav.
+        //               (`primary` = brand-700, `accent` = brand-500 are named
+        //                aliases of this family, kept for legacy call-sites.)
+        //   ink       → all neutral text & surfaces. Text uses only 4 shades:
+        //               900 headings · 700 body · 500 secondary · 400 muted.
+        //               50/100/200/300 are for surfaces, dividers and borders.
+        //   positive  → success / "within target" state ONLY.
+        //   negative  → error / danger / destructive state ONLY.
+        //   caution   → genuine warning state ONLY (never as decoration).
+        //  white / transparent are structural, not hues. Multi-hue chart
+        //  SERIES colours are functional data encodings and live in code, not
+        //  here.
+        // ══════════════════════════════════════════════════════════════════
         // ── Brand (blue) — anchors 50/100/500/600/700/900 given; gaps interpolated ──
         brand: {
           50:  '#F0F4FF',
@@ -80,24 +99,44 @@ export default {
         accent:  '#3A5CD8',
       },
       fontFamily: {
-        serif: ['Instrument Serif', 'Georgia', 'serif'],
-        sans: ['General Sans', 'system-ui', 'sans-serif'],
+        // Single, consistent app typeface: Geist (Google Fonts) — headings and
+        // body alike. No serif token: Instrument Serif remains only for the
+        // Landing hero, scoped via `.serif-headings` in index.css.
+        sans: ['Geist', 'system-ui', 'sans-serif'],
       },
-      // Three-level depth hierarchy — overrides the default scale so every
-      // existing `shadow-*` utility is upgraded without touching components.
-      //   sm  = resting card      md = hovered card
-      //   xl/2xl = modals & panels (deepest)
+      // ── Elevation — EXACTLY three levels. Soft, near-imperceptible depth
+      //    that suggests layering rather than drawing a hard edge. Every card,
+      //    button, modal and input uses one of these three; nothing else.
+      //      shadow-sm → resting card (the default depth for every surface)
+      //      shadow-md → hover / raised state
+      //      shadow-lg → modals & overlays that must separate from the page
+      //    (The one-off `shadow-[inset_0_0_0_1px_…]` utilities that remain are
+      //     1px inset selection rings on nav items — borders, not elevation.)
       boxShadow: {
-        sm:      '0 1px 2px rgba(26, 25, 32, 0.04), 0 4px 16px rgba(26, 25, 32, 0.04)',   // resting
-        DEFAULT: '0 1px 2px rgba(26, 25, 32, 0.05), 0 6px 20px rgba(26, 25, 32, 0.06)',
-        md:      '0 2px 4px rgba(26, 25, 32, 0.06), 0 12px 32px rgba(26, 25, 32, 0.08)',  // hovered
-        lg:      '0 4px 10px rgba(26, 25, 32, 0.07), 0 18px 44px rgba(26, 25, 32, 0.10)',
-        xl:      '0 10px 28px rgba(26, 25, 32, 0.10), 0 24px 56px rgba(26, 25, 32, 0.14)',
-        '2xl':   '0 24px 64px rgba(26, 25, 32, 0.18)',                                    // modals / panels
+        sm: '0 1px 2px rgba(26, 25, 32, 0.04), 0 4px 16px rgba(26, 25, 32, 0.04)',
+        md: '0 2px 4px rgba(26, 25, 32, 0.06), 0 12px 32px rgba(26, 25, 32, 0.08)',
+        lg: '0 8px 24px rgba(26, 25, 32, 0.10), 0 24px 56px rgba(26, 25, 32, 0.14)',
       },
+      // ── Corner radius — a limited set. `rounded-2xl` (1rem) is the single,
+      //    softer radius for every card, button, input and modal across the app;
+      //    `rounded-full` is reserved for genuinely circular / pill elements
+      //    (avatars, dots, toggles, badges). The chat-bubble tail (`rounded-bl-sm`
+      //    / `rounded-br-sm`) is a functional exception. `rounded-xl` (0.75rem)
+      //    is kept only for the Landing page, which retains its own radius.
+      borderRadius: {
+        xl: '0.75rem',
+      },
+      // ── Motion — one standard transition. Every `transition-*` utility that
+      //    doesn't set its own duration/easing glides in ~160ms on a soft
+      //    ease-out (matches --ease-out / the `apple` curve). Short and quick,
+      //    never slow or bouncy. Reduced-motion is honoured globally in index.css.
       transitionTimingFunction: {
+        DEFAULT: 'cubic-bezier(0.22, 1, 0.36, 1)',
         apple: 'cubic-bezier(0.22, 1, 0.36, 1)',
         'apple-in-out': 'cubic-bezier(0.65, 0, 0.35, 1)',
+      },
+      transitionDuration: {
+        DEFAULT: '160ms',
       },
       animation: {
         'orb-1': 'orb-float-1 18s ease-in-out infinite',

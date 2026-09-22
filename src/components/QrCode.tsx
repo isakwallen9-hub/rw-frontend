@@ -30,7 +30,7 @@ export function QrCode({ value, size = 200 }: { value: string; size?: number }) 
       viewBox={`0 0 ${size} ${size}`}
       role="img"
       aria-label="QR-kod för tvåfaktorsautentisering"
-      className="rounded-lg shrink-0"
+      className="rounded-2xl shrink-0"
     >
       <rect width={size} height={size} fill="#ffffff" />
       {cells.map((m, i) => (

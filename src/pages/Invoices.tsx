@@ -45,12 +45,12 @@ export default function Invoices() {
           {loading ? (
             <div className="p-6 space-y-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-10 skeleton rounded-xl" />
+                <div key={i} className="h-10 skeleton rounded-2xl" />
               ))}
             </div>
           ) : error ? (
             <div className="p-6">
-              <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-xl px-5 py-4 text-sm">
+              <div className="bg-negative-50 border border-negative-100 text-negative-600 rounded-2xl px-5 py-4 text-sm">
                 {error}
               </div>
             </div>
@@ -59,7 +59,7 @@ export default function Invoices() {
               Inga förfallna fakturor hittades.
             </div>
           ) : (
-            <table className="w-full text-base">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-ink-100 bg-ink-50">
                   <th className="text-left px-5 py-4 font-medium text-ink-500 uppercase tracking-wide text-sm">
@@ -84,14 +84,14 @@ export default function Invoices() {
                       inv.daysOverdue > 30 ? 'bg-negative-50' : ''
                     }`}
                   >
-                    <td className="px-5 py-4 text-ink-800 font-medium">{inv.customerName}</td>
+                    <td className="px-5 py-4 text-ink-900 font-medium">{inv.customerName}</td>
                     <td className="px-5 py-4 text-ink-500">
                       {inv.invoiceNumber ?? '—'}
                     </td>
-                    <td className="px-5 py-4 text-ink-800 text-right">{fmt(inv.amount)}</td>
+                    <td className="px-5 py-4 text-ink-900 text-right tabular-nums whitespace-nowrap">{fmt(inv.amount)}</td>
                     <td className="px-5 py-4 text-right">
                       <span
-                        className={`font-semibold ${
+                        className={`font-semibold tabular-nums ${
                           inv.daysOverdue > 30 ? 'text-negative-600' : 'text-ink-700'
                         }`}
                       >
@@ -105,7 +105,7 @@ export default function Invoices() {
           )}
         </div>
 
-        <div className="mt-8 bg-ink-50 border border-dashed border-ink-200 rounded-2xl p-8 text-center text-ink-400 text-sm">
+        <div className="mt-8 bg-ink-50 border border-dashed border-ink-200 rounded-2xl p-8 text-center text-ink-500 text-sm">
           Egna grafer: kommer snart
         </div>
       </div>

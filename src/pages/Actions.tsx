@@ -5,6 +5,8 @@ import {
   Clock, FileText,
 } from 'lucide-react'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
+import CountUp from '../components/CountUp'
+import { EmptyState } from '../components/EmptyState'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 const LS_PROGRESS_KEY = 'rw_action_progress'
@@ -207,12 +209,12 @@ export default function Actions() {
         {/* Summary bar */}
         {!loading && actions.length > 0 && (
           <div className="grid grid-cols-3 gap-4">
-            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-3xl font-bold tabular text-ink-900">{actions.length}</p>
+            <div className="glass rounded-2xl px-5 py-4 shadow-sm text-center">
+              <p className="text-3xl font-bold tabular text-ink-900"><CountUp value={actions.length} /></p>
               <p className="text-xs text-ink-400 mt-0.5">Åtgärder totalt</p>
             </div>
-            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-3xl font-bold tabular text-positive-600">{doneCount}</p>
+            <div className="glass rounded-2xl px-5 py-4 shadow-sm text-center">
+              <p className="text-3xl font-bold tabular text-positive-600"><CountUp value={doneCount} /></p>
               <p className="text-xs text-ink-400 mt-0.5">Slutförda</p>
               <div className="mt-2 h-1.5 bg-ink-100 rounded-full overflow-hidden">
                 <div
@@ -221,27 +223,27 @@ export default function Actions() {
                 />
               </div>
             </div>
-            <div className="glass rounded-xl px-5 py-4 shadow-sm text-center">
-              <p className="text-lg font-bold text-brand-600">{fmt(totalValue)}</p>
+            <div className="glass rounded-2xl px-5 py-4 shadow-sm text-center">
+              <p className="text-sm font-bold text-brand-600"><CountUp value={totalValue} format={fmt} /></p>
               <p className="text-xs text-ink-400 mt-0.5">Potentiellt värde</p>
             </div>
           </div>
         )}
 
         {/* Tab bar */}
-        <div className="flex gap-1 bg-ink-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 bg-ink-100 p-1 rounded-2xl w-fit">
           {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-150 ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-150 ${
                 tab === t.key
                   ? 'bg-white shadow-sm text-ink-900'
                   : 'text-ink-500 hover:text-ink-700'
               }`}
             >
               {t.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+              <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
                 tab === t.key ? 'bg-accent/10 text-accent' : 'bg-ink-200 text-ink-500'
               }`}>
                 {t.count}
@@ -258,8 +260,14 @@ export default function Actions() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="glass rounded-2xl p-10 text-center text-ink-400 text-sm">
-            {tab === 'done' ? 'Inga slutförda åtgärder ännu.' : 'Inga pågående åtgärder. Bra jobbat!'}
+          <div className="glass rounded-2xl">
+            <EmptyState
+              icon={<CheckCircle />}
+              title={tab === 'done' ? 'Inga slutförda åtgärder ännu' : 'Inga pågående åtgärder'}
+              hint={tab === 'done'
+                ? 'Åtgärder du bockar av som klara samlas här.'
+                : 'Bra jobbat — du har åtgärdat allt just nu.'}
+            />
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -278,17 +286,21 @@ export default function Actions() {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <FileText className="w-4 h-4 text-ink-400" />
-            <h2 className="text-2xl text-ink-800">Förfallna fakturor</h2>
+            <h2 className="text-2xl text-ink-900">Förfallna fakturor</h2>
             {invoices.length > 0 && (
-              <span className="text-xs bg-negative-100 text-negative-600 font-semibold px-2 py-0.5 rounded-full">{invoices.length} st</span>
+              <span className="text-xs bg-negative-100 text-negative-600 font-semibold px-2 py-1 rounded-full">{invoices.length} st</span>
             )}
           </div>
 
           {loading ? (
             <div className="h-32 skeleton rounded-2xl" />
           ) : invoices.length === 0 ? (
-            <div className="glass rounded-2xl p-8 text-center text-ink-400 text-sm">
-              Inga förfallna fakturor. Allt är i ordning!
+            <div className="glass rounded-2xl">
+              <EmptyState
+                icon={<CheckCircle />}
+                title="Inga förfallna fakturor"
+                hint="Allt är i ordning — inga fakturor har passerat sitt förfallodatum."
+              />
             </div>
           ) : (
             <div className="glass rounded-2xl overflow-hidden shadow-sm">
@@ -303,7 +315,7 @@ export default function Actions() {
               ))}
               <div className="border-t border-ink-100 px-5 py-4 flex items-center justify-between">
                 <span className="text-xs text-ink-400">Totalt utestående</span>
-                <span className="text-sm font-bold text-negative-600">
+                <span className="text-sm font-bold text-negative-600 tabular-nums whitespace-nowrap">
                   {fmt(invoices.reduce((s, inv) => s + inv.amount, 0))}
                 </span>
               </div>
@@ -335,7 +347,7 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${done ? 'bg-positive-100 text-positive-700 border-positive-200' : p.badge}`}>
+              <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full border ${done ? 'bg-positive-100 text-positive-700 border-positive-200' : p.badge}`}>
                 {done ? <CheckCircle className="w-3 h-3" /> : p.icon} {done ? 'Slutförd' : p.label}
               </span>
             </div>
@@ -345,10 +357,10 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
           </div>
           <button
             onClick={onToggle}
-            className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-[transform,box-shadow,background-color,border-color,color] duration-200 ${
+            className={`shrink-0 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-2xl border transition-[transform,box-shadow,background-color,border-color,color] duration-200 ${
               done
                 ? 'border-positive-200 bg-positive-50 text-positive-700 hover:bg-negative-50 hover:border-negative-200 hover:text-negative-600'
-                : 'border-ink-200 bg-ink-50 text-ink-600 hover:border-positive-300 hover:bg-positive-50 hover:text-positive-700'
+                : 'border-ink-200 bg-ink-50 text-ink-700 hover:border-positive-300 hover:bg-positive-50 hover:text-positive-700'
             }`}
             title={done ? 'Ångra' : 'Markera som klar'}
           >
@@ -364,26 +376,26 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
 
         {/* Potential value */}
         {action.estimatedValue > 0 && (
-          <div className="flex items-center gap-3 bg-positive-50 border border-positive-100 rounded-xl px-3 py-2.5 mb-4">
+          <div className="flex items-center gap-3 bg-positive-50 border border-positive-100 rounded-2xl px-3 py-3 mb-4">
             <TrendingUp className="w-4 h-4 text-positive-500 shrink-0" />
             <div>
-              <p className="text-[10px] font-bold text-positive-600 uppercase tracking-widest">Potentiell förbättring</p>
-              <p className="text-base font-bold text-positive-700 leading-tight">{fmt(action.estimatedValue)}</p>
+              <p className="text-xs font-bold text-positive-600 uppercase tracking-widest">Potentiell förbättring</p>
+              <p className="text-sm font-bold text-positive-700 leading-tight">{fmt(action.estimatedValue)}</p>
             </div>
           </div>
         )}
 
         {/* Targets */}
         {action.targets && action.targets.length > 0 && (
-          <div className="mb-4 border border-ink-100 rounded-xl overflow-hidden">
-            <div className="grid grid-cols-[1fr_auto] text-[10px] font-bold uppercase tracking-widest text-ink-400 px-3 py-2 border-b border-ink-50 bg-ink-50/60">
+          <div className="mb-4 border border-ink-100 rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-[1fr_auto] text-xs font-bold uppercase tracking-widest text-ink-500 px-3 py-2 border-b border-ink-50 bg-ink-50/60">
               <span>Berör</span>
               <span className="text-right">Värde</span>
             </div>
             {action.targets.map((t, i) => (
-              <div key={t.id ?? i} className={`grid grid-cols-[1fr_auto] items-center px-3 py-2.5 text-xs ${i !== 0 ? 'border-t border-ink-50' : ''}`}>
+              <div key={t.id ?? i} className={`grid grid-cols-[1fr_auto] items-center px-3 py-3 text-xs ${i !== 0 ? 'border-t border-ink-50' : ''}`}>
                 <span className="text-ink-700 font-medium truncate mr-3">{t.label}</span>
-                <span className="font-semibold text-ink-800 whitespace-nowrap">{fmt(t.value)}</span>
+                <span className="font-semibold text-ink-900 whitespace-nowrap tabular-nums text-right">{fmt(t.value)}</span>
               </div>
             ))}
           </div>
@@ -404,11 +416,11 @@ function ActionCard({ action, done, onToggle }: { action: Action; done: boolean;
                 {howLines.map((line, i) => {
                   const text = line.replace(/^\d+\.\s*/, '').trim()
                   return (
-                    <li key={i} className="flex gap-2.5 items-start">
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center mt-0.5">
+                    <li key={i} className="flex gap-3 items-start">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center mt-0.5">
                         {i + 1}
                       </span>
-                      <span className="text-sm text-ink-600 leading-snug">{text}</span>
+                      <span className="text-sm text-ink-700 leading-snug">{text}</span>
                     </li>
                   )
                 })}
@@ -426,23 +438,23 @@ function InvoiceRow({ inv, isLast }: { inv: LateInvoice; isLast: boolean }) {
   const daysColor = inv.daysOverdue > 60
     ? 'text-negative-600 bg-negative-100'
     : inv.daysOverdue > 30
-    ? 'text-caution-600 bg-caution-100'
+    ? 'text-caution-700 bg-caution-100'
     : 'text-caution-700 bg-caution-100'
 
   return (
     <div className={`grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-4 gap-2 ${!isLast ? 'border-b border-ink-50' : ''} ${urgent ? 'bg-negative-50/40' : ''}`}>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-ink-800 truncate">{inv.customerName}</p>
+        <p className="text-sm font-semibold text-ink-900 truncate">{inv.customerName}</p>
         {urgent && (
           <div className="flex items-center gap-1 mt-0.5">
             <AlertTriangle className="w-3 h-3 text-negative-600" />
-            <span className="text-[10px] text-negative-600 font-medium">Kräver omedelbar åtgärd</span>
+            <span className="text-xs text-negative-600 font-medium">Kräver omedelbar åtgärd</span>
           </div>
         )}
       </div>
       <span className="text-xs text-ink-400 text-right pr-6 whitespace-nowrap">{inv.invoiceNumber ?? '—'}</span>
-      <span className="text-sm font-semibold text-ink-900 text-right pr-6 whitespace-nowrap">{fmt(inv.amount)}</span>
-      <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${daysColor}`}>
+      <span className="text-sm font-semibold text-ink-900 text-right pr-6 whitespace-nowrap tabular-nums">{fmt(inv.amount)}</span>
+      <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 tabular-nums ${daysColor}`}>
         <Clock className="w-3 h-3" /> {inv.daysOverdue} dagar
       </span>
     </div>

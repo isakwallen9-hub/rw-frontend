@@ -45,10 +45,15 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 function SidebarLayout() {
+  // App-shell layout: on desktop (lg+) the shell is pinned to the viewport height
+  // and clips its own overflow, so the document itself never scrolls. The sidebar
+  // is already position:fixed (full height, viewport-pinned), and <main> becomes
+  // the single dedicated scroll container. On mobile the sidebar is an overlay, so
+  // we keep the normal document flow (min-h-screen) and let the page scroll as before.
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen lg:h-screen lg:overflow-hidden">
       <Sidebar />
-      <main className="flex-1 lg:ml-60 min-w-0 animate-fade-rise">
+      <main className="flex-1 lg:ml-60 min-w-0 animate-fade-rise lg:h-screen lg:overflow-y-auto">
         <LegalGate>
           <Outlet />
         </LegalGate>
@@ -63,9 +68,9 @@ export default function App() {
       {/* ── Global animated background ──────────────────────────────── */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-ink-100 via-ink-50 to-brand-50/30" aria-hidden="true">
         <div className="absolute top-[-12%] left-[8%] w-[680px] h-[680px] bg-brand-100/60 rounded-full blur-[150px] animate-orb-1" />
-        <div className="absolute bottom-[2%] right-[4%] w-[540px] h-[540px] bg-stone-200/50 rounded-full blur-[140px] animate-orb-2" />
+        <div className="absolute bottom-[2%] right-[4%] w-[540px] h-[540px] bg-ink-200/50 rounded-full blur-[140px] animate-orb-2" />
         <div className="absolute top-[30%] left-[52%] w-[440px] h-[440px] bg-brand-100/40 rounded-full blur-[130px] animate-orb-3" />
-        <div className="absolute top-[58%] left-[15%] w-[300px] h-[300px] bg-stone-200/40 rounded-full blur-[110px] animate-orb-4" />
+        <div className="absolute top-[58%] left-[15%] w-[300px] h-[300px] bg-ink-200/40 rounded-full blur-[110px] animate-orb-4" />
         {/* Edge vignette — brightens center, grounds edges */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 90% 80% at 62% 40%, transparent 35%, rgba(26,25,32,0.04) 100%)' }} />
       </div>
