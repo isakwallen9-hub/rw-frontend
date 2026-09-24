@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Truck } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -7,7 +8,7 @@ const INDUSTRIES = [
   { value: 'restaurant', label: 'Restaurang', icon: '🍽️' },
   { value: 'salon', label: 'Frisör/Salong', icon: '✂️' },
   { value: 'retail', label: 'Butik/Detaljhandel', icon: '🛍️' },
-  { value: 'cafe', label: 'Café', icon: '☕' },
+  { value: 'transport', label: 'Åkeri & logistik', icon: <Truck className="w-[1em] h-[1em]" /> },
   { value: 'gym', label: 'Gym/Träning', icon: '💪' },
   { value: 'other', label: 'Annat', icon: '🏢' },
 ]

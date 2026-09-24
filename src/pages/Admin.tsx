@@ -12,7 +12,7 @@ const INDUSTRY_BADGE: Record<string, { label: string; cls: string }> = {
   restaurant: { label: 'Restaurang', cls: 'bg-caution-50 text-caution-700 border border-caution-100' },
   salon:      { label: 'Frisör',     cls: 'bg-brand-50 text-brand-700 border border-brand-100' },
   retail:     { label: 'Butik',      cls: 'bg-brand-50 text-brand-700 border border-brand-100' },
-  cafe:       { label: 'Café',       cls: 'bg-caution-50 text-caution-800 border border-caution-100' },
+  transport:  { label: 'Åkeri & logistik', cls: 'bg-caution-50 text-caution-800 border border-caution-100' },
   gym:        { label: 'Gym',        cls: 'bg-positive-50 text-positive-700 border border-positive-100' },
   other:      { label: 'Annat',      cls: 'bg-ink-100 text-ink-500 border border-ink-200' },
 }

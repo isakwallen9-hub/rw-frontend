@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trash2, MessageSquare } from 'lucide-react'
+import { Trash2, MessageSquare, Truck } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { fetchWithAuth } from '../utils/fetchWithAuth'
 import { SkeletonCard } from '../components/Skeleton'
@@ -20,7 +20,7 @@ const INDUSTRIES = [
   { value: 'restaurant', label: 'Restaurang', icon: '🍽️' },
   { value: 'salon', label: 'Frisör/Salong', icon: '✂️' },
   { value: 'retail', label: 'Butik/Detaljhandel', icon: '🛍️' },
-  { value: 'cafe', label: 'Café', icon: '☕' },
+  { value: 'transport', label: 'Åkeri & logistik', icon: <Truck className="w-[1em] h-[1em]" /> },
   { value: 'gym', label: 'Gym/Träning', icon: '💪' },
   { value: 'other', label: 'Annat', icon: '🏢' },
 ]
